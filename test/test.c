@@ -3,7 +3,7 @@
 	test.c
 
 	exceptions4c
-	version 1.0
+	version 1.1
 	An exception handling framework for C.
 
 	Copyright (c) 2009 Guillermo Calvo
@@ -36,11 +36,23 @@
 */
 
 
-# define DEBUG
 # define LINE(string)			printf("%s\n", string)
-# define ECHO(string)			printf("    * %s\n", string)
-# define SHOW(statement)		printf("             * %s;\n", #statement); statement
-# define SVAR(svar)				printf("             * %s: \"%s\"\n", #svar, svar)
+
+# define BLOCK_1(string)		printf("\n%s\n----------------------------------------------------------------\n", string)
+# define BLOCK_2(string)		printf("\n        %s\n        --------------------------------------------------------\n", string)
+# define BLOCK_3(string)		printf("\n                %s\n                ------------------------------------------------\n", string)
+
+# define ECHO_1(string)			printf("    * %s\n", string)
+# define ECHO_2(string)			printf("            * %s\n", string)
+# define ECHO_3(string)			printf("                    * %s\n", string)
+
+# define SHOW_1(statement)		printf("    * %s;\n", #statement); statement
+# define SHOW_2(statement)		printf("            * %s;\n", #statement); statement
+# define SHOW_3(statement)		printf("                    * %s;\n", #statement); statement
+
+# define SVAR_1(svar)			printf("    * %s: \"%s\"\n", #svar, svar)
+# define SVAR_2(svar)			printf("            * %s: \"%s\"\n", #svar, svar)
+# define SVAR_3(svar)			printf("                    * %s: \"%s\"\n", #svar, svar)
 
 
 # include <stdio.h>
@@ -54,8 +66,10 @@ void runTest(int test);
 void test1();
 void test2();
 void test3();
-void aux2();
+void test4();
+void test5();
 void aux3();
+void aux5();
 void pause();
 
 
@@ -70,13 +84,32 @@ int main(int argc, char *argv[]){
 	int test;
 
 	atexit(pause);
-	atexit(atUncaughtException);
+	initializeExceptionHandling(true);
+
+	/*
+
+	try{
+		int i = 10 / 0;
+	}catch(ArithmeticException){
+		printf("Aqui no ha pasado nada, señores... :-)\n");
+	}
+
+	try{
+		int * p = NULL;
+		*p = 123;
+	}catch(BadPointerException){
+		printf("Aqui no ha pasado nada, señores... :-)\n");
+	}
+
+	return(0);
+
+	*/
 
 	LINE(">>");
 	LINE(">> WE ARE INSIDE 'MAIN'");
 	LINE(">>");
 
-	for(test = 1; test < 4; test++){
+	for(test = 1; test < 6; test++){
 
 		runTest(test);
 
@@ -87,7 +120,7 @@ int main(int argc, char *argv[]){
 		pause();
 	}
 
-	ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 
 	return(EXIT_SUCCESS);
 }
@@ -99,15 +132,44 @@ void pause(){
 
 void generateError(int whichOne){
 
-	ECHO("We are inside 'generateError' now...");
-
-	switch(whichOne){
-		case 1: SHOW( throw(NullPointerException) ); break;
-		case 2: SHOW( throw(BlueException) ); break;
-		case 3: SHOW( throw(RedException) ); break;
+	if(whichOne == 3 || whichOne == 5){
+        BLOCK_3("We are inside 'generateError' now...");
+	}else{
+        BLOCK_2("We are inside 'generateError' now...");
 	}
 
-	ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	switch(whichOne){
+
+		case 1:
+			SHOW_2( throw(NotEnoughMemoryException) );
+			break;
+
+		case 2:
+			{
+				int zero, number;
+				SHOW_2( zero = 0 );
+				SHOW_2( number = 100 / zero );
+			}
+			break;
+
+		case 3:
+			SHOW_3( throw(BlueException) );
+			break;
+
+		case 4:
+			{
+				int * pointer, number;
+				SHOW_2( pointer = NULL );
+				SHOW_2( number = *pointer );
+			}
+			break;
+
+		case 5:
+			SHOW_3( throw(RedException) );
+			break;
+	}
+
+	ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 }
 
 void runTest(int test){
@@ -116,6 +178,8 @@ void runTest(int test){
 		case 1: test1(); break;
 		case 2: test2(); break;
 		case 3: test3(); break;
+		case 4: test4(); break;
+		case 5: test5(); break;
 	}
 }
 
@@ -131,159 +195,207 @@ void info(int test){
 
 		case 1:
 			LINE("  1. 'test1' will call 'generateError' inside a <try> block.");
-			LINE("  2. 'NullPointerException' will be thrown from 'generateError'.");
+			LINE("  2. 'NotEnoughMemoryException' will be thrown from 'generateError'.");
 			LINE("  3. 'test1' will catch it.");
 			LINE("  4. Then 'test1's <finally> block will be executed.");
 			LINE("  5. Return from 'test1' back to 'main'.");
 			break;
 
 		case 2:
-			LINE("  1. 'test2' will call 'aux2' inside a <try> block.");
-			LINE("  2. 'aux2' will call 'generateError' inside another <try> block.");
-			LINE("  3. 'generateError' will throw 'BlueException'.");
-			LINE("  4. 'aux2' will catch any 'ColorException'.");
-			LINE("  5.' aux2' will throw 'RedException' inside its <catch> block.");
-			LINE("  6. 'aux2's <finally> block will be executed.");
-			LINE("  7. 'test2' will catch any 'RuntimeException'.");
-			LINE("  8. 'test2's <finally> block will be executed.");
-			LINE("  9. Return from 'test2' back to 'main'.");
+			LINE("  1. 'test2' will call 'generateError' inside a <try> block.");
+			LINE("  2. 'generateError' will attempt to divide 100 by 0.");
+			LINE("  3. A signal SIGFPE will be raised.");
+			LINE("  4. The signal will be converted to 'ArithmeticException'.");
+			LINE("  5. 'test2' will catch it. There is no <finally> block.");
+			LINE("  6. Return from 'test2' back to 'main'.");
 			break;
 
 		case 3:
-			LINE("  1. OK. This test will *hurt*, so get ready.");
-			LINE("  2. 'test3' will call 'aux3' inside a <try> block.");
-			LINE("  3. 'aux3' will call 'generateError' inside another <try> block.");
-			LINE("  4. 'generateError' will throw a 'BlueException'.");
-			LINE("  5. 'aux3' will not be able to catch a blue exception.");
+			LINE("  1. 'test3' will call 'aux3' inside a <try> block.");
+			LINE("  2. 'aux3' will call 'generateError' inside another <try> block.");
+			LINE("  3. 'generateError' will throw 'BlueException'.");
+			LINE("  4. 'aux3' will catch any 'ColorException'.");
+			LINE("  5.' aux3' will throw 'RedException' inside its <catch> block.");
 			LINE("  6. 'aux3's <finally> block will be executed.");
-			LINE("  7. 'test3' will not be able to catch a blue exception.");
+			LINE("  7. 'test3' will catch any 'RuntimeException'.");
 			LINE("  8. 'test3's <finally> block will be executed.");
+			LINE("  9. Return from 'test3' back to 'main'.");
+			break;
+
+		case 4:
+			LINE("  1. 'test4' will call 'generateError' inside a <try> block.");
+			LINE("  2. 'generateError' will attempt to dereference a NULL pointer.");
+			LINE("  3. A signal SIGSEGV will be raised.");
+			LINE("  4. The signal will be converted to 'BadPointerException'.");
+			LINE("  5. 'test4' will catch it.");
+			LINE("  6. Then 'test4's <finally> block will be executed.");
+			LINE("  7. Return from 'test4' back to 'main'.");
+			break;
+
+		case 5:
+			LINE("  1. OK. This test will *hurt*, so get ready.");
+			LINE("  2. 'test5' will call 'aux5' inside a <try> block.");
+			LINE("  3. 'aux5' will call 'generateError' inside another <try> block.");
+			LINE("  4. 'generateError' will throw a 'BlueException'.");
+			LINE("  5. 'aux5' will not be able to catch a blue exception.");
+			LINE("  6. 'aux5's <finally> block will be executed.");
+			LINE("  7. 'test5' will not be able to catch a blue exception.");
+			LINE("  8. 'test5's <finally> block will be executed.");
 			LINE("  9. There are no more outter <try> blocks, that means: fast fail.");
 			LINE(" 10. The exception handling framework will call 'exit'.");
 			LINE(" 11. 'exit' will call any 'atexit' functions.");
 			LINE(" 12. That means 'atUncaughtException' will be called if you want.");
-			LINE("If you #undefine DEBUG, 'atUncaughtException' will show less info.");
+			LINE("If you #define DEBUG, 'atUncaughtException' will show more info.");
 			LINE("This is the final test, try changing the code and see what happens.");
 			break;
 	}
 
 	pause();
-	LINE("  Let's go!");
+	LINE("Let's go!");
 }
 
 void test1(){
 
-	ECHO("We are inside 'test1'");
-
 	try{
-		ECHO("test1: We are inside our <try> block,");
-		ECHO("       about to call function 'generateError'...");
-		SHOW( generateError(1) );
-		ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+		BLOCK_1("test1/try");
+		ECHO_1("Let's call function 'generateError'...");
+		SHOW_1( generateError(1) );
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}catch(NullPointerException){
-		ECHO("test1: We are inside our <catch> block;");
-		ECHO("       let's see what we got here:");
-		SVAR(exception.name);
+		/* NullPointerException is not being thrown in test1 */
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}catch(NotEnoughMemoryException){
+		BLOCK_1("test1/catch(NotEnoughMemoryException)");
+		ECHO_1("Exception information:");
+		SVAR_1(exception.name);
+	}catch(UserInterruptionException){
+		/* UserInterruptionException is not being thrown in test1 */
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}finally{
-		ECHO("test1: We are inside our <finally> block.");
-		ECHO("       We could clean up here.");
+		BLOCK_1("test1/finally");
+		ECHO_1("We could clean up here.\n");
 	}
 
-	ECHO("test1: We are about to get back to 'main'...");
-}
-
-void aux2(){
-
-	ECHO("We are inside 'aux2'");
-
-	try{
-		ECHO("aux2: We are inside our <try> block.");
-		ECHO("      Let's call function 'generateError'...");
-		SHOW( generateError(2) );
-		ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
-	}catch(ColorException){
-		ECHO("aux2: We are inside our <catch> block;");
-		ECHO("      let's see what we got here:");
-		SVAR(exception.name);
-		ECHO("aux2: Blue exceptions are sad;");
-		ECHO("      let's throw 'RedException' instead...");
-		SHOW( throw(BlueException) );
-	}finally{
-		ECHO("aux2: We are inside our <finally> block.");
-		ECHO("      Did you realize that?");
-		ECHO("      We just threw 'RedException', but we can still clean up here.");
-		ECHO("aux2: Next, we're jumping right to 'test2's <catch> block.");
-	}
-
-	ECHO("YOU ARE NOT GONNA SEE ANY OF THESE MESSAGES");
-	ECHO("aux2: We are about to get back to 'test2'...");
 }
 
 void test2(){
 
-	ECHO("We are inside 'test2'");
-
 	try{
-		ECHO("test2: We are inside our <try> block,");
-		ECHO("       about to call function 'aux2'...");
-		SHOW( aux2() );
-		ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
-	}catch(RuntimeException){
-		ECHO("test2: We are inside our <catch> block;");
-		ECHO("       we've caught some kind of 'RuntimeException'.");
-		SVAR(exception.name);
-		SVAR(exception.description);
-		LINE("");
-		printExceptionHierarchy(exception);
-		ECHO("test2: OK, <catch> block is done.");
-	}finally{
-		ECHO("test2: We are inside our <finally> block.");
-		ECHO("       Again, we could clean up here.");
+		BLOCK_1("test2/try");
+		ECHO_1("What about dividing by zero?");
+		SHOW_1( generateError(2) );
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}catch(ArithmeticException){
+		BLOCK_1("test1/catch(ArithmeticException)");
+		ECHO_1("Exception information:");
+		SVAR_1(exception.name);
+		SVAR_1(exception.description);
+		ECHO_1("We have just divided by zero, but our process didn't crash!");
 	}
 
-	ECHO("test2: We are about to get back to 'main'...");
 }
 
 void aux3(){
 
-	ECHO("We are inside 'aux3'");
-
 	try{
-		ECHO("aux3: We are inside our <try> block.");
-		ECHO("      Let's call function 'generateError'...");
-		SHOW( generateError(3) );
-		ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
-	}catch(BlueException){
-		ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+        BLOCK_2("aux3/try");
+		ECHO_2("Let's call function 'generateError'...");
+		SHOW_2( generateError(3) );
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}catch(ColorException){
+        BLOCK_2("aux3/catch(ColorException)");
+		ECHO_2("Exception information:");
+		SVAR_2(exception.name);
+		ECHO_2("Blue exceptions are sad;");
+		ECHO_2("let's throw 'RedException' instead...");
+		SHOW_2( throw(RedException) );
 	}finally{
-		ECHO("aux3: We are inside our <finally> block.");
-		ECHO("      As you know, we didn't catch 'RedException',");
-		ECHO("      because we are only able to catch 'BlueException'.");
-		ECHO("aux3: Next, we're jumping right to 'test3's <finally> block.");
+        BLOCK_2("aux3/finally");
+		ECHO_2("Did you realize that?");
+		ECHO_2("We threw 'RedException' ourselves,");
+		ECHO_2("but we can still clean up here.");
 	}
 
-	ECHO("YOU ARE NOT GONNA SEE ANY OF THESE MESSAGES");
-	ECHO("aux3: We are about to get back to 'test3'...");
+	ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 }
 
 void test3(){
 
-	ECHO("We are inside 'test3'");
-
 	try{
-		ECHO("test3: We are inside our <try> block, about to call function 'aux3'...");
-		SHOW( aux3() );
-		ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
-	}catch(DarkRedException){
-		ECHO("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+        BLOCK_1("test3/try");
+		ECHO_1("Let's call function 'aux3'...");
+		SHOW_1( aux3() );
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}catch(RuntimeException){
+        BLOCK_1("test3/catch(RuntimeException)");
+		ECHO_1("Exception information:");
+		SVAR_1(exception.name);
+		ECHO_1("We caught RedException because it \"is a\" RuntimeException:");
+		LINE("");
+		printExceptionHierarchy(exception);
 	}finally{
-		ECHO("test3: We are inside our <finally> block.");
-		ECHO("       We didn't catch 'RedException',");
-		ECHO("       we can only catch 'DarkRedException'.");
-		ECHO("test3: This is last <try> block, so the application will exit now.");
+        BLOCK_1("test3/finally");
+		ECHO_1("Again, we could clean up here.");
 	}
 
-	ECHO("YOU ARE NOT GONNA SEE ANY OF THESE MESSAGES");
-	ECHO("test3: We are about to get back to 'main'...");
+}
+
+void test4(){
+
+	try{
+        BLOCK_1("test4/try");
+		ECHO_1("We are about to perform a segment violation...");
+		SHOW_1( generateError(4) );
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}catch(SignalException){
+        BLOCK_1("test4/catch(SignalException)");
+		ECHO_1("Exception information:");
+		SVAR_1(exception.name);
+		SVAR_1(exception.description);
+		ECHO_1("We tried to dereference a NULL pointer,");
+		ECHO_1("but we didn't core dump!");
+	}finally{
+        BLOCK_1("test4/finally");
+		ECHO_1("We have just avoided our program to crash.");
+		ECHO_1("Pretty cool, isn't it?");
+	}
+
+}
+
+void aux5(){
+
+	try{
+        BLOCK_2("aux5/try");
+		ECHO_2("Let's call function 'generateError'...");
+		SHOW_2( generateError(5) );
+		ECHO_2("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}catch(BlueException){
+		ECHO_2("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}finally{
+        BLOCK_2("aux5/finally");
+		ECHO_2("As you know, we didn't catch 'RedException',");
+		ECHO_2("because we are only able to catch 'BlueException'.");
+	}
+
+	ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+}
+
+void test5(){
+
+	try{
+        BLOCK_1("test5/try");
+		ECHO_1("Let's call function 'aux5'...");
+		SHOW_1( aux5() );
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}catch(DarkRedException){
+		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
+	}finally{
+        BLOCK_1("test5/finally");
+		ECHO_1("We didn't catch 'RedException',");
+		ECHO_1("we can only catch DarkRedException'.");
+		ECHO_1("This is last <try> block, so the application will exit now.");
+	}
+
+	ECHO_1("YOU ARE NOT GONNA SEE ANY OF THESE MESSAGES");
 }
 
