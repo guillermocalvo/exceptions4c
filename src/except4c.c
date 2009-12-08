@@ -1,39 +1,30 @@
 /*
-	----------------------------------------------------------------
-	except4c.c
+ *
+ * @file except4c.c
+ *
+ * <code>exceptions4c</code> source code file
+ *
+ * @version 1.2
+ * @author Copyright (c) 2009 Guillermo Calvo
+ *
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
-	exceptions4c
-	version 1.1
-	An exception handling framework for C.
-
-	Copyright (c) 2009 Guillermo Calvo
-
-	This is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This software is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this software.  If not, see <http://www.gnu.org/licenses/>.
-
-	Credits:
-	This little library has been inspired by these previous works:
-
-	"Exceptions in C"
-	By Laurent Deniau
-	http://ldeniau.home.cern.ch/ldeniau/html/exception/exception.html
-
-	"Implementing Exceptions in C Programming language"
-	By Adomas Paltanavicius
-	http://adomas.org/excc/
-
-	----------------------------------------------------------------
-*/
+/*
+ * except4c.c is undocumented on purpose (everything is documented in except4c.h)
+ */
 
 
 # include <stdlib.h>
@@ -42,25 +33,27 @@
 # include "except4c.h"
 
 typedef enum{beginning, trying, catching, finalizing, ending} Stage;
-typedef struct ContextStruct Context;
-struct ContextStruct{
+typedef struct Context Context;
+struct Context{
 	Context *			prev;
 	Stage				stage;
 	bool				uncaught;
 	EXCEPT4C_JMP_BUF	address;
 };
 
-static SignalMapping *	signalMapping	= NULL;
-static int				signalMappings	= 0;
-static Context *		currentContext	= NULL;
-static const char *		srcFile			= NULL;
-static int				srcLine			= 0;
+/* private global variables */
 
-Exception			exception		= {
-	name:			(const char *)NULL,
-	description:	(const char *)NULL,
-	super:			(const Exception *)NULL
-};
+const static SignalMapping *	signalMapping	= NULL;
+static int						signalMappings	= 0;
+static Context *				currentContext	= NULL;
+static const char *				srcFile			= NULL;
+static int						srcLine			= 0;
+
+/* public global variables */
+
+Exception exception = EXCEPTION_LITERAL(
+	(const char *)NULL, (const char *)NULL, (const Exception *)NULL
+);
 
 DEFINE_EXCEPTION(RuntimeException,				"Runtime exception",				RuntimeException);
 DEFINE_EXCEPTION(NotEnoughMemoryException,		"Not enough memory",				RuntimeException);
@@ -90,7 +83,7 @@ DEFINE_EXCEPTION(ProgramSignalException,		"User-defined signal received",		Signa
 DEFINE_EXCEPTION(ProgramSignal1Exception,		"User-defined signal 1 received",	ProgramSignalException);
 DEFINE_EXCEPTION(ProgramSignal2Exception,		"User-defined signal 2 received",	ProgramSignalException);
 
-SignalMapping defaultSignalMapping[] = {
+const SignalMapping defaultSignalMapping[] = {
 	SIGNAL_MAPPING(SIGABRT,		AbortException),
 	SIGNAL_MAPPING(SIGFPE,		ArithmeticException),
 	SIGNAL_MAPPING(SIGILL,		IllegalInstructionException),
@@ -147,7 +140,7 @@ SignalMapping defaultSignalMapping[] = {
 # endif
 
 };
-int defaultSignalMappings = ( sizeof(defaultSignalMapping) / sizeof(defaultSignalMapping[0]) );
+const int defaultSignalMappings = ( sizeof(defaultSignalMapping) / sizeof(defaultSignalMapping[0]) );
 
 static bool extends(const Exception * e1, const Exception * e2){
 
@@ -168,24 +161,24 @@ static bool extends(const Exception * e1, const Exception * e2){
 	return( extends(super, e2) );
 }
 
-static void handleSignal(int signalId){
+static void handleSignal(int _signal_){
 
 	const Exception *	exception = NULL;
 	int					index;
 
 	/* try to find a mapping for this signal */
 	for(index = 0; index < signalMappings; index++){
-		if(signalId == signalMapping[index].signalId){
+		if(_signal_ == signalMapping[index].signal){
 			const Exception * exception = signalMapping[index].exception;
 			/* make ensure we have a proper exception to throw */
 			if(exception == NULL) break;
 			/* reset the handler for this signal */
-			signal(signalId, handleSignal);
+			signal(_signal_, handleSignal);
 			throw(*exception);
 		}
 	}
 	/* we were not supposed to handle this signal */
-	SIG_DFL(signalId);
+	SIG_DFL(_signal_);
 }
 
 EXCEPT4C_JMP_BUF * except4c_firstStep(){
@@ -207,7 +200,7 @@ EXCEPT4C_JMP_BUF * except4c_firstStep(){
 	return( &(tmp->address) );
 }
 
-bool except4c_isOkToBreak(){
+bool e4c_isOkToBreak(){
 
 	Context *	tmp;
 	bool		uncaught;
@@ -230,31 +223,31 @@ bool except4c_isOkToBreak(){
 		exception.super			= (const Exception *)NULL;
 	}else{
 		/* ...otherwise, propagate it */
-		except4c_throwException(exception, (const char *)NULL, 0);
+		e4c_throwException(exception, (const char *)NULL, 0);
 	}
 
 	/* Ok to break */
 	return(true);
 }
 
-bool except4c_nextStep(){
+bool e4c_nextStep(){
 	currentContext->stage++;
 	return(true);
 }
 
-bool except4c_isOkToTry(){
+bool e4c_isOkToTry(){
 	return(currentContext->stage == trying);
 }
 
-bool except4c_isOkToFinalize(){
+bool e4c_isOkToFinalize(){
 	return(currentContext->stage == finalizing);
 }
 
-bool except4c_isOkToCatch(const Exception exception_){
+bool e4c_isOkToCatch(const Exception _exception_){
 
 	const Exception * super;
 
-	if( currentContext->stage != catching || !extends(&exception, &exception_) ){
+	if( currentContext->stage != catching || !extends(&exception, &_exception_) ){
 		return(false);
 	}
 
@@ -263,10 +256,10 @@ bool except4c_isOkToCatch(const Exception exception_){
 }
 
 
-extern void except4c_throwException(const Exception exception_, const char * file, int line){
+extern void e4c_throwException(const Exception _exception_, const char * file, int line){
 
 	/* Ignore unnamed exceptions */
-	if(exception_.name == NULL) return;
+	if(_exception_.name == NULL) return;
 
 	if(file != NULL){
 		/* Update debug info */
@@ -274,7 +267,7 @@ extern void except4c_throwException(const Exception exception_, const char * fil
 		srcLine = line;
 	}
 
-	exception = exception_;
+	exception = _exception_;
 
 	/* If we are not inside a try block... */
 	if(currentContext == NULL){
@@ -310,20 +303,20 @@ void atUncaughtException(){
 	}
 }
 
-void printExceptionHierarchy(Exception exception){
+void printExceptionHierarchy(Exception _exception_){
 
 	const char * separator = "________________________________________________________________";
 	int deep = 0;
-	fprintf(stderr, "%s Exception hierarchy\n%s\n\n   %s\n", exception.name, separator, exception.name);
-	while( exception.super != NULL && exception.name != exception.super->name){
-		exception = *exception.super;
-		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", exception.name);
+	fprintf(stderr, "%s Exception hierarchy\n%s\n\n   %s\n", _exception_.name, separator, _exception_.name);
+	while( _exception_.super != NULL && _exception_.name != _exception_.super->name){
+		_exception_ = *_exception_.super;
+		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", _exception_.name);
 		deep++;
 	}
 	fprintf(stderr, "%s\n\n", separator);
 }
 
-void setSignalHandlers(SignalMapping * mapping, int mappings){
+void setSignalHandlers(const SignalMapping * mapping, int mappings){
 
 	int index;
 
@@ -332,9 +325,9 @@ void setSignalHandlers(SignalMapping * mapping, int mappings){
 
 	for(index = 0; index < signalMappings; index++){
         if(signalMapping[index].exception == NULL){
-			signal(signalMapping[index].signalId, SIG_DFL);
+			signal(signalMapping[index].signal, SIG_DFL);
 		}else{
-			signal(signalMapping[index].signalId, handleSignal);
+			signal(signalMapping[index].signal, handleSignal);
 		}
 	}
 
