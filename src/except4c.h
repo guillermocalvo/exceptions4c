@@ -2,24 +2,26 @@
  *
  * @file except4c.h
  *
- * <code>exceptions4c</code> header file
+ * exceptions4c header file
  *
- * @version 1.2
- * @author Copyright (c) 2009 Guillermo Calvo
+ * @version 1.3
+ * @author Copyright (c) 2010 Guillermo Calvo
  *
- * @section e4c_h <code>exceptions4c</code> header file
+ * @section e4c_h exceptions4c header file
  *
  * <p>
- * This header file needs to be included from other parts of the program in
- * order to be able to use any of the keywords of the the exception handling
- * system:
+ * This header file needs to be included from in order to be able to use any of
+ * the keywords of the the exception handling system:
+ * </p>
+ *
  * <ul>
  * <li><code>try</code></li>
  * <li><code>catch</code></li>
  * <li><code>finally</code></li>
  * <li><code>throw</code></li>
+ * <li><code>with</code></li>
+ * <li><code>using</code></li>
  * </ul>
- * </p>
  *
  * @section license License
  *
@@ -42,15 +44,41 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
+# if !defined(E4C_THREAD_SAFE) && ( \
+		defined(PTHREAD_BARRIER_SERIAL_THREAD) \
+	||	defined(PTHREAD_CANCEL_ASYNCHRONOUS) \
+	||	defined(PTHREAD_CANCEL_ENABLE) \
+	||	defined(PTHREAD_CANCEL_DEFERRED) \
+	||	defined(PTHREAD_CANCEL_DISABLE) \
+	||	defined(PTHREAD_CANCELED) \
+	||	defined(PTHREAD_CREATE_DETACHED) \
+	||	defined(PTHREAD_CREATE_JOINABLE) \
+	)
+# error Please define E4C_THREAD_SAFE at compiler level to enable the \
+          thread-safe version of exceptions4c.
+# endif
 
 # include <stdlib.h>
 # include <setjmp.h>
+
 # if __STDC_VERSION__ >= 199901L
 # include <stdbool.h>
+# endif
+
+# ifdef __bool_true_false_are_defined
+# define e4c_bool						bool
+# define e4c_false						false
+# define e4c_true						true
 # else
-# define	bool								unsigned char
-# define	false								0
-# define	true								1
+# define e4c_bool						unsigned char
+# define e4c_false						0
+# define e4c_true						1
+# endif
+
+# ifdef E4C_IMPLEMENTATION
+# define E4C_READ_ONLY
+# else
+# define E4C_READ_ONLY					const
 # endif
 
 /*
@@ -59,80 +87,557 @@
  */
 
 # ifdef _POSIX_C_SOURCE
-# define	EXCEPT4C_SETJMP(address)			sigsetjmp(address)
-# define	EXCEPT4C_LONGJMP(address, value)	siglongjmp(address, 1)
-# define	EXCEPT4C_JMP_BUF					sigjmp_buf
+# define E4C_SETJMP(address)			sigsetjmp(address)
+# define E4C_LONGJMP(address, value)	siglongjmp(address, 1)
+# define E4C_JMP_BUF					sigjmp_buf
 # else
-# define	EXCEPT4C_SETJMP(address)			setjmp(address)
-# define	EXCEPT4C_LONGJMP(address)			longjmp(address, 1)
-# define	EXCEPT4C_JMP_BUF					jmp_buf
+# define E4C_SETJMP(address)			setjmp(address)
+# define E4C_LONGJMP(address)			longjmp(address, 1)
+# define E4C_JMP_BUF					jmp_buf
 # endif
 
 # ifdef DEBUG
-# define	EXCEPT4C_FILE						(const char *)__FILE__
-# define	EXCEPT4C_LINE						__LINE__
+# define E4C_FILE						(const char *)__FILE__
+# define E4C_LINE						__LINE__
 # else
-# define	EXCEPT4C_FILE						(const char *)NULL
-# define	EXCEPT4C_LINE						0
+# define E4C_FILE						(const char *)NULL
+# define E4C_LINE						0
 # endif
 
-/** @name Exception handling keywords
+# define E4C_LOOP(stage) \
+	E4C_SETJMP(  *( e4c_first(stage, E4C_FILE, E4C_LINE) )  ); \
+	while( e4c_next() )
+
+
+/**
+ * @name Exception handling keywords
  *
  * <p>
- * This library provides you a simple set of keywords which map the semantics of
- * exception handling you're probably already used to.
+ * This is a set of keywords which map the semantics of exception handling.
  * </p>
  *
  * @{
  */
 
 /**
- * Announce a block of code aware of exceptions
+ * Introduces a block of code aware of exceptions
  */
-# define	try																\
-				EXCEPT4C_SETJMP(  *( except4c_firstStep() )  );				\
-				while( e4c_nextStep() )										\
-					if( e4c_isOkToBreak() )									\
-						break;												\
-					else if( e4c_isOkToTry() )
+# define try \
+	E4C_LOOP(e4c_acquire) \
+	if( e4c_hook(e4c_try, INVALID_EXCEPTION) \
+		&& e4c_next() )
+	/* simple optimization: e4c_next() will avoid e4c_dispose stage */
 
 /**
- * Announce a block of code capable of handling some kind of exceptions
+ * Introduces a block of code capable of handling a specific kind of exceptions
  *
  * @param _exception_ The kind of exceptions to be handled
  */
-# define	catch(_exception_)												\
-				else if(													\
-					e4c_isOkToCatch(_exception_)							\
-				)
+# define catch(_exception_) \
+	else if( \
+		e4c_hook(e4c_catch, _exception_) \
+	)
 
 /**
- * Announce a block of code responsible for cleaning up a <code>try</code> block
+ * Introduces a block of code responsible for cleaning up the previous
+ * <code>try</code> block
  */
-# define	finally															\
-				else if(													\
-					e4c_isOkToFinalize()									\
-				)
+# define finally \
+	else if( \
+		e4c_hook(e4c_finalize, INVALID_EXCEPTION) \
+	)
 
 /**
- * Signal an exceptional situation
+ * Signals an exceptional situation represented by an exception object
  *
  * @param _exception_ The exception to be thrown
  */
-# define	throw(_exception_)												\
-				e4c_throwException(											\
-					_exception_,											\
-					EXCEPT4C_FILE,											\
-					EXCEPT4C_LINE											\
-				)
+# define throw(_exception_) \
+	e4c_throw( \
+		_exception_, E4C_FILE, E4C_LINE \
+	)
+
+/**
+ * @name Convenience macros for acessing exception-related information
+ *
+ * <p>
+ * These macros let you obtain data regarding the current exception context,
+ * such as the actual exception being thrown, the value of <code>errno</code>,
+ * etc.
+ * </p>
+ *
+ * <p>
+ * This information is especially useful when recovering from errors
+ * (<code>catch</code> blocks) or cleaning up (<code>finally</code> blocks).
+ * </p>
+ *
+ * @{
+ */
+
+/**
+ * Accesses the current exception context of the program (or current thread)
+ * @see ExceptionContext
+ * @see getExceptionContext
+ * @see beginExceptionContext
+ * @see endExceptionContext
+ */
+# define E4C_CONTEXT			getExceptionContext()
+
+/**
+ * Accesses the current frame of the exception context
+ * @see ExceptionFrame
+ */
+# define EC4_FRAME				(E4C_CONTEXT->currentFrame)
+
+/**
+ * Accesses the current exception being thrown from the current exception frame
+ *
+ * <p>
+ * If no exception was thrown, then the value of <code>EXCEPTION</code> will be
+ * <code>INVALID_EXCEPTION</code>.
+ * </p>
+ *
+ * <p>
+ * The flag <code>EC4_STATUS_THROWN</code> can be checked in order to know if an
+ * exception was actually thrown.
+ * </p>
+ *
+ * @see ExceptionFrame
+ * @see INVALID_EXCEPTION
+ * @see EC4_STATUS_THROWN
+ */
+# define EXCEPTION				(EC4_FRAME->exception)
+
+/**
+ * Accesses the error number of the current exception frame
+ * @see ExceptionFrame
+ */
+# define EC4_ERRNO				(EC4_FRAME->errorNumber)
+
+/**
+ * Accesses the error file of the current exception frame
+ * @see ExceptionFrame
+ */
+# define EC4_FILE				(EC4_FRAME->srcFile)
+
+/**
+ * Accesses the error line of the current exception frame
+ * @see ExceptionFrame
+ */
+# define EC4_LINE				(EC4_FRAME->srcLine)
+
+/**
+ * Accesses the <code>thrown</code> flag of the current exception frame
+ *
+ * <p>
+ * The <code>thrown</code> flag is set when some exception is thrown within the
+ * current exception frame, regardless of whether it gets caught or not.
+ * </p>
+ *
+ * @see ExceptionFrame
+ * @see EC4_STATUS_UNCAUGHT
+ */
+# define EC4_STATUS_THROWN		(EC4_FRAME->thrown)
+
+/**
+ * Accesses the <code>uncaught</code> flag of the current exception frame
+ *
+ * <p>
+ * The <code>uncaught</code> flag is set when some exception is caught within
+ * the current exception frame.
+ * </p>
+ *
+ * @see ExceptionFrame
+ * @see EC4_STATUS_THROWN
+ */
+# define EC4_STATUS_UNCAUGHT	(EC4_FRAME->uncaught)
+
+/**
+ * Checks whether the current exception frame did complete without an error.
+ * @see ExceptionFrame
+ */
+# define EC4_SUCCEED			(!EC4_STATUS_THROWN)
+
+/**
+ * Checks whether the current exception frame did fail and then did recover of
+ * the error.
+ * @see ExceptionFrame
+ */
+# define EC4_RECOVERED			(EC4_STATUS_THROWN && !EC4_STATUS_UNCAUGHT)
+
+/**
+ * Checks whether the current exception frame did fail and did not recover of
+ * the error.
+ * @see ExceptionFrame
+ */
+# define EC4_FAILED				(EC4_STATUS_THROWN && EC4_STATUS_UNCAUGHT)
+
+/*@}*/
 
 /*@}*/
 
 /**
- * @name Convenience macros
+ * @name Dispose pattern keywords
  *
  * <p>
- * These macros let you represent and define ::Exception and ::SignalMapping
+ * This is a set of keywords which map the semantics of automatic resource
+ * acquisition and disposal.
+ * </p>
+ *
+ * @{
+ */
+
+/**
+ * Opens a block of code with automatic disposal of a resource
+ *
+ * @param _resource_ The resource to be disposed
+ * @param _dispose_ The name of the disposal function (or macro)
+ *
+ * <p>
+ * The <code>with</code> keyword is used to encapsulate the
+ * <em>Dispose Pattern</em>. It must be followed by the <code>use</code>
+ * keyword.
+ * </p>
+ *
+ * <p>
+ * In addition, the <code>use</code> block can precede <code>catch</code> and
+ * <code>finally</code> blocks.
+ * </p>
+ *
+ * <p>
+ * This pattern consists of two separate blocks and an implicit call to a
+ * given function:
+ * </p>
+ *
+ * <ol>
+ * <li>the <code>with</code> block is responsible of the resource
+ * acquisition</li>
+ * <li>the <code>use</code> block makes use of the resource</li>
+ * <li>the disposal function is called implicitly</li>
+ * </ol>
+ *
+ * <p>
+ * The <code>with</code> keyword guarantees that the disposal function will be
+ * called <strong>if and only if</strong> the acquisition block
+ * <em>completed</em> without an error (i.e. no exteption being thrown from the
+ * acquisition block).
+ * </p>
+ *
+ * <p>
+ * If the <code>with</code> does not complete, then neither the disposal
+ * function nor the <code>use</code> block will be ever executed.
+ * </p>
+ *
+ * <p>
+ * The disposal function is called right after the <code>use</code> block. If an
+ * exception was thrown, the <code>catch</code> or <code>finally</code> blocks
+ * (if any) will take place <strong>after</strong> the disposal of the resource.
+ * </p>
+ *
+ * <p>
+ * When called, the disposal function will receive three arguments:
+ * </p>
+ *
+ * <ol>
+ * <li>The resource</li>
+ * <li>A boolean flag indicating if the <code>use</code> block did not
+ * <strong>complete</strong></li>
+ * <li>The current exception context</li>
+ * </ol>
+ *
+ * <p>
+ * This way, different actions can be taken depending on the success or failure
+ * of the block. For example, commiting or rolling back a <em>transaction</em>
+ * resource.
+ * </p>
+ *
+ * <p>
+ * Legacy functions can be reused by defining macros. For example, a file
+ * resource needs to be closed regardless of the errors. Since the function
+ * <code>fclose</code> only takes a parameter, we could provide
+ * <code>disposeFile</code> as the disposal function and define the next macro:
+ * </p>
+ *
+ * <pre class="fragment">
+ * # define disposeFile(_file_, _failed_, _context_) fclose(_file_)
+ * </pre>
+ *
+ * <p>
+ * The typical usage of a <code>with</code> block will be:
+ * </p>
+ *
+ * <pre class="fragment">
+ * with(foo, disposeFoo){
+ *     foo = acquireFoo(foobar);
+ *     someAssertion(foo, bar);
+ *     ...
+ * }use{
+ *     fooSomething(foo);
+ *     ...
+ * }catch(FooAcquisitionFailed){
+ *     recover1();
+ *     ...
+ * }catch(somethingElseFailed){
+ *     recover2();
+ *     ...
+ * }finally{
+ *     cleanup();
+ *     ...
+ * }
+ * </pre>
+ *
+ * <p>
+ * Nonetheless, one-liners fit nicely too:
+ * </p>
+ *
+ * <pre class="fragment">
+ * with(foo, disposeFoo) foo = acquireFoo(bar, foobar); use fooSomething(foo);
+ * </pre>
+ *
+ * <p>
+ * There is a way to lighten up even more this pattern by defining convenience
+ * macros, customized for a specific kind of resources. For example,
+ * <code>#usingFile</code> or <code>#usingMemory</code>.
+ * </p>
+ *
+ * @see use
+ * @see using
+ * @see usingIfNotNull
+ * @see usingMemory
+ * @see usingFile
+ */
+# define with(_resource_, _dispose_) \
+	E4C_LOOP(e4c_begin) \
+	if( e4c_hook(e4c_dispose, INVALID_EXCEPTION) ){ \
+		ExceptionContext * context = E4C_CONTEXT; \
+		_dispose_(_resource_, context->currentFrame->thrown, context); \
+	}else if( e4c_hook(e4c_acquire, INVALID_EXCEPTION) ){
+
+/**
+ * Closes a block of code with automatic disposal of a resource
+ *
+ * <p>
+ * A <code>use</code> block must always be preceded by a <code>with</code>
+ * block. Dangling <code>with</code> or <code>use</code> blocks will (hopefully)
+ * make the compiler complain.
+ * </p>
+ *
+ * @see with
+ */
+# define use \
+	}else if( \
+		e4c_hook(e4c_try, INVALID_EXCEPTION) \
+	)
+
+/**
+ * Introduces a block of code with automatic acquisition and disposal of a
+ * resource
+ *
+ * @param _type_ The type of the resource
+ * @param _resource_ The resource to be acquired, used and then disposed
+ * @param _args_ A list of arguments to be passed to acquisition function
+ *
+ * <p>
+ * The specified resource will be aquired, used and then disposed. The automatic
+ * acquisition and disposal is achieved by calling the <em>magic</em> functions:
+ * </p>
+ *
+ * <ul>
+ * <li><code>_type_ acquire<em>_type_</em>(_args_)</code></li>
+ * <li><code>void dispose<em>_type_</em>(_resource_, failed,
+ * context)</code></li>
+ * </ul>
+ *
+ * <p>
+ * The resource will be acquired implicitly by assigning it the result of the
+ * <em>magic</em> acquisition function <code>acquire<em>_type_</em></code>.
+ * </p>
+ *
+ * <p>
+ * The semantics of the automatic acquisition and disposal are the same as for
+ * blocks introduced by the keyword <code>with</code>.
+ * </p>
+ *
+ * @see with
+ * @see usingIfNotNull
+ * @see usingMemory
+ * @see usingFile
+ */
+
+# define using(_type_, _resource_, _args_) \
+	with(_resource_, dispose##_type_) \
+		_resource_ = acquire##_type_ _args_; \
+	use
+
+/*@}*/
+
+/**
+ * @name Convenience macros for acquiring and disposing resources
+ *
+ * <p>
+ * These macros let you acquire and dispose different kinds of resources
+ * according to the <em>dispose pattern</em>.
+ * </p>
+ *
+ * @{
+ */
+
+/**
+ * Binds the acquisition of memory to the standard function <code>malloc</code>
+ */
+# define acquireMemory malloc
+
+/**
+ * Binds the disposal of memory to the standard function <code>malloc</code>
+ */
+# define disposeMemory(_buffer_, _failure_, _context_) free(_buffer_)
+
+/**
+ * Introduces a block of code with automatic acquisition and disposal of a
+ * memory buffer
+ *
+ * @param _buffer_ The buffer to be acquired, used and then disposed
+ * @param _bytes_ The amount of memory to be allocated (in bytes)
+ *
+ * <p>
+ * This macro lets you acquire and dispose memory according to the
+ * <em>dispose pattern</em>:
+ * </p>
+ *
+ * <pre class="fragment">
+ * void * buffer;
+ * &nbsp;
+ * usingMemory(buffer, 1024){
+ *     /<span>* implicit: buffer = malloc(1024); *</span>/
+ *     memset(buffer, 0, 1024);
+ *     /<span>* implicit: free(buffer); *</span>/
+ * }
+ * </pre>
+ *
+ * <p>
+ * If <code>malloc</code> returns <code>NULL</code> then the exception
+ * <code>NotEnoughMemoryException</code> will be automatically thrown.
+ * </p>
+ *
+ */
+# define usingMemory(_buffer_, _bytes_) \
+	usingIfNotNull( \
+		Memory, _buffer_, (_bytes_), NotEnoughMemoryException \
+	)
+
+/**
+ * Binds the acquisition of file to the standard function <code>fopen</code>
+ */
+# define acquireFile fopen
+
+/**
+ * Binds the disposal of memory to the standard function <code>fclose</code>
+ */
+# define disposeFile(_file_, _failure_, _context_) fclose(_file_)
+
+/**
+ * Introduces a block of code with automatic acquisition and disposal of a
+ * file stream
+ *
+ * @param _file_ The file to be acquired, used and then disposed
+ * @param _path_ The path of the file to be opened
+ * @param _mode_ The access mode of the file
+ *
+ * <p>
+ * This macro lets you acquire and dispose (open and close) files according to
+ * the <em>dispose pattern</em>:
+ * </p>
+ *
+ * <pre class="fragment">
+ * FILE * file;
+ * &nbsp;
+ * usingFile(file, "log.txt", "a"){
+ *     /<span>* implicit: file = fopen("log.txt", "a"); *</span>/
+ *     fputs("hello, world!\n", file);
+ *     /<span>* implicit: fclose(file); *</span>/
+ * }
+ * </pre>
+ *
+ * <p>
+ * If <code>fopen</code> returns <code>NULL</code> then the exception
+ * <code>FileOpenException</code> will be automatically thrown.
+ * </p>
+ *
+ * <p>
+ * The macro <code>EC4_ERRNO</code> can be checked in order to find out the
+ * specific cause of the error.
+ * </p>
+ *
+ */
+# define usingFile(_file_, _path_, _mode_) \
+	usingIfNotNull( \
+		File, _file_, (_path_, _mode_), FileOpenException \
+	)
+
+/**
+ * Introduces a block of code with automatic disposal of a resource and
+ * acquisition, under certain condition
+ *
+ * @param _type_ The type of the resource
+ * @param _resource_ The resource to be acquired, used and then disposed
+ * @param _args_ A list of arguments to be passed to acquisition function
+ * @param _cond_ The condition which has to be satisfied in order to consider
+ *        the acquisition <em>complete</em>
+ * @param _exception_ The exception to be thrown if the acquisition function
+ *        does not satisfy the specified condition
+ *
+ * <p>
+ * This macro will attempt the acquisition of the resource and then will check
+ * the given condition. If the condition evaluates to false, then the specified
+ * exception will be thrown, and therefore, the disposal of the resource will
+ * not take place.
+ * </p>
+ *
+ * <p>
+ * This is a convenience macro for reusing legacy C standard functions which
+ * don't throw exceptions when the acquisition fails. For example:
+ * </p>
+ *
+ * <pre class="fragment">
+ * # define acquireMemory malloc
+ * # define disposeMemory free
+ * # define usingMemory(_resource_, _bytes_) \
+ *          usingIf(Memory, _resource_, ( _bytes_ ), _resource_ != NULL, \
+ *          NotEnoughMemoryException )
+ * </pre>
+ *
+ * @see using
+ */
+# define usingIf(_type_, _resource_, _args_, _cond_, _exception_) \
+	with(_resource_, dispose##_type_){ \
+		_resource_ = acquire##_type_ _args_; \
+		if( !(_cond_) ) throw(_exception_); \
+	}use
+
+/**
+ * Introduces a block of code with automatic disposal of a resource and
+ * acquisition, preventing null pointers
+ *
+ * @param _type_ The type of the resource
+ * @param _resource_ The resource to be acquired, used and then disposed
+ * @param _args_ A list of arguments to be passed to acquisition function
+ * @param _exception_ The exception to be thrown if the acquisition function
+ *        yields a <code>NULL</code> pointer.
+ *
+ * @see usingIf
+ */
+# define usingIfNotNull(_type_, _resource_, _args_, _exception_) \
+	usingIf( \
+		_type_, _resource_, _args_, _resource_ != NULL, _exception_ \
+	)
+
+/*@}*/
+
+/**
+ * @name Other convenience macros
+ *
+ * <p>
+ * These macros let you represent and define #Exception and #SignalMapping
  * literals and variables.
  * </p>
  *
@@ -140,51 +645,38 @@
  */
 
 /**
- * Define a new const exception
+ * Defines a new, const exception
  *
  * @param _name_ Name of the new exception
  * @param _description_ Description of the new exception
  * @param _super_ Supertype of the new exception
+ *
+ * @see Exception
  */
-# define	DEFINE_EXCEPTION(_name_, _description_, _super_)				\
-				const Exception _name_ = EXCEPTION_LITERAL(					\
-					_name_,													\
-					_description_,											\
-					&_super_												\
-				)
+# define DEFINE_EXCEPTION(_name_, _description_, _super_) \
+	const Exception _name_ = { \
+		name: #_name_, description: _description_, super: &_super_ \
+	}
 
 /**
- * Convenience macro for representing an exception literal
+ * Represents a mapping literal
  *
- * @param _name_ Name of the exception literal
- * @param _description_ Description of the exception literal
- * @param _super_ Address of the supertype of the exception literal
- */
-# define	EXCEPTION_LITERAL(_name_, _description_, _super_)				\
-				{															\
-					name:			#_name_,								\
-					description:	_description_,							\
-					super:			_super_									\
-				}
-
-/**
- * Convenience macro for representing a mapping literal
- *
- * @param _signal_ Signal to be converted
+ * @param _signalNumber_ Signal to be converted
  * @param _exception_ Exception representing the signal
+ *
+ * @see SignalMapping
  */
-# define	SIGNAL_MAPPING(_signal_, _exception_)							\
-				{															\
-					signal:			_signal_,								\
-					exception:		&_exception_,							\
-				}
+# define SIGNAL_MAPPING(_signalNumber_, _exception_) \
+	{ \
+		signalNumber:   _signalNumber_, \
+		exception:      &_exception_, \
+	}
 
 /*@}*/
 
-typedef struct Exception Exception;
 /**
  *
- * This type represents an exception in the exception handling system.
+ * Represents an exception in the exception handling system
  *
  * <p>
  * Exceptions are objects with a <code>#name</code>, a <code>#description</code>
@@ -203,46 +695,102 @@ typedef struct Exception Exception;
  *
  * <p>
  * Exceptions are usually defined as global <code>const</code> objects. There is
- * a set of global predefined exceptions built into the framework, amongst
- * others:
+ * a set of predefined exceptions built into the framework, amongst others:
  * </p>
  *
  * <ul>
- * <li>#RuntimeException</li>
- * <li>#NotEnoughMemoryException</li>
- * <li>#NullPointerException</li>
- * <li>#AbortException</li>
- * <li>#ArithmeticException</li>
- * <li>#IllegalInstructionException</li>
- * <li>#BadPointerException</li>
- * <li>#TerminationException</li>
- * <li>#UserInterruptionException</li>
+ * <li><code>#RuntimeException</code></li>
+ * <li><code>#NotEnoughMemoryException</code></li>
+ * <li><code>#NullPointerException</code></li>
+ * <li><code>#FileOpenException</code></li>
+ * <li><code>#AbortException</code></li>
+ * <li><code>#ArithmeticException</code></li>
+ * <li><code>#IllegalInstructionException</code></li>
+ * <li><code>#BadPointerException</code></li>
+ * <li><code>#TerminationException</code></li>
+ * <li><code>#UserInterruptionException</code></li>
  * </ul>
  *
  * <p>
  * <code>#RuntimeException</code> is the root of the exceptions
- * <em>pseudo-hierarchy</em>.
+ * <em>pseudo-hierarchy</em>. <strong>Any</strong> exception can be caught by a
+ * <code>catch(RuntimeException)</code> block.
  * </p>
  *
  */
+typedef struct Exception Exception;
 struct Exception{
 
-	/** The exception's name */
+	/** The name of this exception */
 	const char *			name;
 
-	/** The exception's description */
+	/** The description of this exception */
 	const char *			description;
 
-	/** The exception's supertype */
+	/** The supertype of this exception */
 	const Exception *		super;
 };
 
 /**
- * This type represents a map between a signal and an exception.
+ * Represents the current execution status of an exception frame
+ *
+ * <p>
+ * <em>Note: this type is internal to the framework, and not intended to be used
+ * by the user of the library.</em>
+ * </p>
+ *
+ * <p>
+ * Every group of <code>#try</code>/<code>#catch</code>/<code>#finally</code>
+ * blocks goes through a set of execution stages. Each stage determines which
+ * one of the different blocks is run.
+ * </p>
+ */
+typedef enum{
+	/** No block has been executed yet */
+	e4c_begin,
+	/** Acquiring a resource */
+	e4c_acquire,
+	/** Executing the "try" or "use" block */
+	e4c_try,
+	/** Disposing a resource */
+	e4c_dispose,
+	/** Catching (or attempting to catch) an exception */
+	e4c_catch,
+	/** Cleaning up ("finally" block) */
+	e4c_finalize,
+	/** The group of blocks has been executed */
+	e4c_end
+} e4c_Stage;
+
+/**
+ * This is the signature of a function which will be executed in the event of an
+ * uncaught exception
+ *
+ * <p>
+ * These functions are not allowed to try and recover the current exception
+ * context. Moreover, the program (or current thread) will terminate right after
+ * the function returns.
+ * </p>
+ *
+ * @param exception The uncaught exception
+ * @param srcFile The path of the source code file from which the exception was
+ *        thrown
+ * @param srcLine The number of line from which the exception was thrown
+ * @param errorNumber The value of errno at the time the exception was thrown
+ */
+typedef void (*UncaughtHandler)(
+	Exception		exception,
+	const char *	srcFile,
+	int				srcLine,
+	int				errorNumber
+);
+
+/**
+ * Represents a map between a signal and an exception
  *
  * <p>
  * <strong>exceptions4c</strong> can make your life easier by converting each
- * signals to a ::Exception. Most of these signals would crash your program as
+ * signals to a #Exception. Most of these signals would crash your program as
  * soon as they were raised. Now you can <code>#catch</code> signals and avoid
  * core dumps.
  * </p>
@@ -275,11 +823,11 @@ struct Exception{
  * </p>
  *
  * <pre class="fragment">
- * extern void initializeExceptionHandling(bool handleSignals);</pre>
+ * extern void beginExceptionContext(bool handleSignals);</pre>
  *
  * <p>
- * <code>initializeExceptionHandling</code> will set up for you the default
- * handlers for the available signals in the platform if you pass
+ * <code>beginExceptionContext</code> will set up for you the default handlers
+ * for the available signals in the platform if you pass
  * <code>handleSignals=true</code>.
  * </p>
  *
@@ -326,61 +874,84 @@ typedef struct SignalMapping SignalMapping;
 struct SignalMapping{
 
 	/** The signal to be converted */
-	int						signal;
+	int						signalNumber;
 
 	/** The exception representing the signal */
 	const Exception *		exception;
 };
 
-/** @name Predefined pseudo-variable
+/**
+ *
+ * Represents a frame inside an exception context.
  *
  * <p>
- * The current exception being thrown can be accessed through the global
- * <em>pseudo-variable</em> <code>#exception</code>. This global variable is not
- * <code>const</code>, but you should treat it as <em>read-only</em>.
+ * A new frame is created every time a group of <code>#try</code>/
+ * <code>#catch</code>/<code>#finally</code> blocks starts, and destroyed
+ * when the group ends.
  * </p>
  *
  * <p>
- * <code>exception</code> must only be accessed from within <code>#catch</code>
- * or <code>#finally</code> blocks.
+ * Frames are stacked and dispatched in a <em>First-In-Last-Out</em> way. When
+ * an exception is thrown within a frame, it <em>climbs</em> towards the
+ * previous frames until it gets caught, otherwise the program ends.
  * </p>
- *
- * @see Exception
- *
- * @{
  */
+typedef struct ExceptionFrame ExceptionFrame;
+struct ExceptionFrame{
+
+	/** The continuation address of the current block */
+	E4C_READ_ONLY	E4C_JMP_BUF			address;
+
+	/** The previous (upper) frame */
+	ExceptionFrame * E4C_READ_ONLY		previous;
+
+	/** The current stage of this frame */
+	E4C_READ_ONLY	e4c_Stage			stage;
+
+	/** A flag that is set when an exception was thrown */
+	E4C_READ_ONLY	e4c_bool			thrown;
+
+	/** A flag that is set when the exception was caught */
+	E4C_READ_ONLY	e4c_bool			uncaught;
+
+	/** The current exception being thrown */
+	E4C_READ_ONLY	Exception			exception;
+
+	/** The path of the source code file from which the exception was thrown */
+	const char *	E4C_READ_ONLY		srcFile;
+
+	/** The number of line from which the exception was thrown */
+	E4C_READ_ONLY	int					srcLine;
+
+	/** The value of errno at the time the exception was thrown */
+	E4C_READ_ONLY	int					errorNumber;
+};
 
 /**
- * The current thrown exception.
- */
-extern Exception exception;
-
-/*@}*/
-
-/** @name Predefined mappings
+ * Represents the exception context of the program
  *
  * <p>
- * These are the default settings for handling the available signals in the
- * platform.
+ * Each part of the program that makes use of the exception handling system,
+ * needs an exception context. This context holds a stack of
+ * #ExceptionFrame's, in which exception information is recorded.
  * </p>
- *
- * @see SignalMapping
- *
- * @{
  */
+typedef struct ExceptionContext ExceptionContext;
+struct ExceptionContext{
 
-/**
- * The default array of mappings between the signals to be handled and the
- * corresponding exception to be thrown
- */
-const extern SignalMapping defaultSignalMapping[];
+	/** The current (inner) exception frame of this context */
+	E4C_READ_ONLY ExceptionFrame * E4C_READ_ONLY	currentFrame;
 
-/**
- * The number of elements in the array
- */
-const extern int defaultSignalMappings;
+	/** The array of mappings between the signals and exceptions */
+	const SignalMapping * E4C_READ_ONLY				signalMapping;
 
-/*@}*/
+	/** The number of elements in the array of mappings */
+	E4C_READ_ONLY	int								signalMappings;
+
+	/** The function to be executed in the event of an uncaught exception */
+	E4C_READ_ONLY	UncaughtHandler					uncaughtHandler;
+};
+
 
 /**
  * @name Predefined exceptions
@@ -398,6 +969,20 @@ const extern int defaultSignalMappings;
  *
  * @{
  */
+
+/**
+ * This represents an invalid exception.
+ *
+ * <p>
+ * <code>INVALID_EXCEPTION</code> honors the Null Object pattern:
+ * </p>
+ *
+ * <ul>
+ * <li>Throwing it has no effect</li>
+ * <li>Catching it does nothing</li>
+ * </ul>
+ */
+extern const Exception INVALID_EXCEPTION;
 
 /**
  * This is the root of the exception pseudo-hierarchy
@@ -456,12 +1041,24 @@ extern const Exception RuntimeException;
 extern const Exception NotEnoughMemoryException;
 
 /**
- * This exception is thrown when when an unexpected null pointer is found.
+ * This exception is thrown when an unexpected null pointer is found.
  *
- * NullPointerException is thrown when when some part of the program gets a
- * pointer which was expected or required to contain a valid memory address.
+ * NullPointerException is thrown when some part of the program gets a pointer
+ * which was expected or required to contain a valid memory address.
  */
 extern const Exception NullPointerException;
+
+/**
+ * This exception is thrown when a file cannot be opened.
+ *
+ * FileOpenException is thrown by <code>#usingFile</code> when
+ * <code>fopen</code> returns <code>NULL</code> for whatever reason.
+ *
+ * The value of <code>errno</code> at the time the exception was thrown (right
+ * after <code>fopen</code>) can be accessed through the macro
+ * <code>EC4_ERRNO</code>.
+ */
+extern const Exception FileOpenException;
 
 /**
  * This exception is the common supertype of all signal exceptions
@@ -731,7 +1328,7 @@ extern const Exception UserInterruptionException;
  */
 extern const Exception UserBreakException;
 
- /**
+/**
  * This exception is the common supertype of all user-defined signal exceptions
  *
  * <p>
@@ -770,41 +1367,61 @@ extern const Exception ProgramSignal2Exception;
 
 /*@}*/
 
-
 /**
- * Create a new exception
+ * Opens an exception context
  *
- * This is a convenience function to create a new exception.
+ * <p>
+ * This function creates and initializes the exception context to be used by the
+ * the program until <code>endExceptionContext</code> is called.
+ * </p>
  *
- * @param name Name of the new exception
- * @param description Description of the new exception
- * @param super Address of the supertype of the new exception
+ * <p>
+ * A function can be specified to be called in the event of an uncaught
+ * exception. There
+ * exceptions, if <code>handleSignals</code> is <code>true</code>.
+ * </p>
+ *
+ * <p>
+ * In addition, if <code>handleSignals</code> is <code>true</code>,
+ * <code>beginExceptionContext</code> will sets u the default mapping to convert
+ * signals into exceptions. This goal is achieved through the standard function
+ * <code>signal</code>. Note that the behaviour of <code>signal</code> is
+ * undefined in a multithreaded program, so use this feature with caution.
+ * </p>
+ *
+ * @param handleSignals If <code>true</code>, the signal handling system will be
+ *        set up with the default mapping.
+ * @param uncaughtHandler If not <code>NULL</code>, this function will be called
+ *        in the event of an uncaught exception.
  */
-extern const Exception newException(
-	const char * name, const char * description, const Exception * super);
+extern void beginExceptionContext(e4c_bool handleSignals,
+	UncaughtHandler uncaughtHandler);
 
 /**
- * Print an error message at uncaught exception
+ * Retrieves the current exception context of the program (or current thread)
  *
- * This is a convenience function to print an error message when the program
- * ends with an uncaught exception.
+ * <p>
+ * The exception context must be properly started and finished by calling the
+ * functions <code>beginExceptionContext</code> and
+ * <code>andExceptionContext</code> in order to be accessed.
+ * </p>
  *
- * It should be registered by calling <code>atexit</code>.
+ * @see ExceptionContext
+ * @see beginExceptionContext
+ * @see endExceptionContext
+ * @see E4C_CONTEXT
  */
-extern void atUncaughtException();
+extern ExceptionContext * getExceptionContext();
 
 /**
- * Print an exception's hierarchy graph
+ * Closes the current exception context
  *
- * This is a convenience function to print an exception's <em>hierarchy</em>
- * graph with simple <code>ASCII</code> characters.
- *
- * @param _exception_ The exception whose hierarchy is to be printed
+ * This function closes the current exception context.
  */
-extern void printExceptionHierarchy(Exception _exception_);
+extern void endExceptionContext();
 
 /**
- * Set up the signal handling system
+ * Sets up the signal handling system
  *
  * This function receives an array of mappings between the signals to be handled
  * and the corresponding exception to be thrown.
@@ -815,32 +1432,64 @@ extern void printExceptionHierarchy(Exception _exception_);
 extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
 
 /**
- * Initialize the exception handling system
+ * Initializes new exception context
  *
- * This function registers <code>atUncaughtException</code> to be executed when
- * the program ends (by calling <code>atexit</code>).
+ * This is a convenience function for creating a new exception context.
  *
- * In addition, it sets up the default mapping to convert signals into
- * exceptions, if <code>handleSignals</code> is <code>true</code>.
- *
- * @param handleSignals If <code>true</code>, the signal handling system will be
- * set up with the default mapping.
+ * @param context Pointer to the new context to be initialized
  */
-extern void initializeExceptionHandling(bool handleSignals);
+extern void initializeExceptionContext(ExceptionContext * context);
+
+/**
+ * Creates a new exception
+ *
+ * This is a convenience function for creating a new exception.
+ *
+ * @param name Name of the new exception
+ * @param description Description of the new exception
+ * @param super Address of the supertype of the new exception
+ */
+extern const Exception newException(
+	const char * name, const char * description, const Exception * super);
+
+/**
+ * Prints a fatal error message regarding the specified exception
+ *
+ * This is a convenience function for showing an error message through the
+ * standard error output. It can be passed to
+ * <code>#beginExceptionContext</code> as the handler for uncaught exceptions.
+ *
+ * @param exception The uncaught exception
+ * @param srcFile The path of the source code file from which the exception was
+ *        thrown
+ * @param srcLine The number of line from which the exception was thrown
+ * @param errorNumber The value of errno at the time the exception was thrown
+ */
+extern void dumpException(Exception exception,
+	const char * srcFile, int srcLine, int errorNumber);
+
+/**
+ * Prints an exception's hierarchy graph
+ *
+ * This is a convenience function for printing an exception's <em>hierarchy</em>
+ * graph with simple <code>ASCII</code> characters.
+ *
+ * @param exception The exception whose hierarchy is to be printed
+ */
+extern void printExceptionHierarchy(Exception exception);
+
 
 /*
- * Next functions are undocumented on purpose, because they shouldn't be called
- * directly (but through the macros: try, catch, finalize and throw).
+ * Next functions are undocumented on purpose, because they shouldn't be used
+ * directly (but through the 'keyword' macros).
  */
 
-extern void e4c_throwException(
-	const Exception _exception_, const char * file, int line);
-extern EXCEPT4C_JMP_BUF * except4c_firstStep();
-extern bool e4c_nextStep();
-extern bool e4c_isOkToTry();
-extern bool e4c_isOkToCatch(const Exception _exception_);
-extern bool e4c_isOkToFinalize();
-extern bool e4c_isOkToBreak();
+extern E4C_JMP_BUF * e4c_first(e4c_Stage stage, const char * file, int line);
+extern e4c_bool e4c_next();
+extern e4c_bool e4c_hook(e4c_Stage stage, const Exception exception);
+extern void e4c_throw(const Exception exception, const char * file, int line);
 
+
+# undef E4C_READ_ONLY
 
 # endif
