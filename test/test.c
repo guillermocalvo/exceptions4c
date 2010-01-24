@@ -1,64 +1,62 @@
 /*
-	----------------------------------------------------------------
-	test.c
-
-	exceptions4c
-	version 1.1
-	An exception handling framework for C.
-
-	Copyright (c) 2009 Guillermo Calvo
-
-	This is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This software is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this software.  If not, see <http://www.gnu.org/licenses/>.
-
-	Credits:
-	This little library has been inspired by these previous works:
-
-	"Exceptions in C"
-	By Laurent Deniau
-	http://ldeniau.home.cern.ch/ldeniau/html/exception/exception.html
-
-	"Implementing Exceptions in C Programming language"
-	By Adomas Paltanavicius
-	http://adomas.org/excc/
-
-	----------------------------------------------------------------
-*/
+ * test.c
+ *
+ * exceptions4c
+ * version 1.3
+ * An exception handling framework for C.
+ *
+ * Copyright (c) 2009 Guillermo Calvo
+ *
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Credits:
+ * This little library has been inspired by these previous works:
+ *
+ * "Exceptions in C"
+ * By Laurent Deniau
+ * http://ldeniau.home.cern.ch/ldeniau/html/exception/exception.html
+ *
+ * "Implementing Exceptions in C Programming language"
+ * By Adomas Paltanavicius
+ * http://adomas.org/excc/
+ *
+ */
 
 
-# define LINE(string)			printf("%s\n", string)
+# define LINE(string)                   printf("%s\n", string)
 
-# define BLOCK_1(string)		printf("\n%s\n----------------------------------------------------------------\n", string)
-# define BLOCK_2(string)		printf("\n        %s\n        --------------------------------------------------------\n", string)
-# define BLOCK_3(string)		printf("\n                %s\n                ------------------------------------------------\n", string)
+# define BLOCK_1(string)                printf("\n%s\n----------------------------------------------------------------\n", string)
+# define BLOCK_2(string)                printf("\n        %s\n        --------------------------------------------------------\n", string)
+# define BLOCK_3(string)                printf("\n                %s\n                ------------------------------------------------\n", string)
 
-# define ECHO_1(string)			printf("    * %s\n", string)
-# define ECHO_2(string)			printf("            * %s\n", string)
-# define ECHO_3(string)			printf("                    * %s\n", string)
+# define ECHO_1(string)                 printf("    * %s\n", string)
+# define ECHO_2(string)                 printf("            * %s\n", string)
+# define ECHO_3(string)                 printf("                    * %s\n", string)
 
-# define SHOW_1(statement)		printf("    * %s;\n", #statement); statement
-# define SHOW_2(statement)		printf("            * %s;\n", #statement); statement
-# define SHOW_3(statement)		printf("                    * %s;\n", #statement); statement
+# define SHOW_1(statement)              printf("    * %s;\n", #statement); statement
+# define SHOW_2(statement)              printf("            * %s;\n", #statement); statement
+# define SHOW_3(statement)              printf("                    * %s;\n", #statement); statement
 
-# define SVAR_1(svar)			printf("    * %s: \"%s\"\n", #svar, svar)
-# define SVAR_2(svar)			printf("            * %s: \"%s\"\n", #svar, svar)
-# define SVAR_3(svar)			printf("                    * %s: \"%s\"\n", #svar, svar)
+# define SVAR_1(svar)                   printf("    * %s: \"%s\"\n", #svar, svar)
+# define SVAR_2(svar)                   printf("            * %s: \"%s\"\n", #svar, svar)
+# define SVAR_3(svar)                   printf("                    * %s: \"%s\"\n", #svar, svar)
 
 
 # include <stdio.h>
 # include <stdlib.h>
+# include <stdbool.h>
 # include "except4c.h"
-
 
 void generateError(int whichOne);
 void info(int test);
@@ -73,10 +71,10 @@ void aux5();
 void pause();
 
 
-DEFINE_EXCEPTION(ColorException,	"This is a colorful exception",		RuntimeException);
-DEFINE_EXCEPTION(RedException,		"This exception is a red one",		ColorException);
-DEFINE_EXCEPTION(BlueException,		"This exception is a blue one",		ColorException);
-DEFINE_EXCEPTION(DarkRedException,	"This exception is dark red",		RedException);
+DEFINE_EXCEPTION(ColorException,        "This is a colorful exception",         RuntimeException);
+DEFINE_EXCEPTION(RedException,          "This exception is a red one",          ColorException);
+DEFINE_EXCEPTION(BlueException,         "This exception is a blue one",         ColorException);
+DEFINE_EXCEPTION(DarkRedException,      "This exception is dark red",           RedException);
 
 
 int main(int argc, char *argv[]){
@@ -84,27 +82,9 @@ int main(int argc, char *argv[]){
 	int test;
 
 	atexit(pause);
-	initializeExceptionHandling(true);
 
-	/*
-
-	try{
-		int i = 10 / 0;
-	}catch(ArithmeticException){
-		printf("Aqui no ha pasado nada, señores... :-)\n");
-	}
-
-	try{
-		int * p = NULL;
-		*p = 123;
-	}catch(BadPointerException){
-		printf("Aqui no ha pasado nada, señores... :-)\n");
-	}
-
-	return(0);
-
-	*/
-
+	beginExceptionContext(true, dumpException);
+	
 	LINE(">>");
 	LINE(">> WE ARE INSIDE 'MAIN'");
 	LINE(">>");
@@ -122,6 +102,8 @@ int main(int argc, char *argv[]){
 
 	ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 
+	endExceptionContext();
+
 	return(EXIT_SUCCESS);
 }
 
@@ -133,9 +115,9 @@ void pause(){
 void generateError(int whichOne){
 
 	if(whichOne == 3 || whichOne == 5){
-        BLOCK_3("We are inside 'generateError' now...");
+		BLOCK_3("We are inside 'generateError' now...");
 	}else{
-        BLOCK_2("We are inside 'generateError' now...");
+		BLOCK_2("We are inside 'generateError' now...");
 	}
 
 	switch(whichOne){
@@ -146,9 +128,9 @@ void generateError(int whichOne){
 
 		case 2:
 			{
-				int zero, number;
-				SHOW_2( zero = 0 );
-				SHOW_2( number = 100 / zero );
+			        int zero, number;
+			        SHOW_2( zero = 0 );
+			        SHOW_2( number = 100 / zero );
 			}
 			break;
 
@@ -158,9 +140,9 @@ void generateError(int whichOne){
 
 		case 4:
 			{
-				int * pointer, number;
-				SHOW_2( pointer = NULL );
-				SHOW_2( number = *pointer );
+			        int * pointer, number;
+			        SHOW_2( pointer = NULL );
+			        SHOW_2( number = *pointer );
 			}
 			break;
 
@@ -200,6 +182,7 @@ void info(int test){
 			LINE("  4. Then 'test1's <finally> block will be executed.");
 			LINE("  5. Return from 'test1' back to 'main'.");
 			break;
+
 
 		case 2:
 			LINE("  1. 'test2' will call 'generateError' inside a <try> block.");
@@ -242,10 +225,10 @@ void info(int test){
 			LINE("  7. 'test5' will not be able to catch a blue exception.");
 			LINE("  8. 'test5's <finally> block will be executed.");
 			LINE("  9. There are no more outter <try> blocks, that means: fast fail.");
-			LINE(" 10. The exception handling framework will call 'exit'.");
-			LINE(" 11. 'exit' will call any 'atexit' functions.");
-			LINE(" 12. That means 'atUncaughtException' will be called if you want.");
-			LINE("If you #define DEBUG, 'atUncaughtException' will show more info.");
+			LINE(" 10. 'dumpException' will be called as the \"uncaught handler\".");
+			LINE(" 11. The exception handling framework will call 'exit'.");
+			LINE(" 12. 'exit' will call any 'atexit' functions.");
+			LINE("If you #define DEBUG, 'dumpException' will show more info.");
 			LINE("This is the final test, try changing the code and see what happens.");
 			break;
 	}
@@ -267,7 +250,7 @@ void test1(){
 	}catch(NotEnoughMemoryException){
 		BLOCK_1("test1/catch(NotEnoughMemoryException)");
 		ECHO_1("Exception information:");
-		SVAR_1(exception.name);
+		SVAR_1(EXCEPTION.name);
 	}catch(UserInterruptionException){
 		/* UserInterruptionException is not being thrown in test1 */
 		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
@@ -275,7 +258,6 @@ void test1(){
 		BLOCK_1("test1/finally");
 		ECHO_1("We could clean up here.\n");
 	}
-
 }
 
 void test2(){
@@ -288,29 +270,28 @@ void test2(){
 	}catch(ArithmeticException){
 		BLOCK_1("test1/catch(ArithmeticException)");
 		ECHO_1("Exception information:");
-		SVAR_1(exception.name);
-		SVAR_1(exception.description);
+		SVAR_1(EXCEPTION.name);
+		SVAR_1(EXCEPTION.description);
 		ECHO_1("We have just divided by zero, but our process didn't crash!");
 	}
-
 }
 
 void aux3(){
 
 	try{
-        BLOCK_2("aux3/try");
+		BLOCK_2("aux3/try");
 		ECHO_2("Let's call function 'generateError'...");
 		SHOW_2( generateError(3) );
 		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}catch(ColorException){
-        BLOCK_2("aux3/catch(ColorException)");
+		BLOCK_2("aux3/catch(ColorException)");
 		ECHO_2("Exception information:");
-		SVAR_2(exception.name);
+		SVAR_2(EXCEPTION.name);
 		ECHO_2("Blue exceptions are sad;");
 		ECHO_2("let's throw 'RedException' instead...");
 		SHOW_2( throw(RedException) );
 	}finally{
-        BLOCK_2("aux3/finally");
+		BLOCK_2("aux3/finally");
 		ECHO_2("Did you realize that?");
 		ECHO_2("We threw 'RedException' ourselves,");
 		ECHO_2("but we can still clean up here.");
@@ -322,19 +303,19 @@ void aux3(){
 void test3(){
 
 	try{
-        BLOCK_1("test3/try");
+		BLOCK_1("test3/try");
 		ECHO_1("Let's call function 'aux3'...");
 		SHOW_1( aux3() );
 		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}catch(RuntimeException){
-        BLOCK_1("test3/catch(RuntimeException)");
+		BLOCK_1("test3/catch(RuntimeException)");
 		ECHO_1("Exception information:");
-		SVAR_1(exception.name);
+		SVAR_1(EXCEPTION.name);
 		ECHO_1("We caught RedException because it \"is a\" RuntimeException:");
 		LINE("");
-		printExceptionHierarchy(exception);
+		printExceptionHierarchy(EXCEPTION);
 	}finally{
-        BLOCK_1("test3/finally");
+		BLOCK_1("test3/finally");
 		ECHO_1("Again, we could clean up here.");
 	}
 
@@ -343,19 +324,19 @@ void test3(){
 void test4(){
 
 	try{
-        BLOCK_1("test4/try");
+		BLOCK_1("test4/try");
 		ECHO_1("We are about to perform a segment violation...");
 		SHOW_1( generateError(4) );
 		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}catch(SignalException){
-        BLOCK_1("test4/catch(SignalException)");
+		BLOCK_1("test4/catch(SignalException)");
 		ECHO_1("Exception information:");
-		SVAR_1(exception.name);
-		SVAR_1(exception.description);
+		SVAR_1(EXCEPTION.name);
+		SVAR_1(EXCEPTION.description);
 		ECHO_1("We tried to dereference a NULL pointer,");
 		ECHO_1("but we didn't core dump!");
 	}finally{
-        BLOCK_1("test4/finally");
+		BLOCK_1("test4/finally");
 		ECHO_1("We have just avoided our program to crash.");
 		ECHO_1("Pretty cool, isn't it?");
 	}
@@ -365,14 +346,14 @@ void test4(){
 void aux5(){
 
 	try{
-        BLOCK_2("aux5/try");
+		BLOCK_2("aux5/try");
 		ECHO_2("Let's call function 'generateError'...");
 		SHOW_2( generateError(5) );
 		ECHO_2("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}catch(BlueException){
 		ECHO_2("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}finally{
-        BLOCK_2("aux5/finally");
+		BLOCK_2("aux5/finally");
 		ECHO_2("As you know, we didn't catch 'RedException',");
 		ECHO_2("because we are only able to catch 'BlueException'.");
 	}
@@ -383,14 +364,14 @@ void aux5(){
 void test5(){
 
 	try{
-        BLOCK_1("test5/try");
+		BLOCK_1("test5/try");
 		ECHO_1("Let's call function 'aux5'...");
 		SHOW_1( aux5() );
 		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}catch(DarkRedException){
 		ECHO_1("==== YOU ARE NOT GONNA SEE THIS MESSAGE ====");
 	}finally{
-        BLOCK_1("test5/finally");
+		BLOCK_1("test5/finally");
 		ECHO_1("We didn't catch 'RedException',");
 		ECHO_1("we can only catch DarkRedException'.");
 		ECHO_1("This is last <try> block, so the application will exit now.");
@@ -398,4 +379,3 @@ void test5(){
 
 	ECHO_1("YOU ARE NOT GONNA SEE ANY OF THESE MESSAGES");
 }
-
