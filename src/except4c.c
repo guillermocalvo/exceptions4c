@@ -340,7 +340,7 @@ ExceptionContext * getExceptionContext(){
 
 static void atUncaughtException(ExceptionContext * context){
 
-	/* context cannot be NULL (checked by the callee) */
+	/* context cannot be NULL (checked by the caller) */
 	UncaughtHandler		uncaughtHandler	= context->uncaughtHandler;
 	ExceptionFrame *	frame			= context->currentFrame;
 
@@ -355,7 +355,7 @@ static void atUncaughtException(ExceptionContext * context){
 
 static void e4c_propagate(ExceptionContext * context, const Exception exception, const char * file, int line, int errNumber){
 
-	/* neither context nor frame is NULL (checked by the callee) */
+	/* neither context nor frame is NULL (checked by the caller) */
 	ExceptionFrame * frame = context->currentFrame;
 
 	/* Update the frame with the exception information */
@@ -380,26 +380,6 @@ static void e4c_propagate(ExceptionContext * context, const Exception exception,
 
 	/* keep looping */
 	E4C_LONGJMP(frame->address);
-}
-
-static e4c_bool extends(const Exception * child, const Exception * parent){
-
-	const Exception * super = child->super;
-
-	/* an exception with no supertype does not "extend" anything */
-	if(super == NULL){
-		return(e4c_false);
-	}
-
-	if( (child->name == parent->name) || (super->name == parent->name) ){
-		return(e4c_true);
-	}
-
-	if(super == child){
-		return(e4c_false);
-	}
-
-	return( extends(super, parent) );
 }
 
 static void handleSignal(int signalNumber){
@@ -429,6 +409,46 @@ static void handleSignal(int signalNumber){
 	/* this should never happen, but anyway... */
 	/* we were unable to find the exception that represents the received signal number */
 	e4c_propagate(context, ExceptionSystemFatalError, E4C_FILE, E4C_LINE, errno);
+}
+
+static void privateSetSignalHandlers(ExceptionContext * context, const SignalMapping * signalMapping, int signalMappings){
+
+	/* context cannot be NULL (checked by the caller) */
+	int					index;
+
+	/* reset all the previously set signal handlers */
+	for(index = 0; index < context->signalMappings; index++){
+		signal(context->signalMapping[index].signalNumber, SIG_DFL);
+	}
+
+	/* update the current context (checked) */
+	context->signalMapping		= signalMapping;
+	context->signalMappings		= signalMappings;
+
+	/* set up the handlers for the specified signals */
+	for(index = 0; index < signalMappings; index++){
+		signal(signalMapping[index].signalNumber, handleSignal);
+	}
+}
+
+static e4c_bool extends(const Exception * child, const Exception * parent){
+
+	const Exception * super = child->super;
+
+	/* an exception with no supertype does not "extend" anything */
+	if(super == NULL){
+		return(e4c_false);
+	}
+
+	if( (child->name == parent->name) || (super->name == parent->name) ){
+		return(e4c_true);
+	}
+
+	if(super == child){
+		return(e4c_false);
+	}
+
+	return( extends(super, parent) );
 }
 
 E4C_JMP_BUF * e4c_first(e4c_Stage stage, const char * file, int line){
@@ -618,19 +638,11 @@ void setSignalHandlers(const SignalMapping * signalMapping, int signalMappings){
 	/* check if setSignalHandlers was called before calling beginExceptionContext */
 	STOP_IF(context == NULL, ContextHasNotBegunYet, EC4_FILE_SET_HANDLERS, E4C_LINE);
 
-	/* reset all the previously set signal handlers */
-	for(index = 0; index < context->signalMappings; index++){
-		signal(context->signalMapping[index].signalNumber, SIG_DFL);
-	}
+	/* sanity check */
+	signalMapping		= (signalMappings == 0 ? NULL : signalMapping);
+	signalMappings		= (signalMapping == NULL ? 0 : signalMappings);
 
-	/* update the current context (plus sanity check) */
-	context->signalMapping		= (signalMappings == 0 ? NULL : signalMapping);
-	context->signalMappings		= (signalMapping == NULL ? 0 : signalMappings);
-
-	/* set up the handlers for the specified signals */
-	for(index = 0; index < context->signalMappings; index++){
-		signal(signalMapping[index].signalNumber, handleSignal);
-	}
+	privateSetSignalHandlers(context, signalMapping, signalMappings);
 }
 
 void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandler){
@@ -719,7 +731,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	newFrame->uncaught			= e4c_false;
 	newFrame->exception			= INVALID_EXCEPTION;
 
-	if(handleSignals) setSignalHandlers(defaultSignalMapping, defaultSignalMappings);
+	if(handleSignals) privateSetSignalHandlers(context, defaultSignalMapping, defaultSignalMappings);
 }
 
 void endExceptionContext(){
@@ -764,6 +776,9 @@ void endExceptionContext(){
 
 	/* deallocate the current, top frame */
 	free(frame);
+
+	/* reset all signal handlers */
+	privateSetSignalHandlers(context, NULL, 0);
 
 # ifdef E4C_THREAD_SAFE
 
