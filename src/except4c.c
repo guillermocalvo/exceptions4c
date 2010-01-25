@@ -229,7 +229,7 @@ static void addThreadEnvironment(ThreadEnvironment * environment){
 static ThreadEnvironment * removeThreadEnvironment(){
 
 	THREAD_TYPE				self		= THREAD_CURRENT;
-	bool					found		= false;
+	e4c_bool				found		= e4c_false;
 	ThreadEnvironment *		previous	= NULL;
 	ThreadEnvironment *		environment;
 
@@ -239,7 +239,7 @@ static ThreadEnvironment * removeThreadEnvironment(){
 
 		while(environment != NULL){
 			if( THREAD_SAME(self, environment->self) ){
-				found = true;
+				found = e4c_true;
 				break;
 			}
 			previous	= environment;
@@ -259,7 +259,7 @@ static ThreadEnvironment * removeThreadEnvironment(){
 static ThreadEnvironment * getThreadEnvironment(){
 
 	THREAD_TYPE				self		= THREAD_CURRENT;
-	bool					found		= false;
+	e4c_bool				found		= e4c_false;
 	ThreadEnvironment *		environment;
 
 	MUTEX_LOCK(environmentCollectionMutex);
@@ -268,7 +268,7 @@ static ThreadEnvironment * getThreadEnvironment(){
 
 		while(environment != NULL){
 			if( THREAD_SAME(self, environment->self) ){
-				found = true;
+				found = e4c_true;
 				break;
 			}
 			environment	= environment->next;
@@ -293,7 +293,7 @@ static ThreadEnvironment * getThreadEnvironment(){
 		MUTEX_LOCK(isInitializedMutex);
 
 			if(!isInitialized){
-				isInitialized = true;
+				isInitialized = e4c_true;
 				atexit(atExit);
 			}
 
