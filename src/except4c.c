@@ -37,31 +37,6 @@
 
 # define IS_TOP_FRAME(frame)			( frame->previous == NULL )
 # define STOP_IF(c, e, f, l)			if(c){ dumpException(e, f, l, errno); STOP_EXECUTION; }
-# ifdef DEBUG
-#	ifdef E4C_THREAD_SAFE
-#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n\n"
-#	else
-#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n\n"
-#	endif
-#	define	MSG_THREAD_UNSAFE			"\n\nIf this application is actually using threads, this error could mean that\nexceptions4c was compiled without thread support."
-#	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) initialize()
-#	define	DEBUG_STOP_IF(c, e, f, l)	STOP_IF(c, e, f, l)
-#	define	EC4_FILE_SIGNAL				"<system signal>"
-#	define	EC4_FILE_SET_HANDLERS		"exceptions4c.setSignalHandlers"
-#	define	EC4_FILE_BEGIN				"exceptions4c.beginExceptionContext"
-#	define	EC4_FILE_END				"exceptions4c.endExceptionContext"
-#	define	EC4_FILE_AT_EXIT			"exceptions4c.atExit"
-# else
-#	define	MSG_FATAL_ERROR
-#	define	MSG_THREAD_UNSAFE
-#	define	DEBUG_INITIALIZE_ONCE
-#	define	DEBUG_STOP_IF(c, e, f, l)
-#	define	EC4_FILE_SIGNAL				E4C_FILE
-#	define	EC4_FILE_SET_HANDLERS		E4C_FILE
-#	define	EC4_FILE_BEGIN				E4C_FILE
-#	define	EC4_FILE_END				E4C_FILE
-#	define	EC4_FILE_AT_EXIT			E4C_FILE
-# endif
 
 # ifdef E4C_THREAD_SAFE
 #	include <pthread.h>
@@ -85,10 +60,6 @@
 	};
 	MUTEX_DEFINE(environmentCollectionMutex);
 	static ThreadEnvironment * environmentCollection = NULL;
-
-#	ifdef DEBUG
-		MUTEX_DEFINE(isInitializedMutex);
-#	endif
 # else
 #	undef	E4C_CONTEXT
 #	define	E4C_CONTEXT				currentContext
@@ -103,6 +74,30 @@
 
 # ifdef DEBUG
 	static e4c_bool isInitialized = e4c_false;
+#	ifdef E4C_THREAD_SAFE
+		MUTEX_DEFINE(isInitializedMutex);
+#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n\n"
+#	else
+#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n\n"
+#	endif
+#	define	MSG_THREAD_UNSAFE			"\n\nIf this application is actually using threads, this error could mean that\nexceptions4c was compiled without thread support."
+#	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) initialize()
+#	define	DEBUG_STOP_IF(c, e, f, l)	STOP_IF(c, e, f, l)
+#	define	EC4_FILE_SIGNAL				"<system signal>"
+#	define	EC4_FILE_SET_HANDLERS		"exceptions4c.setSignalHandlers"
+#	define	EC4_FILE_BEGIN				"exceptions4c.beginExceptionContext"
+#	define	EC4_FILE_END				"exceptions4c.endExceptionContext"
+#	define	EC4_FILE_AT_EXIT			"exceptions4c.atExit"
+# else
+#	define	MSG_FATAL_ERROR
+#	define	MSG_THREAD_UNSAFE
+#	define	DEBUG_INITIALIZE_ONCE
+#	define	DEBUG_STOP_IF(c, e, f, l)
+#	define	EC4_FILE_SIGNAL				E4C_FILE
+#	define	EC4_FILE_SET_HANDLERS		E4C_FILE
+#	define	EC4_FILE_BEGIN				E4C_FILE
+#	define	EC4_FILE_END				E4C_FILE
+#	define	EC4_FILE_AT_EXIT			E4C_FILE
 # endif
 
 const Exception INVALID_EXCEPTION = {
@@ -162,55 +157,42 @@ static const SignalMapping defaultSignalMapping[] = {
 	SIGNAL_MAPPING(SIGSEGV,		BadPointerException),
 	SIGNAL_MAPPING(SIGTERM,		TerminationException),
 	SIGNAL_MAPPING(SIGINT,		UserInterruptionException),
-
 # ifdef SIGALRM
 	SIGNAL_MAPPING(SIGALRM,		SignalAlarmException),
 # endif
-
 # ifdef SIGCHLD
 	SIGNAL_MAPPING(SIGCHLD,		SignalChildException),
 # endif
-
 # ifdef SIGTRAP
 	SIGNAL_MAPPING(SIGTRAP,		SignalTrapException),
 # endif
-
 # ifdef SIGPIPE
 	SIGNAL_MAPPING(SIGPIPE,		BrokenPipeException),
 # endif
-
 # ifdef SIGSTOP
 	SIGNAL_MAPPING(SIGSTOP,		StopException),
 # endif
-
 # ifdef SIGKILL
 	SIGNAL_MAPPING(SIGKILL,		KillException),
 # endif
-
 # ifdef SIGHUP
 	SIGNAL_MAPPING(SIGHUP,		HangUpException),
 # endif
-
 # ifdef SIGXCPU
 	SIGNAL_MAPPING(SIGXCPU,		CPUTimeException),
 # endif
-
 # ifdef SIGQUIT
 	SIGNAL_MAPPING(SIGQUIT,		UserQuitException),
 # endif
-
 # ifdef SIGBREAK
 	SIGNAL_MAPPING(SIGBREAK,	UserBreakException),
 # endif
-
 # ifdef SIGUSR1
 	SIGNAL_MAPPING(SIGUSR1,		ProgramSignal1Exception),
 # endif
-
 # ifdef SIGUSR2
 	SIGNAL_MAPPING(SIGUSR2,		ProgramSignal2Exception),
 # endif
-
 };
 const int defaultSignalMappings = ( sizeof(defaultSignalMapping) / sizeof(defaultSignalMapping[0]) );
 
@@ -283,7 +265,7 @@ static ThreadEnvironment * getThreadEnvironment(){
 
 	static void atExit(){
 
-		if(isInitialized && environmentCollection != NULL){
+		if(environmentCollection != NULL){
 			dumpException(ContextNotEnded, EC4_FILE_AT_EXIT, E4C_LINE, errno);
 		}
 	}
@@ -315,7 +297,7 @@ ExceptionContext * getExceptionContext(){
 
 	static void atExit(){
 
-		if(isInitialized && currentContext != NULL){
+		if(currentContext != NULL){
 			dumpException(ContextNotEnded, EC4_FILE_AT_EXIT, E4C_LINE, errno);
 		}
 	}
@@ -323,7 +305,7 @@ ExceptionContext * getExceptionContext(){
 	static void initialize(){
 
 		if(!isInitialized){
-			isInitialized = true;
+			isInitialized = e4c_true;
 			atexit(atExit);
 		}
 	}
@@ -345,7 +327,7 @@ static void atUncaughtException(ExceptionContext * context){
 	ExceptionFrame *	frame			= context->currentFrame;
 
 	if(uncaughtHandler != NULL){
-		uncaughtHandler(frame->exception, frame->srcFile, frame->srcLine, frame->errorNumber);
+		uncaughtHandler(frame->exception, frame->file, frame->line, frame->errorNumber);
 	}
 
 	endExceptionContext();
@@ -362,8 +344,8 @@ static void e4c_propagate(ExceptionContext * context, const Exception exception,
 	frame->thrown		= e4c_true;
 	frame->uncaught		= e4c_true;
 	frame->exception	= exception;
-	frame->srcFile		= file;
-	frame->srcLine		= line;
+	frame->file			= file;
+	frame->line			= line;
 	frame->errorNumber	= errNumber;
 
 	/* if this is the upper frame, then this is an uncaught exception */
@@ -478,8 +460,8 @@ E4C_JMP_BUF * e4c_first(e4c_Stage stage, const char * file, int line){
 	newFrame->uncaught		= e4c_false;
 	newFrame->exception		= INVALID_EXCEPTION;
 	newFrame->errorNumber	= 0;
-	newFrame->srcFile		= (const char *)NULL;
-	newFrame->srcLine		= 0;
+	newFrame->file			= (const char *)NULL;
+	newFrame->line			= 0;
 	newFrame->previous		= currentFrame;
 
 	/* make it the new current frame */
@@ -556,7 +538,7 @@ e4c_bool e4c_next(){
 
 	/* if the current frame has an uncaught exception, then we will propagate it */
 	if(tmpFrame.uncaught){
-		e4c_propagate(context, tmpFrame.exception, tmpFrame.srcFile, tmpFrame.srcLine, tmpFrame.errorNumber);
+		e4c_propagate(context, tmpFrame.exception, tmpFrame.file, tmpFrame.line, tmpFrame.errorNumber);
 	}
 	/* otherwise, we're free to go */
 
@@ -598,12 +580,12 @@ const Exception newException(const char * name, const char * description, const 
 	return(tmp);
 }
 
-void dumpException(Exception exception, const char * srcFile, int srcLine, int errorNumber){
+void dumpException(Exception exception, const char * file, int line, int errorNumber){
 
-	if(srcFile != NULL){
+	if(file != NULL){
 		fprintf(stderr, "\n\n%s:%u: %s (%s), errno: %d.\n\n",
-			srcFile,
-			srcLine,
+			file,
+			line,
 			exception.name,
 			exception.description,
 			errorNumber
@@ -724,8 +706,8 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 
 	newFrame->previous			= NULL;
 	newFrame->stage				= e4c_end;
-	newFrame->srcFile			= NULL;
-	newFrame->srcLine			= 0;
+	newFrame->file				= NULL;
+	newFrame->line				= 0;
 	newFrame->errorNumber		= 0;
 	newFrame->thrown			= e4c_false;
 	newFrame->uncaught			= e4c_false;

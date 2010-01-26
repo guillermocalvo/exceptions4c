@@ -218,13 +218,13 @@
  * Accesses the error file of the current exception frame
  * @see ExceptionFrame
  */
-# define EC4_FILE				(EC4_FRAME->srcFile)
+# define EC4_FILE				(EC4_FRAME->file)
 
 /**
  * Accesses the error line of the current exception frame
  * @see ExceptionFrame
  */
-# define EC4_LINE				(EC4_FRAME->srcLine)
+# define EC4_LINE				(EC4_FRAME->line)
 
 /**
  * Accesses the <code>thrown</code> flag of the current exception frame
@@ -773,15 +773,15 @@ typedef enum{
  * </p>
  *
  * @param exception The uncaught exception
- * @param srcFile The path of the source code file from which the exception was
+ * @param file The path of the source code file from which the exception was
  *        thrown
- * @param srcLine The number of line from which the exception was thrown
+ * @param line The number of line from which the exception was thrown
  * @param errorNumber The value of errno at the time the exception was thrown
  */
 typedef void (*UncaughtHandler)(
 	Exception		exception,
-	const char *	srcFile,
-	int				srcLine,
+	const char *	file,
+	int				line,
 	int				errorNumber
 );
 
@@ -918,10 +918,10 @@ struct ExceptionFrame{
 	E4C_READ_ONLY	Exception			exception;
 
 	/** The path of the source code file from which the exception was thrown */
-	const char *	E4C_READ_ONLY		srcFile;
+	const char *	E4C_READ_ONLY		file;
 
 	/** The number of line from which the exception was thrown */
-	E4C_READ_ONLY	int					srcLine;
+	E4C_READ_ONLY	int					line;
 
 	/** The value of errno at the time the exception was thrown */
 	E4C_READ_ONLY	int					errorNumber;
@@ -1460,13 +1460,13 @@ extern const Exception newException(
  * <code>#beginExceptionContext</code> as the handler for uncaught exceptions.
  *
  * @param exception The uncaught exception
- * @param srcFile The path of the source code file from which the exception was
+ * @param file The path of the source code file from which the exception was
  *        thrown
- * @param srcLine The number of line from which the exception was thrown
+ * @param line The number of line from which the exception was thrown
  * @param errorNumber The value of errno at the time the exception was thrown
  */
 extern void dumpException(Exception exception,
-	const char * srcFile, int srcLine, int errorNumber);
+	const char * file, int line, int errorNumber);
 
 /**
  * Prints an exception's hierarchy graph
