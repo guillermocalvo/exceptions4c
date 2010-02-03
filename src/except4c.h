@@ -87,8 +87,8 @@
  */
 
 # ifdef _POSIX_C_SOURCE
-# define E4C_SETJMP(address)			sigsetjmp(address)
-# define E4C_LONGJMP(address, value)	siglongjmp(address, 1)
+# define E4C_SETJMP(address)			sigsetjmp(address, e4c_true)
+# define E4C_LONGJMP(address)			siglongjmp(address, 1)
 # define E4C_JMP_BUF					sigjmp_buf
 # else
 # define E4C_SETJMP(address)			setjmp(address)

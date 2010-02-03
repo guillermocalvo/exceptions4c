@@ -81,7 +81,7 @@
 #		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n\n"
 #	endif
 #	define	MSG_THREAD_UNSAFE			"\n\nIf this application is actually using threads, this error could mean that\nexceptions4c was compiled without thread support."
-#	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) initialize()
+#	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) e4c_initialize()
 #	define	DEBUG_STOP_IF(c, e, f, l)	STOP_IF(c, e, f, l)
 #	define	EC4_FILE_SIGNAL				"<system signal>"
 #	define	EC4_FILE_SET_HANDLERS		"exceptions4c.setSignalHandlers"
@@ -198,7 +198,7 @@ const int defaultSignalMappings = ( sizeof(defaultSignalMapping) / sizeof(defaul
 
 # ifdef E4C_THREAD_SAFE
 
-static void addThreadEnvironment(ThreadEnvironment * environment){
+static void e4c_addThreadEnvironment(ThreadEnvironment * environment){
 
 	MUTEX_LOCK(environmentCollectionMutex);
 
@@ -208,7 +208,7 @@ static void addThreadEnvironment(ThreadEnvironment * environment){
 	MUTEX_UNLOCK(environmentCollectionMutex);
 }
 
-static ThreadEnvironment * removeThreadEnvironment(){
+static ThreadEnvironment * e4c_removeThreadEnvironment(){
 
 	THREAD_TYPE				self		= THREAD_CURRENT;
 	e4c_bool				found		= e4c_false;
@@ -238,7 +238,7 @@ static ThreadEnvironment * removeThreadEnvironment(){
 	return(found ? environment : NULL);
 }
 
-static ThreadEnvironment * getThreadEnvironment(){
+static ThreadEnvironment * e4c_getThreadEnvironment(){
 
 	THREAD_TYPE				self		= THREAD_CURRENT;
 	e4c_bool				found		= e4c_false;
@@ -263,20 +263,20 @@ static ThreadEnvironment * getThreadEnvironment(){
 
 # ifdef DEBUG
 
-	static void atExit(){
+	static void e4c_atExit(){
 
 		if(environmentCollection != NULL){
 			dumpException(ContextNotEnded, EC4_FILE_AT_EXIT, E4C_LINE, errno);
 		}
 	}
 
-	static void initialize(){
+	static void e4c_initialize(){
 
 		MUTEX_LOCK(isInitializedMutex);
 
 			if(!isInitialized){
 				isInitialized = e4c_true;
-				atexit(atExit);
+				atexit(e4c_atExit);
 			}
 
 		MUTEX_UNLOCK(isInitializedMutex);
@@ -286,7 +286,7 @@ static ThreadEnvironment * getThreadEnvironment(){
 
 ExceptionContext * getExceptionContext(){
 
-	ThreadEnvironment * environment = getThreadEnvironment();
+	ThreadEnvironment * environment = e4c_getThreadEnvironment();
 
 	return(environment == NULL ? NULL : &environment->context);
 }
@@ -295,18 +295,18 @@ ExceptionContext * getExceptionContext(){
 
 # ifdef DEBUG
 
-	static void atExit(){
+	static void e4c_atExit(){
 
 		if(currentContext != NULL){
 			dumpException(ContextNotEnded, EC4_FILE_AT_EXIT, E4C_LINE, errno);
 		}
 	}
 
-	static void initialize(){
+	static void e4c_initialize(){
 
 		if(!isInitialized){
 			isInitialized = e4c_true;
-			atexit(atExit);
+			atexit(e4c_atExit);
 		}
 	}
 
@@ -320,7 +320,7 @@ ExceptionContext * getExceptionContext(){
 
 # endif
 
-static void atUncaughtException(ExceptionContext * context){
+static void e4c_atUncaughtException(ExceptionContext * context){
 
 	/* context cannot be NULL (checked by the caller) */
 	UncaughtHandler		uncaughtHandler	= context->uncaughtHandler;
@@ -349,7 +349,7 @@ static void e4c_propagate(ExceptionContext * context, const Exception exception,
 	frame->errorNumber	= errNumber;
 
 	/* if this is the upper frame, then this is an uncaught exception */
-	if( IS_TOP_FRAME(frame) ) atUncaughtException(context);
+	if( IS_TOP_FRAME(frame) ) e4c_atUncaughtException(context);
 
 	/* otherwise, we will jump to the upper frame */
 
@@ -364,7 +364,7 @@ static void e4c_propagate(ExceptionContext * context, const Exception exception,
 	E4C_LONGJMP(frame->address);
 }
 
-static void handleSignal(int signalNumber){
+static void e4c_handleSignal(int signalNumber){
 
 	ExceptionContext *	context		= E4C_CONTEXT;
 	const Exception *	exception;
@@ -383,7 +383,7 @@ static void handleSignal(int signalNumber){
 			/* make ensure we have a proper exception to throw */
 			if(exception == NULL) break;
 			/* reset the handler for this signal */
-			signal(signalNumber, handleSignal);
+			signal(signalNumber, e4c_handleSignal);
 			/* throw the appropriate exception to the default context */
 			e4c_propagate(context, *exception, EC4_FILE_SIGNAL, signalNumber, errno);
 		}
@@ -393,7 +393,7 @@ static void handleSignal(int signalNumber){
 	e4c_propagate(context, ExceptionSystemFatalError, E4C_FILE, E4C_LINE, errno);
 }
 
-static void privateSetSignalHandlers(ExceptionContext * context, const SignalMapping * signalMapping, int signalMappings){
+static void e4c_setHandlers(ExceptionContext * context, const SignalMapping * signalMapping, int signalMappings){
 
 	/* context cannot be NULL (checked by the caller) */
 	int					index;
@@ -409,11 +409,11 @@ static void privateSetSignalHandlers(ExceptionContext * context, const SignalMap
 
 	/* set up the handlers for the specified signals */
 	for(index = 0; index < signalMappings; index++){
-		signal(signalMapping[index].signalNumber, handleSignal);
+		signal(signalMapping[index].signalNumber, e4c_handleSignal);
 	}
 }
 
-static e4c_bool extends(const Exception * child, const Exception * parent){
+static e4c_bool e4c_extends(const Exception * child, const Exception * parent){
 
 	const Exception * super = child->super;
 
@@ -430,7 +430,7 @@ static e4c_bool extends(const Exception * child, const Exception * parent){
 		return(e4c_false);
 	}
 
-	return( extends(super, parent) );
+	return( e4c_extends(super, parent) );
 }
 
 E4C_JMP_BUF * e4c_first(e4c_Stage stage, const char * file, int line){
@@ -484,7 +484,7 @@ e4c_bool e4c_hook(e4c_Stage stage, const Exception exception){
 
 	if(stage == e4c_catch){
 		/* does this block catch current exception? */
-		if( !extends(&frame->exception, &exception) ){
+		if( !e4c_extends(&frame->exception, &exception) ){
 			/* nay, keep looking for an exception handler */
 			return(e4c_false);
 		}
@@ -581,29 +581,28 @@ const Exception newException(const char * name, const char * description, const 
 }
 
 void dumpException(Exception exception, const char * file, int line, int errorNumber){
+# ifdef DEBUG
+	fprintf(stderr, "\n\nUncaught %s: %s\n\n", exception.name, exception.description);
 
-	if(file != NULL){
-		fprintf(stderr, "\n\n%s:%u: %s (%s), errno: %d.\n\n",
-			file,
-			line,
-			exception.name,
-			exception.description,
-			errorNumber
-		);
-		printExceptionHierarchy(exception);
+	if(file != NULL && *file == '<'){
+		fprintf(stderr, "    received %s number %d\n\n", file, line);
 	}else{
-		fprintf(stderr, "\n\nFatal Error: %s (%s)\n\n",
-			exception.name,
-			exception.description
-		);
+		fprintf(stderr, "    thrown at line %d of %s\n\n", line, file);
 	}
+
+	fprintf(stderr, "The value of errno was %d.\n\n", errorNumber);
+
+	printExceptionHierarchy(exception);
+# else
+	fprintf(stderr, "\n\nFatal Error: %s (%s)\n\n", exception.name, exception.description);
+# endif
 }
 
 void printExceptionHierarchy(Exception exception){
 
 	const char * separator = "________________________________________________________________";
 	int deep = 0;
-	fprintf(stderr, "%s Exception hierarchy\n%s\n\n   %s\n", exception.name, separator, exception.name);
+	fprintf(stderr, "Exception hierarchy\n%s\n\n   %s\n", separator, exception.name);
 	while( exception.super != NULL && exception.name != exception.super->name){
 		exception = *exception.super;
 		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", exception.name);
@@ -624,7 +623,7 @@ void setSignalHandlers(const SignalMapping * signalMapping, int signalMappings){
 	signalMapping		= (signalMappings == 0 ? NULL : signalMapping);
 	signalMappings		= (signalMapping == NULL ? 0 : signalMappings);
 
-	privateSetSignalHandlers(context, signalMapping, signalMappings);
+	e4c_setHandlers(context, signalMapping, signalMappings);
 }
 
 void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandler){
@@ -640,7 +639,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	DEBUG_INITIALIZE_ONCE;
 
 	/* get the current environment */
-	environment = getThreadEnvironment();
+	environment = e4c_getThreadEnvironment();
 
 	/* check if beginExceptionContext was called twice for this thread */
 	if(environment != NULL){
@@ -664,7 +663,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	}
 
 	/* add the new environment to the collection */
-	addThreadEnvironment(environment);
+	e4c_addThreadEnvironment(environment);
 
 	/* bound the new environment to the current thread */
 	environment->self = self;
@@ -713,7 +712,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	newFrame->uncaught			= e4c_false;
 	newFrame->exception			= INVALID_EXCEPTION;
 
-	if(handleSignals) privateSetSignalHandlers(context, defaultSignalMapping, defaultSignalMappings);
+	if(handleSignals) e4c_setHandlers(context, defaultSignalMapping, defaultSignalMappings);
 }
 
 void endExceptionContext(){
@@ -726,7 +725,7 @@ void endExceptionContext(){
 	ThreadEnvironment *	environment;
 
 	/* remove (and get) the current context */
-	environment = removeThreadEnvironment();
+	environment = e4c_removeThreadEnvironment();
 
 	/* check if endExceptionContext was called before calling beginExceptionContext */
 	STOP_IF(environment == NULL, ContextHasNotBegunYet, EC4_FILE_END, E4C_LINE);
@@ -760,7 +759,7 @@ void endExceptionContext(){
 	free(frame);
 
 	/* reset all signal handlers */
-	privateSetSignalHandlers(context, NULL, 0);
+	e4c_setHandlers(context, NULL, 0);
 
 # ifdef E4C_THREAD_SAFE
 
