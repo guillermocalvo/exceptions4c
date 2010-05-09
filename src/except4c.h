@@ -97,15 +97,15 @@
 # endif
 
 # ifdef DEBUG
-# define E4C_FILE						(const char *)__FILE__
-# define E4C_LINE						__LINE__
+# define E4C_FILE_INFO					(const char *)__FILE__
+# define E4C_LINE_INFO					__LINE__
 # else
-# define E4C_FILE						(const char *)NULL
-# define E4C_LINE						0
+# define E4C_FILE_INFO					(const char *)NULL
+# define E4C_LINE_INFO					0
 # endif
 
 # define E4C_LOOP(stage) \
-	E4C_SETJMP(  *( e4c_first(stage, E4C_FILE, E4C_LINE) )  ); \
+	E4C_SETJMP(  *( e4c_first(stage, E4C_FILE_INFO, E4C_LINE_INFO) )  ); \
 	while( e4c_next() )
 
 
@@ -154,7 +154,7 @@
  */
 # define throw(_exception_) \
 	e4c_throw( \
-		_exception_, E4C_FILE, E4C_LINE \
+		_exception_, E4C_FILE_INFO, E4C_LINE_INFO \
 	)
 
 /**
@@ -675,7 +675,6 @@
 /*@}*/
 
 /**
- *
  * Represents an exception in the exception handling system
  *
  * <p>
@@ -839,7 +838,7 @@ typedef void (*UncaughtHandler)(
  * <pre class="fragment">
  * SignalMapping mapping[] = {
  *     SIGNAL_MAPPING(SIGABRT, YourVeryOwnException),
- *     /<span>* ... *</span>/
+ *     ...
  * }
  * </pre>
  *
@@ -1383,7 +1382,7 @@ extern const Exception ProgramSignal2Exception;
  *
  * <p>
  * In addition, if <code>handleSignals</code> is <code>true</code>,
- * <code>beginExceptionContext</code> will sets u the default mapping to convert
+ * <code>beginExceptionContext</code> will set up the default mapping to convert
  * signals into exceptions. This goal is achieved through the standard function
  * <code>signal</code>. Note that the behaviour of <code>signal</code> is
  * undefined in a multithreaded program, so use this feature with caution.
@@ -1432,15 +1431,6 @@ extern void endExceptionContext();
 extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
 
 /**
- * Initializes new exception context
- *
- * This is a convenience function for creating a new exception context.
- *
- * @param context Pointer to the new context to be initialized
- */
-extern void initializeExceptionContext(ExceptionContext * context);
-
-/**
  * Creates a new exception
  *
  * This is a convenience function for creating a new exception.
@@ -1477,7 +1467,6 @@ extern void dumpException(Exception exception,
  * @param exception The exception whose hierarchy is to be printed
  */
 extern void printExceptionHierarchy(Exception exception);
-
 
 /*
  * Next functions are undocumented on purpose, because they shouldn't be used
