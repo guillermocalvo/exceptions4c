@@ -187,7 +187,7 @@
  * Accesses the current frame of the exception context
  * @see ExceptionFrame
  */
-# define EC4_FRAME				(E4C_CONTEXT->currentFrame)
+# define E4C_FRAME				(E4C_CONTEXT->currentFrame)
 
 /**
  * Accesses the current exception being thrown from the current exception frame
@@ -198,33 +198,33 @@
  * </p>
  *
  * <p>
- * The flag <code>EC4_STATUS_THROWN</code> can be checked in order to know if an
+ * The flag <code>E4C_STATUS_THROWN</code> can be checked in order to know if an
  * exception was actually thrown.
  * </p>
  *
  * @see ExceptionFrame
  * @see INVALID_EXCEPTION
- * @see EC4_STATUS_THROWN
+ * @see E4C_STATUS_THROWN
  */
-# define EXCEPTION				(EC4_FRAME->exception)
+# define EXCEPTION				(E4C_FRAME->exception)
 
 /**
  * Accesses the error number of the current exception frame
  * @see ExceptionFrame
  */
-# define EC4_ERRNO				(EC4_FRAME->errorNumber)
+# define E4C_ERRNO				(E4C_FRAME->errorNumber)
 
 /**
  * Accesses the error file of the current exception frame
  * @see ExceptionFrame
  */
-# define EC4_FILE				(EC4_FRAME->file)
+# define E4C_FILE				(E4C_FRAME->file)
 
 /**
  * Accesses the error line of the current exception frame
  * @see ExceptionFrame
  */
-# define EC4_LINE				(EC4_FRAME->line)
+# define E4C_LINE				(E4C_FRAME->line)
 
 /**
  * Accesses the <code>thrown</code> flag of the current exception frame
@@ -235,9 +235,9 @@
  * </p>
  *
  * @see ExceptionFrame
- * @see EC4_STATUS_UNCAUGHT
+ * @see E4C_STATUS_UNCAUGHT
  */
-# define EC4_STATUS_THROWN		(EC4_FRAME->thrown)
+# define E4C_STATUS_THROWN		(E4C_FRAME->thrown)
 
 /**
  * Accesses the <code>uncaught</code> flag of the current exception frame
@@ -248,29 +248,29 @@
  * </p>
  *
  * @see ExceptionFrame
- * @see EC4_STATUS_THROWN
+ * @see E4C_STATUS_THROWN
  */
-# define EC4_STATUS_UNCAUGHT	(EC4_FRAME->uncaught)
+# define E4C_STATUS_UNCAUGHT	(E4C_FRAME->uncaught)
 
 /**
  * Checks whether the current exception frame did complete without an error.
  * @see ExceptionFrame
  */
-# define EC4_SUCCEED			(!EC4_STATUS_THROWN)
+# define E4C_SUCCEED			(!E4C_STATUS_THROWN)
 
 /**
  * Checks whether the current exception frame did fail and then did recover of
  * the error.
  * @see ExceptionFrame
  */
-# define EC4_RECOVERED			(EC4_STATUS_THROWN && !EC4_STATUS_UNCAUGHT)
+# define E4C_RECOVERED			(E4C_STATUS_THROWN && !E4C_STATUS_UNCAUGHT)
 
 /**
  * Checks whether the current exception frame did fail and did not recover of
  * the error.
  * @see ExceptionFrame
  */
-# define EC4_FAILED				(EC4_STATUS_THROWN && EC4_STATUS_UNCAUGHT)
+# define E4C_FAILED				(E4C_STATUS_THROWN && E4C_STATUS_UNCAUGHT)
 
 /*@}*/
 
@@ -564,7 +564,7 @@
  * </p>
  *
  * <p>
- * The macro <code>EC4_ERRNO</code> can be checked in order to find out the
+ * The macro <code>E4C_ERRNO</code> can be checked in order to find out the
  * specific cause of the error.
  * </p>
  *
@@ -1056,7 +1056,7 @@ extern const Exception NullPointerException;
  *
  * The value of <code>errno</code> at the time the exception was thrown (right
  * after <code>fopen</code>) can be accessed through the macro
- * <code>EC4_ERRNO</code>.
+ * <code>E4C_ERRNO</code>.
  */
 extern const Exception FileOpenException;
 

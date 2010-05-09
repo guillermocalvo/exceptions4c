@@ -83,21 +83,21 @@
 #	define	MSG_THREAD_UNSAFE			"\n\nIf this application is actually using threads, this error could mean that\nexceptions4c was compiled without thread support."
 #	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) e4c_initialize()
 #	define	DEBUG_STOP_IF(c, e, f, l)	STOP_IF(c, e, f, l)
-#	define	EC4_FILE_SIGNAL				"<system signal>"
-#	define	EC4_FILE_SET_HANDLERS		"exceptions4c.setSignalHandlers"
-#	define	EC4_FILE_BEGIN				"exceptions4c.beginExceptionContext"
-#	define	EC4_FILE_END				"exceptions4c.endExceptionContext"
-#	define	EC4_FILE_AT_EXIT			"exceptions4c.atExit"
+#	define	E4C_FILE_SIGNAL				"<system signal>"
+#	define	E4C_FILE_SET_HANDLERS		"exceptions4c.setSignalHandlers"
+#	define	E4C_FILE_BEGIN				"exceptions4c.beginExceptionContext"
+#	define	E4C_FILE_END				"exceptions4c.endExceptionContext"
+#	define	E4C_FILE_AT_EXIT			"exceptions4c.atExit"
 # else
 #	define	MSG_FATAL_ERROR
 #	define	MSG_THREAD_UNSAFE
 #	define	DEBUG_INITIALIZE_ONCE
 #	define	DEBUG_STOP_IF(c, e, f, l)
-#	define	EC4_FILE_SIGNAL				E4C_FILE
-#	define	EC4_FILE_SET_HANDLERS		E4C_FILE
-#	define	EC4_FILE_BEGIN				E4C_FILE
-#	define	EC4_FILE_END				E4C_FILE
-#	define	EC4_FILE_AT_EXIT			E4C_FILE
+#	define	E4C_FILE_SIGNAL				E4C_FILE
+#	define	E4C_FILE_SET_HANDLERS		E4C_FILE
+#	define	E4C_FILE_BEGIN				E4C_FILE
+#	define	E4C_FILE_END				E4C_FILE
+#	define	E4C_FILE_AT_EXIT			E4C_FILE
 # endif
 
 const Exception INVALID_EXCEPTION = {
@@ -266,7 +266,7 @@ static ThreadEnvironment * e4c_getThreadEnvironment(){
 	static void e4c_atExit(){
 
 		if(environmentCollection != NULL){
-			dumpException(ContextNotEnded, EC4_FILE_AT_EXIT, E4C_LINE, errno);
+			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE, errno);
 		}
 	}
 
@@ -298,7 +298,7 @@ ExceptionContext * getExceptionContext(){
 	static void e4c_atExit(){
 
 		if(currentContext != NULL){
-			dumpException(ContextNotEnded, EC4_FILE_AT_EXIT, E4C_LINE, errno);
+			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE, errno);
 		}
 	}
 
@@ -385,7 +385,7 @@ static void e4c_handleSignal(int signalNumber){
 			/* reset the handler for this signal */
 			signal(signalNumber, e4c_handleSignal);
 			/* throw the appropriate exception to the default context */
-			e4c_propagate(context, *exception, EC4_FILE_SIGNAL, signalNumber, errno);
+			e4c_propagate(context, *exception, E4C_FILE_SIGNAL, signalNumber, errno);
 		}
 	}
 	/* this should never happen, but anyway... */
@@ -617,7 +617,7 @@ void setSignalHandlers(const SignalMapping * signalMapping, int signalMappings){
 	int					index;
 
 	/* check if setSignalHandlers was called before calling beginExceptionContext */
-	STOP_IF(context == NULL, ContextHasNotBegunYet, EC4_FILE_SET_HANDLERS, E4C_LINE);
+	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_SET_HANDLERS, E4C_LINE);
 
 	/* sanity check */
 	signalMapping		= (signalMappings == 0 ? NULL : signalMapping);
@@ -643,7 +643,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 
 	/* check if beginExceptionContext was called twice for this thread */
 	if(environment != NULL){
-		e4c_propagate(&environment->context, ContextHasAlreadyBegun, EC4_FILE_BEGIN, E4C_LINE, errno);
+		e4c_propagate(&environment->context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE, errno);
 	}
 
 	/* allocate memory for the new frame */
@@ -681,7 +681,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	/* check if beginExceptionContext was called twice for this program */
 	/* this can also happen when the program uses threads but E4C_THREAD_SAFE is not defined */
 	if(context != NULL){
-		e4c_propagate(context, ContextHasAlreadyBegun, EC4_FILE_BEGIN, E4C_LINE, errno);
+		e4c_propagate(context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE, errno);
 	}
 
 	/* update local and global variable */
@@ -728,7 +728,7 @@ void endExceptionContext(){
 	environment = e4c_removeThreadEnvironment();
 
 	/* check if endExceptionContext was called before calling beginExceptionContext */
-	STOP_IF(environment == NULL, ContextHasNotBegunYet, EC4_FILE_END, E4C_LINE);
+	STOP_IF(environment == NULL, ContextHasNotBegunYet, E4C_FILE_END, E4C_LINE);
 
 	/* update local variable */
 	context = &environment->context;
@@ -742,7 +742,7 @@ void endExceptionContext(){
 	context = currentContext;
 
 	/* check if endExceptionContext was called before calling beginExceptionContext */
-	STOP_IF(context == NULL, ContextHasNotBegunYet, EC4_FILE_END, E4C_LINE);
+	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_END, E4C_LINE);
 
 # endif
 
