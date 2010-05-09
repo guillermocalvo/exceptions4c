@@ -72,7 +72,7 @@
 	static ExceptionContext *	currentContext = NULL;
 # endif
 
-# ifdef DEBUG
+# ifndef NDEBUG
 	static e4c_bool isInitialized = e4c_false;
 #	ifdef E4C_THREAD_SAFE
 		MUTEX_DEFINE(isInitializedMutex);
@@ -261,7 +261,7 @@ static ThreadEnvironment * e4c_getThreadEnvironment(){
 	return(found ? environment : NULL);
 }
 
-# ifdef DEBUG
+# ifndef NDEBUG
 
 	static void e4c_atExit(){
 
@@ -293,7 +293,7 @@ ExceptionContext * getExceptionContext(){
 
 # else
 
-# ifdef DEBUG
+# ifndef NDEBUG
 
 	static void e4c_atExit(){
 
@@ -581,7 +581,7 @@ const Exception newException(const char * name, const char * description, const 
 }
 
 void dumpException(Exception exception, const char * file, int line, int errorNumber){
-# ifdef DEBUG
+# ifndef NDEBUG
 	fprintf(stderr, "\n\nUncaught %s: %s\n\n", exception.name, exception.description);
 
 	if(file != NULL && *file == '<'){
