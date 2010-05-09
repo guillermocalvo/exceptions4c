@@ -665,6 +665,11 @@
  * @param _exception_ Exception representing the signal
  *
  * @see SignalMapping
+ * @see beginExceptionContext
+ * @see setSignalHandlers
+ * @see getSignalHandlers
+ * @see defaultSignalMapping
+ * @see defaultSignalMappings
  */
 # define SIGNAL_MAPPING(_signalNumber_, _exception_) \
 	{ \
@@ -868,6 +873,13 @@ typedef void (*UncaughtHandler)(
  * <li><code>SIGTERM</code> the signal sent to a process to request its
  * termination.</li>
  * </ul>
+ *
+ * @see SIGNAL_MAPPING
+ * @see beginExceptionContext
+ * @see setSignalHandlers
+ * @see getSignalHandlers
+ * @see defaultSignalMapping
+ * @see defaultSignalMappings
  */
 typedef struct SignalMapping SignalMapping;
 struct SignalMapping{
@@ -951,6 +963,45 @@ struct ExceptionContext{
 	E4C_READ_ONLY	UncaughtHandler					uncaughtHandler;
 };
 
+/**
+ * @name Predefined signal mappings
+ *
+ * <p>
+ * There is a predefined set of signal mappings. Signal mappings are used to
+ * convert signals into exceptions.
+ * </p>
+ *
+ * <p>
+ * Common signals are mapped to its corresponding exception, for example:
+ * </p>
+ *
+ * <ul>
+ * <li><code>SIGABRT</code> is mapped to <code>AbortException</code></li>
+ * <li><code>SIGFPE</code> is mapped to <code>ArithmeticException</code></li>
+ * <li><code>SIGSEGV</code> is mapped to <code>BadPointerException</code></li>
+ * <li><code>SIGTERM</code> is mapped to <code>TerminationException</code></li>
+ * <li>...and so on</li>
+ * </ul>
+ *
+ * @see ::SignalMapping
+ * @see SIGNAL_MAPPING
+ * @see beginExceptionContext
+ * @see setSignalHandlers
+ * @see getSignalHandlers
+ * @{
+ */
+
+/**
+ * The array of predefined signal mappings.
+ */
+extern const SignalMapping defaultSignalMapping[];
+
+/**
+ * The number of predefined signal mappings.
+ */
+extern const int defaultSignalMappings;
+
+/*@}*/
 
 /**
  * @name Predefined exceptions
@@ -1425,10 +1476,31 @@ extern void endExceptionContext();
  * This function receives an array of mappings between the signals to be handled
  * and the corresponding exception to be thrown.
  *
+ * @see SignalMapping
+ * @see SIGNAL_MAPPING
+ * @see defaultSignalMapping
+ * @see defaultSignalMappings
+ *
  * @param mapping The array of mappings
  * @param mappings The number of elements in the array
  */
 extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
+
+/**
+ * Gets the current signal mapping
+ *
+ * This function receives an array of mappings between the signals to be handled
+ * and the corresponding exception to be thrown.
+ *
+ * @see SignalMapping
+ * @see SIGNAL_MAPPING
+ * @see defaultSignalMapping
+ * @see defaultSignalMappings
+ *
+ * @param mappings Will be set to the current number of mappings
+ * @return The current array of mappings
+ */
+extern const SignalMapping * getSignalHandlers(int * mappings);
 
 /**
  * Creates a new exception
