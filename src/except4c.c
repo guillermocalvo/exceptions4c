@@ -93,11 +93,11 @@
 #	define	MSG_THREAD_UNSAFE
 #	define	DEBUG_INITIALIZE_ONCE
 #	define	DEBUG_STOP_IF(c, e, f, l)
-#	define	E4C_FILE_SIGNAL				E4C_FILE
-#	define	E4C_FILE_SET_HANDLERS		E4C_FILE
-#	define	E4C_FILE_BEGIN				E4C_FILE
-#	define	E4C_FILE_END				E4C_FILE
-#	define	E4C_FILE_AT_EXIT			E4C_FILE
+#	define	E4C_FILE_SIGNAL				E4C_FILE_INFO
+#	define	E4C_FILE_SET_HANDLERS		E4C_FILE_INFO
+#	define	E4C_FILE_BEGIN				E4C_FILE_INFO
+#	define	E4C_FILE_END				E4C_FILE_INFO
+#	define	E4C_FILE_AT_EXIT			E4C_FILE_INFO
 # endif
 
 const Exception INVALID_EXCEPTION = {
@@ -266,7 +266,7 @@ static ThreadEnvironment * e4c_getThreadEnvironment(){
 	static void e4c_atExit(){
 
 		if(environmentCollection != NULL){
-			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE, errno);
+			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE_INFO, errno);
 		}
 	}
 
@@ -298,7 +298,7 @@ ExceptionContext * getExceptionContext(){
 	static void e4c_atExit(){
 
 		if(currentContext != NULL){
-			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE, errno);
+			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE_INFO, errno);
 		}
 	}
 
@@ -371,10 +371,10 @@ static void e4c_handleSignal(int signalNumber){
 	int					index;
 
 	/* check if 'handleSignal' was called before calling beginExceptionContext (very unlikely) */
-	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_STOP_IF(context->currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(context->currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* try to find a mapping for this signal */
 	for(index = 0; index < context->signalMappings; index++){
@@ -390,7 +390,7 @@ static void e4c_handleSignal(int signalNumber){
 	}
 	/* this should never happen, but anyway... */
 	/* we were unable to find the exception that represents the received signal number */
-	e4c_propagate(context, ExceptionSystemFatalError, E4C_FILE, E4C_LINE, errno);
+	e4c_propagate(context, ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO, errno);
 }
 
 static void e4c_setHandlers(ExceptionContext * context, const SignalMapping * signalMapping, int signalMappings){
@@ -445,14 +445,14 @@ E4C_JMP_BUF * e4c_first(e4c_Stage stage, const char * file, int line){
 	currentFrame = context->currentFrame;
 
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_STOP_IF(currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* create a new frame */
 	newFrame = (ExceptionFrame *)malloc( sizeof(ExceptionFrame) );
 
 	/* if there wasn't enough memory... */
 	if(newFrame == NULL){
-		e4c_propagate(context, NotEnoughMemoryException, E4C_FILE, E4C_LINE, errno);
+		e4c_propagate(context, NotEnoughMemoryException, E4C_FILE_INFO, E4C_LINE_INFO, errno);
 	}
 
 	newFrame->stage			= stage;
@@ -476,7 +476,7 @@ e4c_bool e4c_hook(e4c_Stage stage, const Exception exception){
 	ExceptionFrame *	frame;
 
 	/* check if the current exception context is NULL (unlikely) */
-	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	frame = context->currentFrame;
 
@@ -505,12 +505,12 @@ e4c_bool e4c_next(){
 	context = E4C_CONTEXT;
 
 	/* check if the current exception context is NULL (unlikely) */
-	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	currentFrame = context->currentFrame;
 
 	/* check if the current frame is NULL (unlikely) */
-	DEBUG_STOP_IF(currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	currentFrame->stage++;
 
@@ -534,7 +534,7 @@ e4c_bool e4c_next(){
 	context->currentFrame	= currentFrame = tmpFrame.previous;
 
 	/* check if the current frame is NULL (unlikely) */
-	DEBUG_STOP_IF(currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(currentFrame == NULL, ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* if the current frame has an uncaught exception, then we will propagate it */
 	if(tmpFrame.uncaught){
@@ -564,7 +564,7 @@ void e4c_throw(const Exception exception, const char * file, int line){
 	frame = context->currentFrame;
 
 	/* check if the current frame is NULL (unlikely) */
-	DEBUG_STOP_IF(frame == NULL, ExceptionSystemFatalError, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(frame == NULL, ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	e4c_propagate(context, exception, file, line, errno);
 }
@@ -617,7 +617,7 @@ void setSignalHandlers(const SignalMapping * signalMapping, int signalMappings){
 	int					index;
 
 	/* check if setSignalHandlers was called before calling beginExceptionContext */
-	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_SET_HANDLERS, E4C_LINE);
+	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_SET_HANDLERS, E4C_LINE_INFO);
 
 	/* sanity check */
 	signalMapping		= (signalMappings == 0 ? NULL : signalMapping);
@@ -643,14 +643,14 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 
 	/* check if beginExceptionContext was called twice for this thread */
 	if(environment != NULL){
-		e4c_propagate(&environment->context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE, errno);
+		e4c_propagate(&environment->context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE_INFO, errno);
 	}
 
 	/* allocate memory for the new frame */
 	environment	= malloc( sizeof(ThreadEnvironment) );
 
 	/* if there wasn't enough memory... */
-	STOP_IF(environment == NULL, NotEnoughMemoryException, E4C_FILE, E4C_LINE);
+	STOP_IF(environment == NULL, NotEnoughMemoryException, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* allocate memory for the new frame */
 	newFrame = malloc( sizeof(ExceptionFrame) );
@@ -658,7 +658,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	/* if there wasn't enough memory... */
 	if(newFrame == NULL){
 		free(environment);
-		dumpException(NotEnoughMemoryException, E4C_FILE, E4C_LINE, errno);
+		dumpException(NotEnoughMemoryException, E4C_FILE_INFO, E4C_LINE_INFO, errno);
 		STOP_EXECUTION;
 	}
 
@@ -681,20 +681,20 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	/* check if beginExceptionContext was called twice for this program */
 	/* this can also happen when the program uses threads but E4C_THREAD_SAFE is not defined */
 	if(context != NULL){
-		e4c_propagate(context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE, errno);
+		e4c_propagate(context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE_INFO, errno);
 	}
 
 	/* update local and global variable */
 	context = currentContext = &mainContext;
 
 	/* check if the current exception context is NULL (unlikely) */
-	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* allocate memory for the new frame */
 	newFrame = malloc( sizeof(ExceptionFrame) );
 
 	/* if there wasn't enough memory... */
-	STOP_IF(newFrame == NULL, NotEnoughMemoryException, E4C_FILE, E4C_LINE);
+	STOP_IF(newFrame == NULL, NotEnoughMemoryException, E4C_FILE_INFO, E4C_LINE_INFO);
 
 # endif
 
@@ -728,13 +728,13 @@ void endExceptionContext(){
 	environment = e4c_removeThreadEnvironment();
 
 	/* check if endExceptionContext was called before calling beginExceptionContext */
-	STOP_IF(environment == NULL, ContextHasNotBegunYet, E4C_FILE_END, E4C_LINE);
+	STOP_IF(environment == NULL, ContextHasNotBegunYet, E4C_FILE_END, E4C_LINE_INFO);
 
 	/* update local variable */
 	context = &environment->context;
 
 	/* check if the current context is NULL (unlikely) */
-	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_INFO, E4C_LINE_INFO);
 
 # else
 
@@ -742,7 +742,7 @@ void endExceptionContext(){
 	context = currentContext;
 
 	/* check if endExceptionContext was called before calling beginExceptionContext */
-	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_END, E4C_LINE);
+	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_END, E4C_LINE_INFO);
 
 # endif
 
@@ -750,10 +750,10 @@ void endExceptionContext(){
 	frame = context->currentFrame;
 
 	/* check if there are no frames left (unlikely) */
-	DEBUG_STOP_IF(frame == NULL, ExceptionSystemFatalError, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(frame == NULL, ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* check if there are too many frames left (unlikely) */
-	DEBUG_STOP_IF(!IS_TOP_FRAME(frame), ExceptionSystemFatalError, E4C_FILE, E4C_LINE);
+	DEBUG_STOP_IF(!IS_TOP_FRAME(frame), ExceptionSystemFatalError, E4C_FILE_INFO, E4C_LINE_INFO);
 
 	/* deallocate the current, top frame */
 	free(frame);
