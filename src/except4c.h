@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version 1.3
+ * @version 1.4
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -81,6 +81,12 @@
 # define E4C_READ_ONLY					const
 # endif
 
+
+# define E4C_PASTE_TOKENS(a, b, c, d, e) a ## b ## c ## d ## e
+# define E4C_MANGLE_NAME(_prefix_, _name_, _line_) E4C_PASTE_TOKENS(_prefix_, _name_, _, _line_, _)
+# define E4C_RECYCLING(name) E4C_MANGLE_NAME(_recycling_, name, __LINE__)
+
+
 /*
  * Next macros are undocumented on purpose, because they shouldn't be used
  * directly (but through the macros: try, catch, finalize and throw).
@@ -156,123 +162,6 @@
 	e4c_throw( \
 		_exception_, E4C_FILE_INFO, E4C_LINE_INFO \
 	)
-
-/**
- * @name Convenience macros for acessing exception-related information
- *
- * <p>
- * These macros let you obtain data regarding the current exception context,
- * such as the actual exception being thrown, the value of <code>errno</code>,
- * etc.
- * </p>
- *
- * <p>
- * This information is especially useful when recovering from errors
- * (<code>catch</code> blocks) or cleaning up (<code>finally</code> blocks).
- * </p>
- *
- * @{
- */
-
-/**
- * Accesses the current exception context of the program (or current thread)
- * @see ExceptionContext
- * @see getExceptionContext
- * @see beginExceptionContext
- * @see endExceptionContext
- */
-# define E4C_CONTEXT			getExceptionContext()
-
-/**
- * Accesses the current frame of the exception context
- * @see ExceptionFrame
- */
-# define E4C_FRAME				(E4C_CONTEXT->currentFrame)
-
-/**
- * Accesses the current exception being thrown from the current exception frame
- *
- * <p>
- * If no exception was thrown, then the value of <code>EXCEPTION</code> will be
- * <code>INVALID_EXCEPTION</code>.
- * </p>
- *
- * <p>
- * The flag <code>E4C_STATUS_THROWN</code> can be checked in order to know if an
- * exception was actually thrown.
- * </p>
- *
- * @see ExceptionFrame
- * @see INVALID_EXCEPTION
- * @see E4C_STATUS_THROWN
- */
-# define EXCEPTION				(E4C_FRAME->exception)
-
-/**
- * Accesses the error number of the current exception frame
- * @see ExceptionFrame
- */
-# define E4C_ERRNO				(E4C_FRAME->errorNumber)
-
-/**
- * Accesses the error file of the current exception frame
- * @see ExceptionFrame
- */
-# define E4C_FILE				(E4C_FRAME->file)
-
-/**
- * Accesses the error line of the current exception frame
- * @see ExceptionFrame
- */
-# define E4C_LINE				(E4C_FRAME->line)
-
-/**
- * Accesses the <code>thrown</code> flag of the current exception frame
- *
- * <p>
- * The <code>thrown</code> flag is set when some exception is thrown within the
- * current exception frame, regardless of whether it gets caught or not.
- * </p>
- *
- * @see ExceptionFrame
- * @see E4C_STATUS_UNCAUGHT
- */
-# define E4C_STATUS_THROWN		(E4C_FRAME->thrown)
-
-/**
- * Accesses the <code>uncaught</code> flag of the current exception frame
- *
- * <p>
- * The <code>uncaught</code> flag is set when some exception is caught within
- * the current exception frame.
- * </p>
- *
- * @see ExceptionFrame
- * @see E4C_STATUS_THROWN
- */
-# define E4C_STATUS_UNCAUGHT	(E4C_FRAME->uncaught)
-
-/**
- * Checks whether the current exception frame did complete without an error.
- * @see ExceptionFrame
- */
-# define E4C_SUCCEED			(!E4C_STATUS_THROWN)
-
-/**
- * Checks whether the current exception frame did fail and then did recover of
- * the error.
- * @see ExceptionFrame
- */
-# define E4C_RECOVERED			(E4C_STATUS_THROWN && !E4C_STATUS_UNCAUGHT)
-
-/**
- * Checks whether the current exception frame did fail and did not recover of
- * the error.
- * @see ExceptionFrame
- */
-# define E4C_FAILED				(E4C_STATUS_THROWN && E4C_STATUS_UNCAUGHT)
-
-/*@}*/
 
 /*@}*/
 
@@ -634,6 +523,361 @@
 /*@}*/
 
 /**
+ * @name Integration macro
+ *
+ * <p>
+ * This macro is designed to ease the integration of external libraries.
+ * </p>
+ *
+ * @{
+ */
+
+/**
+ * Reuses an existing exception context, otherwise, opens a new one and then
+ * closes it.
+ *
+ * <p>
+ * This macro lets library developers use the exception framework, regardless of
+ * the library clients being unaware of the exception handling system. In a
+ * nutshell, function libraries can use <code>#try</code>, <code>#catch</code>,
+ * <code>#throw</code>, etc. whether the client previously began an exception
+ * context or not.
+ * </p>
+ *
+ * <p>
+ * You <strong>must not use this macro</strong> unless you are implementing some
+ * functionality which is to be called from another program, potentially unaware
+ * of exceptions.
+ * </p>
+ *
+ * <p>
+ * A block introduced by <code>recycleExceptionContext</code> is guaranteed to
+ * take place <em>inside</em> an execution context. When the block completes,
+ * the system returns to its previous status (if it was necessary to open a new
+ * exception context, it will be automatically closed).
+ * </p>
+ *
+ * <p>
+ * This way, when an external functions encounters an error, it may either throw
+ * an exception (when the caller did open an exception context), or otherwise
+ * return an error code (when the caller did not open an exception context).
+ * </p>
+ *
+ * <p>
+ * <code>recycleExceptionContext</code> needs to be given a variable of type
+ * <code>#RecyclingException</code> that will point to whichever exception
+ * thrown inside the block.
+ * </p>
+ *
+ * <pre class="fragment">
+ * int libraryPublicFunction(void * pointer, int number){
+ * &nbsp;
+ *     RecyclingException exception = NULL;
+ * &nbsp;
+ *     /<span>*
+ *     We don't know where this function is going to be called from, so:
+ *       * We cannot use "try", "throw", etc. right here, because the exception
+ *       context COULD be uninitialized at this very moment.
+ *       * We cannot call "beginExceptionContext" either, because the exception
+ *       context COULD be already initialized.
+ *     If we have to make use of the exception handling system, we need to
+ *     "recycle" the exception context.
+ *     *</span>/
+ * &nbsp;
+ *     recycleExceptionContext(exception){
+ *         /<span>* Now we can safely use "try", "throw", etc. *</span>/
+ *         if(pointer == NULL){
+ *             throw(NullPointerException);
+ *         }
+ * &nbsp;
+ *         libraryPrivateFunction(pointer, number);
+ *     }
+ * &nbsp;
+ *     if(exception != NULL){
+ *         /<span>*
+ *         We got here because:
+ *           * There was no exception context
+ *           * An exception was caught during the execution of the block
+ *           * The block was closed
+ *         Now we should return an error code to the caller, which is unaware of
+ *         the exception system (if the caller was aware, the exception would
+ *         have been simply propagated).
+ *         *</span>/
+ *         return(-1);
+ *     }
+ * &nbsp;
+ *     /<span>*
+ *     If we got here, it means that our block completed successfully.
+ *     We need to return a "success" status code.
+ *     *</span>/
+ *     return(0);
+ * }
+ * </pre>
+ *
+ * <p>
+ * Next, the semantics of <code>recycleExceptionContext</code> are explained,
+ * step by step.
+ * </p>
+ *
+ * <ul>
+ *   <li>
+ *   If there is an exception context at the time the block starts:
+ *   <ol>
+ *     <li>The existing exception context will be reused
+ *       (<em>recycled</em>).</li>
+ *     <li>The code block will take place.</li>
+ *     <li>
+ *       If any exception is thrown during the execution of the block:
+ *       <ul>
+ *       <li>It will be <strong>propagated</strong> upwards to the caller.</li>
+ *       <li>The control will be transferred to the nearest surrounding block of
+ *         code which is able to handle that exception.</li>
+ *       </ul>
+ *     </li>
+ *     <li>
+ *       When the block ends:
+ *       <ul>
+ *       <li>The block completed successfully.</li>
+ *       <li><code>_recyclingException_</code> will be <code>NULL</code>.</li>
+ *       <li>The function may then return a "success" status code.</li>
+ *       </ul>
+ *     </li>
+ *   </ol>
+ *   </li>
+ *   <li>
+ *   If there is no exception context at the time the block starts:
+ *   <ol>
+ *     <li>A new exception context will be opened; note that the signal handling
+ *       system <strong>will NOT be set up</strong>.</li>
+ *     <li>The code block will take place.</li>
+ *     <li>
+ *       If any exception is thrown during the execution of the block:
+ *       <ul>
+ *       <li>It will be <strong>caught</strong> and
+ *           <code>_recyclingException_</code> will be set to point to it.</li>
+ *       </ul>
+ *     </li>
+ *     <li>
+ *       When the block ends:
+ *       <ul>
+ *       <li>If <code>_recyclingException_</code> is <code>NULL</code> then the
+ *           block completed successfully. The function may then return a
+ *           "success" status code.</li>
+ *       <li>Otherwise, an exception was thrown during the execution of the
+ *           block. The function may then return an error code to the caller.
+ *           </li>
+ *       </ul>
+ *     </li>
+ *   </ol>
+ *   </li>
+ * </ul>
+ *
+ * <p>
+ * If you need to perform any cleanup, you should place it <em>inside</em> a
+ * <code>finally</code> block, for example:
+ * </p>
+ *
+ * <pre class="fragment">
+ * ...
+ * recycleExceptionContext(exception){
+ * &nbsp;
+ *     void * buffer = NULL;
+ *     try{
+ *         buffer = malloc(1024);
+ *         ...
+ *     }finally{
+ *         free(buffer);
+ *     }
+ * }
+ * ...
+ * </pre>
+ *
+ * <p>
+ * If you need to rely on the signal handling system, you should call
+ * <code>#setSignalHandlers</code> explicitely. You could also call
+ * <code>#getSignalHandlers</code>, so you can restore the previous mapping when
+ * you are done:
+ * </p>
+ *
+ * <pre class="fragment">
+ * ...
+ * recycleExceptionContext(exception){
+ * &nbsp;
+ *     int prevMappings;
+ *     const SignalMapping * prevMapping = getSignalHandlers(&prevMappings);
+ * &nbsp;
+ *     setSignalHandlers(newMapping, newMappings);
+ * &nbsp;
+ *     try{
+ *         ...
+ *     }finally{
+ *         setSignalHandlers(prevMapping, prevMappings);
+ *     }
+ * }
+ * ...
+ * </pre>
+ *
+ * @param _recyclingException_ A reference to whichever exception thrown inside
+ *        the block, otherwise will be set to <code>NULL</code>.
+ *
+ * @see e4c_ExceptionContext
+ * @see RecyclingException
+ * @see beginExceptionContext
+ * @see endExceptionContext
+ * @see E4C_CONTEXT
+ */
+# define recycleExceptionContext(_recyclingException_) \
+	\
+	e4c_RecyclingStage	E4C_RECYCLING(stage)	= e4c_beforePayload; \
+	e4c_bool			E4C_RECYCLING(recycled)	= (E4C_CONTEXT != NULL); \
+	\
+	_recyclingException_ = NULL; \
+	if( !E4C_RECYCLING(recycled) ){ \
+        beginExceptionContext(e4c_false, NULL); \
+        try{ \
+			goto E4C_RECYCLING(payload); \
+			E4C_RECYCLING(cleanup): \
+            ; \
+		}catch(RuntimeException){ \
+			_recyclingException_ = &EXCEPTION; \
+		}finally{ \
+			E4C_RECYCLING(stage) = e4c_recyclingDone; \
+            e4c_next(); \
+			endExceptionContext(); \
+			break; \
+		} \
+	} \
+	\
+	E4C_RECYCLING(payload): \
+	for(; E4C_RECYCLING(stage) < e4c_recyclingDone; E4C_RECYCLING(stage)++) \
+		if( E4C_RECYCLING(stage) == e4c_afterPayload){ \
+            if( !E4C_RECYCLING(recycled) ){ \
+            	goto E4C_RECYCLING(cleanup); \
+            }else{ \
+            	break; \
+        	} \
+		}else
+
+/*@}*/
+
+/**
+ * @name Convenience macros for accessing exception-related information
+ *
+ * <p>
+ * These macros let you obtain data regarding the current exception context,
+ * such as the actual exception being thrown, the value of <code>errno</code>,
+ * etc.
+ * </p>
+ *
+ * <p>
+ * This information is especially useful when recovering from errors
+ * (<code>catch</code> blocks) or cleaning up (<code>finally</code> blocks).
+ * </p>
+ *
+ * @{
+ */
+
+/**
+ * Accesses the current exception context of the program (or current thread)
+ * @see ExceptionContext
+ * @see getExceptionContext
+ * @see beginExceptionContext
+ * @see endExceptionContext
+ */
+# define E4C_CONTEXT			getExceptionContext()
+
+/**
+ * Accesses the current frame of the exception context
+ * @see ExceptionFrame
+ */
+# define E4C_FRAME				(E4C_CONTEXT->currentFrame)
+
+/**
+ * Accesses the current exception being thrown from the current exception frame
+ *
+ * <p>
+ * If no exception was thrown, then the value of <code>EXCEPTION</code> will be
+ * <code>INVALID_EXCEPTION</code>.
+ * </p>
+ *
+ * <p>
+ * The flag <code>E4C_STATUS_THROWN</code> can be checked in order to know if an
+ * exception was actually thrown.
+ * </p>
+ *
+ * @see ExceptionFrame
+ * @see INVALID_EXCEPTION
+ * @see E4C_STATUS_THROWN
+ */
+# define EXCEPTION				(E4C_FRAME->exception)
+
+/**
+ * Accesses the error number of the current exception frame
+ * @see ExceptionFrame
+ */
+# define E4C_ERRNO				(E4C_FRAME->errorNumber)
+
+/**
+ * Accesses the error file of the current exception frame
+ * @see ExceptionFrame
+ */
+# define E4C_FILE				(E4C_FRAME->file)
+
+/**
+ * Accesses the error line of the current exception frame
+ * @see ExceptionFrame
+ */
+# define E4C_LINE				(E4C_FRAME->line)
+
+/**
+ * Accesses the <code>thrown</code> flag of the current exception frame
+ *
+ * <p>
+ * The <code>thrown</code> flag is set when some exception is thrown within the
+ * current exception frame, regardless of whether it gets caught or not.
+ * </p>
+ *
+ * @see ExceptionFrame
+ * @see E4C_STATUS_UNCAUGHT
+ */
+# define E4C_STATUS_THROWN		(E4C_FRAME->thrown)
+
+/**
+ * Accesses the <code>uncaught</code> flag of the current exception frame
+ *
+ * <p>
+ * The <code>uncaught</code> flag is set when some exception is caught within
+ * the current exception frame.
+ * </p>
+ *
+ * @see ExceptionFrame
+ * @see E4C_STATUS_THROWN
+ */
+# define E4C_STATUS_UNCAUGHT	(E4C_FRAME->uncaught)
+
+/**
+ * Checks whether the current exception frame did complete without an error.
+ * @see ExceptionFrame
+ */
+# define E4C_SUCCEED			(!E4C_STATUS_THROWN)
+
+/**
+ * Checks whether the current exception frame did fail and then did recover of
+ * the error.
+ * @see ExceptionFrame
+ */
+# define E4C_RECOVERED			(E4C_STATUS_THROWN && !E4C_STATUS_UNCAUGHT)
+
+/**
+ * Checks whether the current exception frame did fail and did not recover of
+ * the error.
+ * @see ExceptionFrame
+ */
+# define E4C_FAILED				(E4C_STATUS_THROWN && E4C_STATUS_UNCAUGHT)
+
+/*@}*/
+
+/**
  * @name Other convenience macros
  *
  * <p>
@@ -767,6 +1011,25 @@ typedef enum{
 } e4c_Stage;
 
 /**
+ * Represents the current execution status of a <em>recycled</em> block
+ *
+ * <p>
+ * <em>Note: this type is internal to the framework, and not intended to be used
+ * by the user of the library.</em>
+ * </p>
+ *
+ * @see recycleExceptionContext
+ */
+typedef enum{
+	/** The block has not been executed yet */
+	e4c_beforePayload,
+	/** The block has just been executed */
+	e4c_afterPayload,
+	/** The block is about to complete */
+	e4c_recyclingDone
+} e4c_RecyclingStage;
+
+/**
  * This is the signature of a function which will be executed in the event of an
  * uncaught exception
  *
@@ -790,13 +1053,21 @@ typedef void (*UncaughtHandler)(
 );
 
 /**
+ * Represents a reference to an exception thrown inside a <em>recycled</em>
+ * block.
+ *
+ * @see recycleExceptionContext
+ */
+typedef const Exception * RecyclingException;
+
+/**
  * Represents a map between a signal and an exception
  *
  * <p>
- * <strong>exceptions4c</strong> can make your life easier by converting each
- * signals to a #Exception. Most of these signals would crash your program as
- * soon as they were raised. Now you can <code>#catch</code> signals and avoid
- * core dumps.
+ * <strong>exceptions4c</strong> can make your life easier by converting signals
+ * to <code>#Exception</code>s. Most of these signals would crash your program
+ * as soon as they were raised. Now you can <code>#catch</code> signals and
+ * avoid core dumps.
  * </p>
  *
  * <p>
@@ -944,7 +1215,7 @@ struct e4c_ExceptionFrame{
  * <p>
  * Each part of the program that makes use of the exception handling system,
  * needs an exception context. This context holds a stack of
- * #ExceptionFrame's, in which exception information is recorded.
+ * <code>#ExceptionFrame</code>s, in which exception information is recorded.
  * </p>
  */
 typedef struct e4c_ExceptionContext ExceptionContext;
@@ -983,7 +1254,7 @@ struct e4c_ExceptionContext{
  * <li>...and so on</li>
  * </ul>
  *
- * @see ::SignalMapping
+ * @see SignalMapping
  * @see SIGNAL_MAPPING
  * @see beginExceptionContext
  * @see setSignalHandlers
