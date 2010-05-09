@@ -96,7 +96,7 @@
 # define E4C_JMP_BUF					jmp_buf
 # endif
 
-# ifdef DEBUG
+# ifndef NDEBUG
 # define E4C_FILE_INFO					(const char *)__FILE__
 # define E4C_LINE_INFO					__LINE__
 # else
