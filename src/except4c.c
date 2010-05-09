@@ -84,6 +84,7 @@
 #	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) e4c_initialize()
 #	define	DEBUG_STOP_IF(c, e, f, l)	STOP_IF(c, e, f, l)
 #	define	E4C_FILE_SIGNAL				"<system signal>"
+#	define	E4C_FILE_GET_HANDLERS		"exceptions4c.getSignalHandlers"
 #	define	E4C_FILE_SET_HANDLERS		"exceptions4c.setSignalHandlers"
 #	define	E4C_FILE_BEGIN				"exceptions4c.beginExceptionContext"
 #	define	E4C_FILE_END				"exceptions4c.endExceptionContext"
@@ -94,6 +95,7 @@
 #	define	DEBUG_INITIALIZE_ONCE
 #	define	DEBUG_STOP_IF(c, e, f, l)
 #	define	E4C_FILE_SIGNAL				E4C_FILE_INFO
+#	define	E4C_FILE_GET_HANDLERS		E4C_FILE_INFO
 #	define	E4C_FILE_SET_HANDLERS		E4C_FILE_INFO
 #	define	E4C_FILE_BEGIN				E4C_FILE_INFO
 #	define	E4C_FILE_END				E4C_FILE_INFO
@@ -150,7 +152,7 @@ DEFINE_EXCEPTION(ContextHasNotBegunYet,			DESC_NOT_BEGUN_YET,					ExceptionSyste
 static
 DEFINE_EXCEPTION(ContextNotEnded,				DESC_NOT_ENDED,						ExceptionSystemFatalError);
 
-static const SignalMapping defaultSignalMapping[] = {
+const SignalMapping defaultSignalMapping[] = {
 	SIGNAL_MAPPING(SIGABRT,		AbortException),
 	SIGNAL_MAPPING(SIGFPE,		ArithmeticException),
 	SIGNAL_MAPPING(SIGILL,		IllegalInstructionException),
@@ -611,19 +613,40 @@ void printExceptionHierarchy(Exception exception){
 	fprintf(stderr, "%s\n\n", separator);
 }
 
-void setSignalHandlers(const SignalMapping * signalMapping, int signalMappings){
+void setSignalHandlers(const SignalMapping * mapping, int mappings){
 
 	ExceptionContext *	context	= E4C_CONTEXT;
-	int					index;
 
 	/* check if setSignalHandlers was called before calling beginExceptionContext */
 	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_SET_HANDLERS, E4C_LINE_INFO);
 
 	/* sanity check */
-	signalMapping		= (signalMappings == 0 ? NULL : signalMapping);
-	signalMappings		= (signalMapping == NULL ? 0 : signalMappings);
+	mapping		= (mappings == 0 ? NULL : mapping);
+	mappings	= (mapping == NULL ? 0 : mappings);
 
-	e4c_setHandlers(context, signalMapping, signalMappings);
+	e4c_setHandlers(context, mapping, mappings);
+}
+
+const SignalMapping * getSignalHandlers(int * mappings){
+
+	ExceptionContext *	context	= E4C_CONTEXT;
+
+	/* check if setSignalHandlers was called before calling beginExceptionContext */
+	STOP_IF(context == NULL, ContextHasNotBegunYet, E4C_FILE_GET_HANDLERS, E4C_LINE_INFO);
+
+	/* sanity check */
+	if(mappings == NULL){
+		e4c_throw(NullPointerException, E4C_FILE_GET_HANDLERS, E4C_LINE_INFO);
+	}
+
+	if(context->signalMapping == NULL){
+		*mappings = 0;
+		return(NULL);
+	}
+
+	*mappings = context->signalMappings;
+
+	return(context->signalMapping);
 }
 
 void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandler){
