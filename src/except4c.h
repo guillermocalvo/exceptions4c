@@ -722,8 +722,8 @@
  * </p>
  *
  */
-typedef struct Exception Exception;
-struct Exception{
+typedef struct e4c_Exception Exception;
+struct e4c_Exception{
 
 	/** The name of this exception */
 	const char *			name;
@@ -881,8 +881,8 @@ typedef void (*UncaughtHandler)(
  * @see defaultSignalMapping
  * @see defaultSignalMappings
  */
-typedef struct SignalMapping SignalMapping;
-struct SignalMapping{
+typedef struct e4c_SignalMapping SignalMapping;
+struct e4c_SignalMapping{
 
 	/** The signal to be converted */
 	int						signalNumber;
@@ -907,8 +907,8 @@ struct SignalMapping{
  * previous frames until it gets caught, otherwise the program ends.
  * </p>
  */
-typedef struct ExceptionFrame ExceptionFrame;
-struct ExceptionFrame{
+typedef struct e4c_ExceptionFrame ExceptionFrame;
+struct e4c_ExceptionFrame{
 
 	/** The continuation address of the current block */
 	E4C_READ_ONLY	E4C_JMP_BUF			address;
@@ -947,8 +947,8 @@ struct ExceptionFrame{
  * #ExceptionFrame's, in which exception information is recorded.
  * </p>
  */
-typedef struct ExceptionContext ExceptionContext;
-struct ExceptionContext{
+typedef struct e4c_ExceptionContext ExceptionContext;
+struct e4c_ExceptionContext{
 
 	/** The current (inner) exception frame of this context */
 	E4C_READ_ONLY ExceptionFrame * E4C_READ_ONLY	currentFrame;
