@@ -1689,26 +1689,62 @@ extern const Exception ProgramSignal2Exception;
 /*@}*/
 
 /**
- * Opens an exception context
+ * Begins an exception context
  *
  * <p>
- * This function creates and initializes the exception context to be used by the
- * the program until <code>endExceptionContext</code> is called.
+ * This function begins the current exception context to be used by the program
+ * (or current thread), until <code>#endExceptionContext</code> is called.
  * </p>
  *
  * <p>
- * A function can be specified to be called in the event of an uncaught
- * exception. There
- * exceptions, if <code>handleSignals</code> is <code>true</code>.
+ * A program (or thread) <strong>must not</strong> use the keywords
+ * <code>#try</code>, <code>#catch</code>, <code>#throw</code>, etc. prior to
+ * calling <code>beginExceptionContext</code>. Such programming error will lead
+ * to an abrupt exit of the program (or thread).
  * </p>
  *
  * <p>
- * In addition, if <code>handleSignals</code> is <code>true</code>,
- * <code>beginExceptionContext</code> will set up the default mapping to convert
- * signals into exceptions. This goal is achieved through the standard function
- * <code>signal</code>. Note that the behaviour of <code>signal</code> is
- * undefined in a multithreaded program, so use this feature with caution.
+ * Calling <code>beginExceptionContext</code> <em>twice</em> is also considered
+ * a programming error, and therefore the program (or thread) will exit abruptly
+ * too. Nevertheless, <code>beginExceptionContext</code> can be called several
+ * times <em>if, and only if,</em> <code>#endExceptionContext</code> is called
+ * in between.
  * </p>
+ *
+ * <p>
+ * The signal handling system can be automatically initialized with the default
+ * signal mapping via <code>handleSignals</code> parameter when calling
+ * <code>beginExceptionContext</code>. This is equivalent to:
+ * </p>
+ *
+ * <pre class="fragment">
+ * setSignalHandlers(defaultSignalMapping, defaultSignalMappings);
+ * </pre>
+ *
+ * <p>
+ * Note that the behaviour of <code>signal</code> is undefined in a
+ * multithreaded program, so use the signal handling system with caution.
+ * </p>
+ *
+ * <p>
+ * In addition, a handling function can be specified to be called in the event
+ * of an uncaught exception. This function will be called before exiting the
+ * program (or thread).
+ * </p>
+ *
+ * <p>
+ * There exist a convenience function to be used as the default
+ * <em>uncaught handler</em>, called <code>#dumpException</code>. This function
+ * simply prints information regarding the exception to <code>stderr</code>, and
+ * then exits.
+ * </p>
+ *
+ * @see endExceptionContext
+ * @see setSignalHandlers
+ * @see defaultSignalMapping
+ * @see defaultSignalMappings
+ * @see UncaughtHandler
+ * @see dumpException
  *
  * @param handleSignals If <code>true</code>, the signal handling system will be
  *        set up with the default mapping.
@@ -1722,22 +1758,46 @@ extern void beginExceptionContext(e4c_bool handleSignals,
  * Retrieves the current exception context of the program (or current thread)
  *
  * <p>
- * The exception context must be properly started and finished by calling the
- * functions <code>beginExceptionContext</code> and
- * <code>andExceptionContext</code> in order to be accessed.
+ * The exception context must be properly begun and ended by calling the
+ * functions <code>#beginExceptionContext</code> and
+ * <code>#endExceptionContext</code> in order to be accessed.
+ * </p>
+ *
+ * <p>
+ * The macro <code>#E4C_CONTEXT</code> is an <em>alias</em> to call this
+ * function.
+ * </p>
+ *
+ * <p>
+ * This function returns <code>NULL</code> if either the exception context has
+ * not yet begun, or has already been ended.
  * </p>
  *
  * @see ExceptionContext
  * @see beginExceptionContext
  * @see endExceptionContext
  * @see E4C_CONTEXT
+ *
+ * @return The current exception context of the program (or current thread),
+ *   otherwise <code>NULL</code>
  */
 extern ExceptionContext * getExceptionContext();
 
 /**
- * Closes the current exception context
+ * Ends the current exception context
  *
- * This function closes the current exception context.
+ * <p>
+ * This function ends the current exception context.
+ * </p>
+ *
+ * <p>
+ * A program (or thread) <strong>must</strong> call
+ * <code>#endExceptionContext</code> when the exception handling system is no
+ * longer needed. Exiting a program (or thread) without calling before
+ * <code>#endExceptionContext</code> is a programming error.
+ * </p>
+ *
+ * @see beginExceptionContext
  */
 extern void endExceptionContext();
 
