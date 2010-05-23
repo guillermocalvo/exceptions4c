@@ -923,6 +923,14 @@
 
 /*@}*/
 
+# ifdef __DOXYGEN
+/* This is a kludge to work around Doxygen */
+typedef e4c_Exception Exception;
+typedef e4c_SignalMapping SignalMapping;
+typedef e4c_ExceptionFrame ExceptionFrame;
+typedef e4c_ExceptionContext ExceptionContext;
+# endif
+
 /**
  * Represents an exception in the exception handling system
  *
