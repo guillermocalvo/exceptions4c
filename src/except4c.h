@@ -927,8 +927,8 @@
  * Represents an exception in the exception handling system
  *
  * <p>
- * Exceptions are objects with a <code>#name</code>, a <code>#description</code>
- * and a <code>#super-type</code>.
+ * Exceptions are objects with a <code>name</code>, a <code>description</code>
+ * and a <code>super</code>-type.
  * </p>
  *
  * <p>
@@ -965,6 +965,11 @@
  * <code>catch(RuntimeException)</code> block.
  * </p>
  *
+ * @see RuntimeException
+ * @see DEFINE_EXCEPTION
+ * @see throw
+ * @see catch
+ * @see EXCEPTION
  */
 typedef struct e4c_Exception Exception;
 struct e4c_Exception{
@@ -1247,10 +1252,10 @@ struct e4c_ExceptionContext{
  * </p>
  *
  * <ul>
- * <li><code>SIGABRT</code> is mapped to <code>AbortException</code></li>
- * <li><code>SIGFPE</code> is mapped to <code>ArithmeticException</code></li>
- * <li><code>SIGSEGV</code> is mapped to <code>BadPointerException</code></li>
- * <li><code>SIGTERM</code> is mapped to <code>TerminationException</code></li>
+ * <li><code>SIGABRT</code> is mapped to <code>#AbortException</code></li>
+ * <li><code>SIGFPE</code> is mapped to <code>#ArithmeticException</code></li>
+ * <li><code>SIGSEGV</code> is mapped to <code>#BadPointerException</code></li>
+ * <li><code>SIGTERM</code> is mapped to <code>#TerminationException</code></li>
  * <li>...and so on</li>
  * </ul>
  *
@@ -1689,6 +1694,17 @@ extern const Exception ProgramSignal2Exception;
 /*@}*/
 
 /**
+ * @name Exception context handling Functions
+ *
+ * <p>
+ * These functions enclose the scope of the exception handling system and
+ * retrieve the current exception context.
+ * </p>
+ *
+ * @{
+ */
+
+/**
  * Begins an exception context
  *
  * <p>
@@ -1757,10 +1773,10 @@ extern void beginExceptionContext(e4c_bool handleSignals,
 /**
  * Retrieves the current exception context of the program (or current thread)
  *
+
  * <p>
- * The exception context must be properly begun and ended by calling the
- * functions <code>#beginExceptionContext</code> and
- * <code>#endExceptionContext</code> in order to be accessed.
+ * This function retrieves the current exception context, to access its
+ * properties.
  * </p>
  *
  * <p>
@@ -1801,11 +1817,38 @@ extern ExceptionContext * getExceptionContext();
  */
 extern void endExceptionContext();
 
+/*@}*/
+
 /**
- * Sets up the signal handling system
+ * @name Signal handling system functions
  *
- * This function receives an array of mappings between the signals to be handled
+ * <p>
+ * These functions retrieve or assign the mapping between signals and exceptions
+ * for the program (or thread).
+ * </p>
+ *
+ * @{
+ */
+
+/**
+ * Assigns the signal mapping for the program (or thread)
+ *
+ * <p>
+ * This function assigns an array of mappings between the signals to be handled
  * and the corresponding exception to be thrown.
+ * </p>
+ *
+ * <p>
+ * A program (or thread) <strong>must</strong> call
+ * <code>#beginExceptionContext</code> prior to calling
+ * <code>setSignalHandlers</code>. Such programming error will lead to an abrupt
+ * exit of the program (or thread).
+ * </p>
+ *
+ * <p>
+ * Note that the behaviour of <code>signal</code> is undefined in a
+ * multithreaded program, so use the signal handling system with caution.
+ * </p>
  *
  * @see SignalMapping
  * @see SIGNAL_MAPPING
@@ -1818,10 +1861,12 @@ extern void endExceptionContext();
 extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
 
 /**
- * Gets the current signal mapping
+ * Retrieves the current signal mapping for the program (or thread)
  *
- * This function receives an array of mappings between the signals to be handled
- * and the corresponding exception to be thrown.
+ * <p>
+ * This function retrieves the current array of mappings between the signals to
+ * be handled and the corresponding exception to be thrown.
+ * </p>
  *
  * @see SignalMapping
  * @see SIGNAL_MAPPING
@@ -1833,12 +1878,26 @@ extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
  */
 extern const SignalMapping * getSignalHandlers(int * mappings);
 
+/*@}*/
+
+/**
+ * @name Convenience functions for printing out exception information
+ *
+ * <p>
+ * These functions might come in handy when dealing with exceptions.
+ * </p>
+ *
+ * @{
+ */
+
 /**
  * Prints a fatal error message regarding the specified exception
  *
+ * <p>
  * This is a convenience function for showing an error message through the
  * standard error output. It can be passed to
  * <code>#beginExceptionContext</code> as the handler for uncaught exceptions.
+ * </p>
  *
  * @param exception The uncaught exception
  * @param file The path of the source code file from which the exception was
@@ -1852,23 +1911,25 @@ extern void dumpException(Exception exception,
 /**
  * Prints an exception's hierarchy graph
  *
+ * <p>
  * This is a convenience function for printing an exception's <em>hierarchy</em>
  * graph with simple <code>ASCII</code> characters.
+ * </p>
  *
  * @param exception The exception whose hierarchy is to be printed
  */
 extern void printExceptionHierarchy(Exception exception);
 
+/*@}*/
+
 /*
  * Next functions are undocumented on purpose, because they shouldn't be used
  * directly (but through the 'keyword' macros).
  */
-
 extern E4C_JMP_BUF * e4c_first(e4c_Stage stage, const char * file, int line);
 extern e4c_bool e4c_next();
 extern e4c_bool e4c_hook(e4c_Stage stage, const Exception exception);
 extern void e4c_throw(const Exception exception, const char * file, int line);
-
 
 # undef E4C_READ_ONLY
 
