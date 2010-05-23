@@ -1774,18 +1774,6 @@ extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
 extern const SignalMapping * getSignalHandlers(int * mappings);
 
 /**
- * Creates a new exception
- *
- * This is a convenience function for creating a new exception.
- *
- * @param name Name of the new exception
- * @param description Description of the new exception
- * @param super Address of the supertype of the new exception
- */
-extern const Exception newException(
-	const char * name, const char * description, const Exception * super);
-
-/**
  * Prints a fatal error message regarding the specified exception
  *
  * This is a convenience function for showing an error message through the
