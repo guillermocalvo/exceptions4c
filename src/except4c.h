@@ -110,10 +110,82 @@
 # define E4C_LINE_INFO					0
 # endif
 
+/*
+ * These undocumented macros hide implementation details from documentation.
+ */
 # define E4C_LOOP(stage) \
 	E4C_SETJMP(  *( e4c_first(stage, E4C_FILE_INFO, E4C_LINE_INFO) )  ); \
 	while( e4c_next() )
 
+# define E4C_TRY \
+	E4C_LOOP(e4c_acquire) \
+	if( e4c_hook(e4c_try, INVALID_EXCEPTION) \
+		&& e4c_next() )
+	/* simple optimization: e4c_next() will avoid e4c_dispose stage */
+
+# define E4C_CATCH(_exception_) \
+	else if( \
+		e4c_hook(e4c_catch, _exception_) \
+	)
+
+# define E4C_FINALLY \
+	else if( \
+		e4c_hook(e4c_finalize, INVALID_EXCEPTION) \
+	)
+
+# define E4C_THROW(_exception_) \
+	e4c_throw( \
+		_exception_, E4C_FILE_INFO, E4C_LINE_INFO \
+	)
+
+# define E4C_WITH(_resource_, _dispose_) \
+	E4C_LOOP(e4c_begin) \
+	if( e4c_hook(e4c_dispose, INVALID_EXCEPTION) ){ \
+		ExceptionContext * context = E4C_CONTEXT; \
+		_dispose_(_resource_, context->currentFrame->thrown, context); \
+	}else if( e4c_hook(e4c_acquire, INVALID_EXCEPTION) ){
+
+# define E4C_USE \
+	}else if( \
+		e4c_hook(e4c_try, INVALID_EXCEPTION) \
+	)
+
+# define E4C_USING(_type_, _resource_, _args_) \
+	with(_resource_, dispose##_type_) \
+		_resource_ = acquire##_type_ _args_; \
+	use
+
+# define E4C_RECYCLE_EXCEPTION_CONTEXT(_recyclingException_) \
+	\
+	e4c_RecyclingStage	E4C_RECYCLING(stage)	= e4c_beforePayload; \
+	e4c_bool			E4C_RECYCLING(recycled)	= (E4C_CONTEXT != NULL); \
+	\
+	_recyclingException_ = NULL; \
+	if( !E4C_RECYCLING(recycled) ){ \
+        beginExceptionContext(e4c_false, NULL); \
+        try{ \
+			goto E4C_RECYCLING(payload); \
+			E4C_RECYCLING(cleanup): \
+            ; \
+		}catch(RuntimeException){ \
+			_recyclingException_ = &EXCEPTION; \
+		}finally{ \
+			E4C_RECYCLING(stage) = e4c_recyclingDone; \
+            e4c_next(); \
+			endExceptionContext(); \
+			break; \
+		} \
+	} \
+	\
+	E4C_RECYCLING(payload): \
+	for(; E4C_RECYCLING(stage) < e4c_recyclingDone; E4C_RECYCLING(stage)++) \
+		if( E4C_RECYCLING(stage) == e4c_afterPayload){ \
+            if( !E4C_RECYCLING(recycled) ){ \
+            	goto E4C_RECYCLING(cleanup); \
+            }else{ \
+            	break; \
+        	} \
+		}else
 
 /**
  * @name Exception handling keywords
@@ -128,40 +200,27 @@
 /**
  * Introduces a block of code aware of exceptions
  */
-# define try \
-	E4C_LOOP(e4c_acquire) \
-	if( e4c_hook(e4c_try, INVALID_EXCEPTION) \
-		&& e4c_next() )
-	/* simple optimization: e4c_next() will avoid e4c_dispose stage */
+# define try E4C_TRY
 
 /**
  * Introduces a block of code capable of handling a specific kind of exceptions
  *
  * @param _exception_ The kind of exceptions to be handled
  */
-# define catch(_exception_) \
-	else if( \
-		e4c_hook(e4c_catch, _exception_) \
-	)
+# define catch(_exception_) E4C_CATCH(_exception_)
 
 /**
  * Introduces a block of code responsible for cleaning up the previous
  * <code>try</code> block
  */
-# define finally \
-	else if( \
-		e4c_hook(e4c_finalize, INVALID_EXCEPTION) \
-	)
+# define finally E4C_FINALLY
 
 /**
  * Signals an exceptional situation represented by an exception object
  *
  * @param _exception_ The exception to be thrown
  */
-# define throw(_exception_) \
-	e4c_throw( \
-		_exception_, E4C_FILE_INFO, E4C_LINE_INFO \
-	)
+# define throw(_exception_) E4C_THROW(_exception_)
 
 /*@}*/
 
@@ -295,12 +354,7 @@
  * @see usingMemory
  * @see usingFile
  */
-# define with(_resource_, _dispose_) \
-	E4C_LOOP(e4c_begin) \
-	if( e4c_hook(e4c_dispose, INVALID_EXCEPTION) ){ \
-		ExceptionContext * context = E4C_CONTEXT; \
-		_dispose_(_resource_, context->currentFrame->thrown, context); \
-	}else if( e4c_hook(e4c_acquire, INVALID_EXCEPTION) ){
+# define with(_resource_, _dispose_) E4C_WITH(_resource_, _dispose_)
 
 /**
  * Closes a block of code with automatic disposal of a resource
@@ -313,10 +367,7 @@
  *
  * @see with
  */
-# define use \
-	}else if( \
-		e4c_hook(e4c_try, INVALID_EXCEPTION) \
-	)
+# define use E4C_USE
 
 /**
  * Introduces a block of code with automatic acquisition and disposal of a
@@ -353,10 +404,7 @@
  * @see usingFile
  */
 
-# define using(_type_, _resource_, _args_) \
-	with(_resource_, dispose##_type_) \
-		_resource_ = acquire##_type_ _args_; \
-	use
+# define using(_type_, _resource_, _args_) E4C_USING(_type_, _resource_, _args_)
 
 /*@}*/
 
@@ -727,36 +775,7 @@
  * @see E4C_CONTEXT
  */
 # define recycleExceptionContext(_recyclingException_) \
-	\
-	e4c_RecyclingStage	E4C_RECYCLING(stage)	= e4c_beforePayload; \
-	e4c_bool			E4C_RECYCLING(recycled)	= (E4C_CONTEXT != NULL); \
-	\
-	_recyclingException_ = NULL; \
-	if( !E4C_RECYCLING(recycled) ){ \
-        beginExceptionContext(e4c_false, NULL); \
-        try{ \
-			goto E4C_RECYCLING(payload); \
-			E4C_RECYCLING(cleanup): \
-            ; \
-		}catch(RuntimeException){ \
-			_recyclingException_ = &EXCEPTION; \
-		}finally{ \
-			E4C_RECYCLING(stage) = e4c_recyclingDone; \
-            e4c_next(); \
-			endExceptionContext(); \
-			break; \
-		} \
-	} \
-	\
-	E4C_RECYCLING(payload): \
-	for(; E4C_RECYCLING(stage) < e4c_recyclingDone; E4C_RECYCLING(stage)++) \
-		if( E4C_RECYCLING(stage) == e4c_afterPayload){ \
-            if( !E4C_RECYCLING(recycled) ){ \
-            	goto E4C_RECYCLING(cleanup); \
-            }else{ \
-            	break; \
-        	} \
-		}else
+	E4C_RECYCLE_EXCEPTION_CONTEXT(_recyclingException_)
 
 /*@}*/
 
@@ -1051,6 +1070,8 @@ typedef enum{
  * context. Moreover, the program (or current thread) will terminate right after
  * the function returns.
  * </p>
+ *
+ * @see beginExceptionContext
  *
  * @param exception The uncaught exception
  * @param file The path of the source code file from which the exception was
