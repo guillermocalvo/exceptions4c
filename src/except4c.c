@@ -571,17 +571,6 @@ void e4c_throw(const Exception exception, const char * file, int line){
 	e4c_propagate(context, exception, file, line, errno);
 }
 
-const Exception newException(const char * name, const char * description, const Exception * super){
-
-	Exception tmp = {
-		name:			name,
-		description:	description,
-		super:			super
-	};
-
-	return(tmp);
-}
-
 void dumpException(Exception exception, const char * file, int line, int errorNumber){
 # ifndef NDEBUG
 	fprintf(stderr, "\n\nUncaught %s: %s\n\n", exception.name, exception.description);
