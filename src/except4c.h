@@ -1009,7 +1009,12 @@ struct e4c_Exception{
 	const Exception *		super;
 };
 
-/**
+/*
+ * Next two enumerations are undocumented on purpose, in order to hide
+ * implementation details, subject to change.
+ */
+
+/*
  * Represents the current execution status of an exception frame
  *
  * <p>
@@ -1024,23 +1029,23 @@ struct e4c_Exception{
  * </p>
  */
 typedef enum{
-	/** No block has been executed yet */
+	/* No block has been executed yet */
 	e4c_beginning,
-	/** Acquiring a resource */
+	/* Acquiring a resource */
 	e4c_acquiring,
-	/** Executing the "try" or "use" block */
+	/* Executing the "try" or "use" block */
 	e4c_trying,
-	/** Disposing a resource */
+	/* Disposing a resource */
 	e4c_disposing,
-	/** Catching (or attempting to catch) an exception */
+	/* Catching (or attempting to catch) an exception */
 	e4c_catching,
-	/** Cleaning up ("finally" block) */
+	/* Cleaning up ("finally" block) */
 	e4c_finalizing,
-	/** The group of blocks has been executed */
+	/* The group of blocks has been executed */
 	e4c_end
 } e4c_Stage;
 
-/**
+/*
  * Represents the current execution status of a <em>recycled</em> block
  *
  * <p>
@@ -1051,11 +1056,11 @@ typedef enum{
  * @see recycleExceptionContext
  */
 typedef enum{
-	/** The block has not been executed yet */
+	/* The block has not been executed yet */
 	e4c_beforePayload,
-	/** The block has just been executed */
+	/* The block has just been executed */
 	e4c_afterPayload,
-	/** The block is about to complete */
+	/* The block is about to complete */
 	e4c_recyclingDone
 } e4c_RecyclingStage;
 
