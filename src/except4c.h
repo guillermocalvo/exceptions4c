@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version 1.4
+ * @version 1.5
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -43,6 +43,8 @@
 
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
+
+# define E4C_VERSION(version)			version(1, 5, 0)
 
 # if !defined(E4C_THREAD_SAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -84,10 +86,15 @@
 # endif
 
 
-# define E4C_PASTE_TOKENS(a, b, c, d, e) a ## b ## c ## d ## e
-# define E4C_MANGLE_NAME(_prefix_, _name_, _line_) E4C_PASTE_TOKENS(_prefix_, _name_, _, _line_, _)
-# define E4C_RECYCLING(name) E4C_MANGLE_NAME(_recycling_, name, __LINE__)
+# define E4C_PASTE_TOKENS(a, b, c, d, e)				a ## b ## c ## d ## e
+# define E4C_MANGLE_NAME(_prefix_, _name_, _line_)		E4C_PASTE_TOKENS(_prefix_, _name_, _, _line_, _)
+# define E4C_RECYCLING(name)							E4C_MANGLE_NAME(_recycling_, name, __LINE__)
 
+# define E4C_V_NUMBER(major, minor, revision)			( ( (long)major * 1000000) + ( (long)minor * 1000) + (long)revision )
+# define E4C_V_MAJOR(major, minor, revision)			( (int)major	)
+# define E4C_V_MINOR(major, minor, revision)			( (int)minor	)
+# define E4C_V_REVISION(major, minor, revision)			( (int)revision	)
+# define E4C_V_STRING(major, minor, revision)			#major "." #minor "." #revision
 
 /*
  * Next macros are undocumented on purpose, because they shouldn't be used
@@ -572,14 +579,115 @@
 /*@}*/
 
 /**
- * @name Integration macro
+ * @name Integration macros
  *
  * <p>
- * This macro is designed to ease the integration of external libraries.
+ * These macros are designed to ease the integration of external libraries.
  * </p>
  *
  * @{
  */
+
+
+/**
+ * Provides the library version number
+ *
+ * <p>
+ * The library version number is a <code>long</code> value which expresses:
+ * </p>
+ *
+ * <ul>
+ *     <li>library <em>major</em> version number</li>
+ *     <li>library <em>minor</em> version number</li>
+ *     <li>library <em>revision</em> number</li>
+ * </ul>
+ *
+ * <p>
+ * The formula to encode these version numbers into a single <code>long</code>
+ * value is: <code>MAJOR * 1000000 + MINOR * 1000 + REVISION</code>
+ * </p>
+ *
+ * <p>
+ * These numbers can be obtained separately via <code>#E4C_VERSION_MAJOR</code>,
+ * <code>#E4C_VERSION_MINOR</code> and <code>#E4C_VERSION_REVISION</code>
+ * macros.
+ * </p>
+ *
+ * <p>
+ * The library version number can be also obtained as a string literal in the
+ * format "MAJOR.MINOR.REVISION" via <code>#E4C_VERSION_STRING</code> macro.
+ * </p>
+ *
+ * <p>
+ * This version number can be considered as the <em>compile-time</em> library
+ * version number, as oposed to the <em>run-time</em> library version
+ * number (associated with the actual, compiled library). This <em>run-time</em>
+ * version number can be obtained via <code>#e4c_getLibraryVersion</code>
+ * function.
+ * </p>
+ *
+ * <p>
+ * The library must be compiled with the corresponding header (i.e. library
+ * version number should be equal to header version number).
+ * </p>
+ *
+ *
+ * @see e4c_getLibraryVersion
+ * @see E4C_VERSION_MAJOR
+ * @see E4C_VERSION_MINOR
+ * @see E4C_VERSION_REVISION
+ * @see E4C_VERSION_STRING
+ */
+# define E4C_VERSION_NUMBER		E4C_VERSION(E4C_V_NUMBER)
+
+/**
+ * Provides the library major version number
+ *
+ * <p>
+ * The library major version number is an <code>int</code> value which is
+ * incremented from one release to another when there are significant changes
+ * in functionality
+ * </p>
+ *
+ * @see E4C_VERSION_NUMBER
+ */
+# define E4C_VERSION_MAJOR		E4C_VERSION(E4C_V_MAJOR)
+
+/**
+ * Provides the library minor version number
+ *
+ * <p>
+ * The library minor version number is an <code>int</code> value which is
+ * incremented from one release to another when only minor features or
+ * significant fixes have been added.
+ * </p>
+ *
+ * @see E4C_VERSION_NUMBER
+ */
+# define E4C_VERSION_MINOR		E4C_VERSION(E4C_V_MINOR)
+
+/**
+ * Provides the library revision number
+ *
+ * <p>
+ * The library revision number is an <code>int</code> value which is incremented
+ * from one release to another when minor bugs are fixed.
+ * </p>
+ *
+ * @see E4C_VERSION_NUMBER
+ */
+# define E4C_VERSION_REVISION	E4C_VERSION(E4C_V_REVISION)
+
+/**
+ * Provides the library version number as a string literal
+ *
+ * <p>
+ * The format of the string literal is: "MAJOR.MINOR.REVISION".
+ * </p>
+ *
+ * @see E4C_VERSION_NUMBER
+ */
+# define E4C_VERSION_STRING		E4C_VERSION(E4C_V_STRING)
 
 /**
  * Reuses an existing exception context, otherwise, opens a new one and then
@@ -1944,6 +2052,32 @@ extern void dumpException(Exception exception,
  * @param exception The exception whose hierarchy is to be printed
  */
 extern void printExceptionHierarchy(Exception exception);
+
+/**
+ * Gets the library version number
+ *
+ * <p>
+ * This function provides the same information as the
+ * <code>E4C_VERSION_NUMBER</code> macro, but the returned version number is
+ * associated with the actual, compiled library.
+ * </p>
+ *
+ * <p>
+ * This version number can be considered as the <em>run-time</em> library
+ * version number, as oposed to the <em>compile-time</em> library version
+ * number (specified by the header file).
+ * </p>
+ *
+ * <p>
+ * The library must be compiled with the corresponding header (i.e. library
+ * version number should be equal to header version number).
+ * </p>
+ *
+ * @see E4C_VERSION_NUMBER
+ *
+ * @return The version number associated with the library
+ */
+extern long e4c_getLibraryVersion();
 
 /*@}*/
 
