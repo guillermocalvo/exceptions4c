@@ -356,9 +356,9 @@ static void e4c_propagate(ExceptionContext * context, const Exception exception,
 	/* otherwise, we will jump to the upper frame */
 
 	/* simple optimization */
-	if(frame->stage == e4c_acquire){
+	if(frame->stage == e4c_acquiring){
 		/* if we are in the middle of an acquisition, we don't need to dispose the resource */
-		frame->stage = e4c_dispose;
+		frame->stage = e4c_disposing;
 		/* (that actually jumps over the disposal stage) */
 	}
 
@@ -484,7 +484,7 @@ e4c_bool e4c_hook(e4c_Stage stage, const Exception exception){
 
 	if(frame->stage != stage) return(e4c_false);
 
-	if(stage == e4c_catch){
+	if(stage == e4c_catching){
 		/* does this block catch current exception? */
 		if( !e4c_extends(&frame->exception, &exception) ){
 			/* nay, keep looking for an exception handler */
@@ -517,7 +517,7 @@ e4c_bool e4c_next(){
 	currentFrame->stage++;
 
 	/* simple optimization */
-	if(currentFrame->stage == e4c_catch && !currentFrame->uncaught){
+	if(currentFrame->stage == e4c_catching && !currentFrame->uncaught){
 		/* if no exception was thrown, we don't need to go through the catch stage */
 		currentFrame->stage++;
 	}
