@@ -143,8 +143,7 @@
 # define E4C_WITH(_resource_, _dispose_) \
 	E4C_LOOP(e4c_beginning) \
 	if( e4c_hook(e4c_disposing, INVALID_EXCEPTION) ){ \
-		ExceptionContext * context = E4C_CONTEXT; \
-		_dispose_(_resource_, context->currentFrame->thrown, context); \
+		_dispose_(_resource_, E4C_CONTEXT->currentFrame->thrown, E4C_CONTEXT); \
 	}else if( e4c_hook(e4c_acquiring, INVALID_EXCEPTION) ){
 
 # define E4C_USE \
@@ -153,16 +152,16 @@
 	)
 
 # define E4C_USING(_type_, _resource_, _args_) \
-	with(_resource_, dispose##_type_) \
+	with(_resource_, dispose##_type_){ \
 		_resource_ = acquire##_type_ _args_; \
-	use
+	}use
 
-# define E4C_RECYCLE_EXCEPTION_CONTEXT(_recyclingException_) \
+# define E4C_RECYCLE_EXCEPTION_CONTEXT(_thrownException_) \
 	\
 	e4c_RecyclingStage	E4C_RECYCLING(stage)	= e4c_beforePayload; \
 	e4c_bool			E4C_RECYCLING(recycled)	= (E4C_CONTEXT != NULL); \
+	const Exception *	_thrownException_		= NULL; \
 	\
-	_recyclingException_ = NULL; \
 	if( !E4C_RECYCLING(recycled) ){ \
         beginExceptionContext(e4c_false, NULL); \
         try{ \
@@ -170,7 +169,7 @@
 			E4C_RECYCLING(cleanup): \
             ; \
 		}catch(RuntimeException){ \
-			_recyclingException_ = &EXCEPTION; \
+			_thrownException_ = &EXCEPTION; \
 		}finally{ \
 			E4C_RECYCLING(stage) = e4c_recyclingDone; \
             e4c_next(); \
@@ -614,15 +613,13 @@
  * </p>
  *
  * <p>
- * <code>recycleExceptionContext</code> needs to be given a variable of type
- * <code>#RecyclingException</code> that will point to whichever exception
- * thrown inside the block.
+ * <code>recycleExceptionContext</code> needs to be given a name to reference
+ * whichever exception thrown inside the block. This variable will be implicitly
+ * created within the scope; its type will be <code>const #Exception *</code>.
  * </p>
  *
  * <pre class="fragment">
  * int libraryPublicFunction(void * pointer, int number){
- * &nbsp;
- *     RecyclingException exception = NULL;
  * &nbsp;
  *     /<span>*
  *     We don't know where this function is going to be called from, so:
@@ -688,7 +685,7 @@
  *       When the block ends:
  *       <ul>
  *       <li>The block completed successfully.</li>
- *       <li><code>_recyclingException_</code> will be <code>NULL</code>.</li>
+ *       <li><code>_thrownException_</code> will be <code>NULL</code>.</li>
  *       <li>The function may then return a "success" status code.</li>
  *       </ul>
  *     </li>
@@ -704,13 +701,13 @@
  *       If any exception is thrown during the execution of the block:
  *       <ul>
  *       <li>It will be <strong>caught</strong> and
- *           <code>_recyclingException_</code> will be set to point to it.</li>
+ *           <code>_thrownException_</code> will point to it.</li>
  *       </ul>
  *     </li>
  *     <li>
  *       When the block ends:
  *       <ul>
- *       <li>If <code>_recyclingException_</code> is <code>NULL</code> then the
+ *       <li>If <code>_thrownException_</code> is <code>NULL</code> then the
  *           block completed successfully. The function may then return a
  *           "success" status code.</li>
  *       <li>Otherwise, an exception was thrown during the execution of the
@@ -767,17 +764,16 @@
  * ...
  * </pre>
  *
- * @param _recyclingException_ A reference to whichever exception thrown inside
- *        the block, otherwise will be set to <code>NULL</code>.
+ * @param _thrownException_ The name of a pointer to find out whether an
+ *        exception was thrown inside the block.
  *
  * @see e4c_ExceptionContext
- * @see RecyclingException
  * @see beginExceptionContext
  * @see endExceptionContext
  * @see E4C_CONTEXT
  */
-# define recycleExceptionContext(_recyclingException_) \
-	E4C_RECYCLE_EXCEPTION_CONTEXT(_recyclingException_)
+# define recycleExceptionContext(_thrownException_) \
+	E4C_RECYCLE_EXCEPTION_CONTEXT(_thrownException_)
 
 /*@}*/
 
@@ -1088,13 +1084,6 @@ typedef void (*UncaughtHandler)(
 	int				errorNumber
 );
 
-/**
- * Represents a reference to an exception thrown inside a <em>recycled</em>
- * block.
- *
- * @see recycleExceptionContext
- */
-typedef const Exception * RecyclingException;
 
 /**
  * Represents a map between a signal and an exception
