@@ -36,14 +36,22 @@
 # include "except4c.h"
 
 # define IS_TOP_FRAME(frame)			( frame->previous == NULL )
-# define STOP_IF(c, e, f, l)			if(c){ dumpException(e, f, l, errno); STOP_EXECUTION; }
+# define STOP_IF(c, e, f, l) \
+	if(c){ \
+		DEBUG_INITIALIZE_ONCE; \
+		fatalErrorFlag = e4c_true; \
+		dumpException(e, f, l, errno); \
+		PRINT_MSG_FATAL_ERROR; \
+		STOP_EXECUTION; \
+	}
+
 
 # ifdef E4C_THREAD_SAFE
 #	include <pthread.h>
-#	define	DESC_INVALID_CONTEXT	"The exception context for this thread is in an invalid state" MSG_FATAL_ERROR
-#	define	DESC_ALREADY_BEGUN		"The exception context for this thread has already begun" MSG_FATAL_ERROR
-#	define	DESC_NOT_BEGUN_YET		"The exception context for this thread has not begun yet" MSG_FATAL_ERROR
-#	define	DESC_NOT_ENDED			"There is at least one thread that did not end its exception context properly"
+#	define	DESC_INVALID_CONTEXT	"The exception context for this thread is in an invalid state."
+#	define	DESC_ALREADY_BEGUN		"The exception context for this thread has already begun."
+#	define	DESC_NOT_BEGUN_YET		"The exception context for this thread has not begun yet."
+#	define	DESC_NOT_ENDED			"There is at least one thread that did not end its exception context properly."
 #	define	THREAD_TYPE				pthread_t
 #	define	THREAD_CURRENT			pthread_self()
 #	define	THREAD_SAME				pthread_equal
@@ -52,6 +60,7 @@
 #	define	MUTEX_LOCK(mutex)		pthread_mutex_lock(&mutex)
 #	define	MUTEX_UNLOCK(mutex)		pthread_mutex_unlock(&mutex)
 #	define	STOP_EXECUTION			THREAD_EXIT(NULL)
+#	define	DANGLING_CONTEXT		(environmentCollection != NULL)
 	typedef struct ThreadEnvironmentStruct ThreadEnvironment;
 	struct ThreadEnvironmentStruct{
 		THREAD_TYPE				self;
@@ -63,24 +72,31 @@
 # else
 #	undef	E4C_CONTEXT
 #	define	E4C_CONTEXT				currentContext
-#	define	DESC_INVALID_CONTEXT	"The exception context for this program is in an invalid state" MSG_THREAD_UNSAFE MSG_FATAL_ERROR
-#	define	DESC_ALREADY_BEGUN		"The exception context for this program has already begun" MSG_THREAD_UNSAFE MSG_FATAL_ERROR
-#	define	DESC_NOT_BEGUN_YET		"The exception context for this program has not begun yet" MSG_THREAD_UNSAFE MSG_FATAL_ERROR
-#	define	DESC_NOT_ENDED			"The program did not end its exception context properly" MSG_THREAD_UNSAFE
+#	define	DESC_INVALID_CONTEXT	"The exception context for this program is in an invalid state."
+#	define	DESC_ALREADY_BEGUN		"The exception context for this program has already begun."
+#	define	DESC_NOT_BEGUN_YET		"The exception context for this program has not begun yet."
+#	define	DESC_NOT_ENDED			"The program did not end its exception context properly."
+#	define	MUTEX_LOCK(mutex)
+#	define	MUTEX_UNLOCK(mutex)
 #	define	STOP_EXECUTION			exit(EXIT_FAILURE)
+#	define	DANGLING_CONTEXT		(currentContext != NULL)
 	static ExceptionContext		mainContext;
 	static ExceptionContext *	currentContext = NULL;
 # endif
+
+static e4c_bool fatalErrorFlag = e4c_false;
 
 # ifndef NDEBUG
 	static e4c_bool isInitialized = e4c_false;
 #	ifdef E4C_THREAD_SAFE
 		MUTEX_DEFINE(isInitializedMutex);
-#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n\n"
+#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n"
+#		define	MSG_AT_EXIT_ERROR		"\n\nThe program will now yield a failure exit code due to exception system errors.\n"
 #	else
-#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n\n"
+#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n"
+#		define	MSG_AT_EXIT_ERROR		"\n\nIf this application is making use of threads, please recompile exceptions4c\nwith thread support (by defining the macro E4C_THREAD_SAFE).\n\n\nThe program will now yield a failure exit code due to exception system errors.\n"
 #	endif
-#	define	MSG_THREAD_UNSAFE			"\n\nIf this application is actually using threads, this error could mean that\nexceptions4c was compiled without thread support."
+#	define	PRINT_MSG_FATAL_ERROR		fprintf(stderr, MSG_FATAL_ERROR)
 #	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) e4c_initialize()
 #	define	DEBUG_STOP_IF(c, e, f, l)	STOP_IF(c, e, f, l)
 #	define	E4C_FILE_SIGNAL				"<system signal>"
@@ -90,8 +106,7 @@
 #	define	E4C_FILE_END				"exceptions4c.endExceptionContext"
 #	define	E4C_FILE_AT_EXIT			"exceptions4c.atExit"
 # else
-#	define	MSG_FATAL_ERROR
-#	define	MSG_THREAD_UNSAFE
+#	define	PRINT_MSG_FATAL_ERROR
 #	define	DEBUG_INITIALIZE_ONCE
 #	define	DEBUG_STOP_IF(c, e, f, l)
 #	define	E4C_FILE_SIGNAL				E4C_FILE_INFO
@@ -198,7 +213,47 @@ const SignalMapping defaultSignalMapping[] = {
 };
 const int defaultSignalMappings = ( sizeof(defaultSignalMapping) / sizeof(defaultSignalMapping[0]) );
 
-# ifdef E4C_THREAD_SAFE
+
+# ifndef NDEBUG
+
+static void e4c_atExit(){
+
+	if(DANGLING_CONTEXT){
+		dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE_INFO, errno);
+		fatalErrorFlag = e4c_true;
+	}
+
+	if(fatalErrorFlag){
+		fprintf(stderr, MSG_AT_EXIT_ERROR);
+		/* force failure exit status */
+		exit(EXIT_FAILURE);
+	}
+
+}
+
+static void e4c_initialize(){
+
+	MUTEX_LOCK(isInitializedMutex);
+
+		if(!isInitialized){
+			isInitialized = e4c_true;
+			atexit(e4c_atExit);
+		}
+
+	MUTEX_UNLOCK(isInitializedMutex);
+}
+
+# endif
+
+
+# ifndef E4C_THREAD_SAFE
+
+ExceptionContext * getExceptionContext(){
+
+	return(currentContext);
+}
+
+# else
 
 static void e4c_addThreadEnvironment(ThreadEnvironment * environment){
 
@@ -263,61 +318,11 @@ static ThreadEnvironment * e4c_getThreadEnvironment(){
 	return(found ? environment : NULL);
 }
 
-# ifndef NDEBUG
-
-	static void e4c_atExit(){
-
-		if(environmentCollection != NULL){
-			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE_INFO, errno);
-		}
-	}
-
-	static void e4c_initialize(){
-
-		MUTEX_LOCK(isInitializedMutex);
-
-			if(!isInitialized){
-				isInitialized = e4c_true;
-				atexit(e4c_atExit);
-			}
-
-		MUTEX_UNLOCK(isInitializedMutex);
-	}
-
-# endif
-
 ExceptionContext * getExceptionContext(){
 
 	ThreadEnvironment * environment = e4c_getThreadEnvironment();
 
 	return(environment == NULL ? NULL : &environment->context);
-}
-
-# else
-
-# ifndef NDEBUG
-
-	static void e4c_atExit(){
-
-		if(currentContext != NULL){
-			dumpException(ContextNotEnded, E4C_FILE_AT_EXIT, E4C_LINE_INFO, errno);
-		}
-	}
-
-	static void e4c_initialize(){
-
-		if(!isInitialized){
-			isInitialized = e4c_true;
-			atexit(e4c_atExit);
-		}
-	}
-
-# endif
-
-
-ExceptionContext * getExceptionContext(){
-
-	return(currentContext);
 }
 
 # endif
@@ -586,6 +591,8 @@ void dumpException(Exception exception, const char * file, int line, int errorNu
 	printExceptionHierarchy(exception);
 # else
 	fprintf(stderr, "\n\nFatal Error: %s (%s)\n\n", exception.name, exception.description);
+	/* get rid of the "unused parameter" warnings */
+	if(file != NULL) line = errorNumber = 0;
 # endif
 }
 
@@ -599,7 +606,7 @@ void printExceptionHierarchy(Exception exception){
 		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", exception.name);
 		deep++;
 	}
-	fprintf(stderr, "%s\n\n", separator);
+	fprintf(stderr, "%s\n", separator);
 }
 
 void setSignalHandlers(const SignalMapping * mapping, int mappings){
@@ -655,6 +662,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 
 	/* check if beginExceptionContext was called twice for this thread */
 	if(environment != NULL){
+		fatalErrorFlag = e4c_true;
 		e4c_propagate(&environment->context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE_INFO, errno);
 	}
 
@@ -693,6 +701,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	/* check if beginExceptionContext was called twice for this program */
 	/* this can also happen when the program uses threads but E4C_THREAD_SAFE is not defined */
 	if(context != NULL){
+		fatalErrorFlag = e4c_true;
 		e4c_propagate(context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE_INFO, errno);
 	}
 
