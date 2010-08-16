@@ -45,7 +45,9 @@
 # define _EXCEPT4C_H_
 
 # if !defined(E4C_THREAD_SAFE) && ( \
-		defined(PTHREAD_BARRIER_SERIAL_THREAD) \
+		defined(HAVE_PTHREAD_H) \
+	||	defined(PTHREAD_H) \
+	||	defined(PTHREAD_BARRIER_SERIAL_THREAD) \
 	||	defined(PTHREAD_CANCEL_ASYNCHRONOUS) \
 	||	defined(PTHREAD_CANCEL_ENABLE) \
 	||	defined(PTHREAD_CANCEL_DEFERRED) \
