@@ -4,7 +4,7 @@
  *
  * exceptions4c source code file
  *
- * @version 1.4
+ * @version 1.5
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -213,6 +213,10 @@ const SignalMapping defaultSignalMapping[] = {
 };
 const int defaultSignalMappings = ( sizeof(defaultSignalMapping) / sizeof(defaultSignalMapping[0]) );
 
+long e4c_getLibraryVersion(){
+
+	return(E4C_VERSION_NUMBER);
+}
 
 # ifndef NDEBUG
 
