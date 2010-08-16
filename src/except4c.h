@@ -120,19 +120,19 @@
 	while( e4c_next() )
 
 # define E4C_TRY \
-	E4C_LOOP(e4c_acquire) \
-	if( e4c_hook(e4c_try, INVALID_EXCEPTION) \
+	E4C_LOOP(e4c_acquiring) \
+	if( e4c_hook(e4c_trying, INVALID_EXCEPTION) \
 		&& e4c_next() )
-	/* simple optimization: e4c_next() will avoid e4c_dispose stage */
+	/* simple optimization: e4c_next() will avoid e4c_disposing stage */
 
 # define E4C_CATCH(_exception_) \
 	else if( \
-		e4c_hook(e4c_catch, _exception_) \
+		e4c_hook(e4c_catching, _exception_) \
 	)
 
 # define E4C_FINALLY \
 	else if( \
-		e4c_hook(e4c_finalize, INVALID_EXCEPTION) \
+		e4c_hook(e4c_finalizing, INVALID_EXCEPTION) \
 	)
 
 # define E4C_THROW(_exception_) \
@@ -141,15 +141,15 @@
 	)
 
 # define E4C_WITH(_resource_, _dispose_) \
-	E4C_LOOP(e4c_begin) \
-	if( e4c_hook(e4c_dispose, INVALID_EXCEPTION) ){ \
+	E4C_LOOP(e4c_beginning) \
+	if( e4c_hook(e4c_disposing, INVALID_EXCEPTION) ){ \
 		ExceptionContext * context = E4C_CONTEXT; \
 		_dispose_(_resource_, context->currentFrame->thrown, context); \
-	}else if( e4c_hook(e4c_acquire, INVALID_EXCEPTION) ){
+	}else if( e4c_hook(e4c_acquiring, INVALID_EXCEPTION) ){
 
 # define E4C_USE \
 	}else if( \
-		e4c_hook(e4c_try, INVALID_EXCEPTION) \
+		e4c_hook(e4c_trying, INVALID_EXCEPTION) \
 	)
 
 # define E4C_USING(_type_, _resource_, _args_) \
@@ -377,7 +377,7 @@
  *
  * @param _type_ The type of the resource
  * @param _resource_ The resource to be acquired, used and then disposed
- * @param _args_ A list of arguments to be passed to acquisition function
+ * @param _args_ A list of arguments to be passed to the acquisition function
  *
  * <p>
  * The specified resource will be aquired, used and then disposed. The automatic
@@ -519,7 +519,7 @@
  *
  * @param _type_ The type of the resource
  * @param _resource_ The resource to be acquired, used and then disposed
- * @param _args_ A list of arguments to be passed to acquisition function
+ * @param _args_ A list of arguments to be passed to the acquisition function
  * @param _cond_ The condition which has to be satisfied in order to consider
  *        the acquisition <em>complete</em>
  * @param _exception_ The exception to be thrown if the acquisition function
@@ -559,7 +559,7 @@
  *
  * @param _type_ The type of the resource
  * @param _resource_ The resource to be acquired, used and then disposed
- * @param _args_ A list of arguments to be passed to acquisition function
+ * @param _args_ A list of arguments to be passed to the acquisition function
  * @param _exception_ The exception to be thrown if the acquisition function
  *        yields a <code>NULL</code> pointer.
  *
@@ -1029,17 +1029,17 @@ struct e4c_Exception{
  */
 typedef enum{
 	/** No block has been executed yet */
-	e4c_begin,
+	e4c_beginning,
 	/** Acquiring a resource */
-	e4c_acquire,
+	e4c_acquiring,
 	/** Executing the "try" or "use" block */
-	e4c_try,
+	e4c_trying,
 	/** Disposing a resource */
-	e4c_dispose,
+	e4c_disposing,
 	/** Catching (or attempting to catch) an exception */
-	e4c_catch,
+	e4c_catching,
 	/** Cleaning up ("finally" block) */
-	e4c_finalize,
+	e4c_finalizing,
 	/** The group of blocks has been executed */
 	e4c_end
 } e4c_Stage;
