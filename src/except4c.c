@@ -46,7 +46,7 @@
 	}
 
 
-# ifdef E4C_THREAD_SAFE
+# ifdef E4C_THREADSAFE
 #	include <pthread.h>
 #	define	DESC_INVALID_CONTEXT	"The exception context for this thread is in an invalid state."
 #	define	DESC_ALREADY_BEGUN		"The exception context for this thread has already begun."
@@ -88,13 +88,13 @@ static e4c_bool fatalErrorFlag = e4c_false;
 
 # ifndef NDEBUG
 	static e4c_bool isInitialized = e4c_false;
-#	ifdef E4C_THREAD_SAFE
+#	ifdef E4C_THREADSAFE
 		MUTEX_DEFINE(isInitializedMutex);
 #		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n"
 #		define	MSG_AT_EXIT_ERROR		"\n\nThe program will now yield a failure exit code due to exception system errors.\n"
 #	else
 #		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n"
-#		define	MSG_AT_EXIT_ERROR		"\n\nIf this application is making use of threads, please recompile exceptions4c\nwith thread support (by defining the macro E4C_THREAD_SAFE).\n\n\nThe program will now yield a failure exit code due to exception system errors.\n"
+#		define	MSG_AT_EXIT_ERROR		"\n\nIf this application is making use of threads, please recompile exceptions4c\nwith thread support (by defining the macro E4C_THREADSAFE).\n\n\nThe program will now yield a failure exit code due to exception system errors.\n"
 #	endif
 #	define	PRINT_MSG_FATAL_ERROR		fprintf(stderr, MSG_FATAL_ERROR)
 #	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) e4c_initialize()
@@ -250,7 +250,7 @@ static void e4c_initialize(){
 # endif
 
 
-# ifndef E4C_THREAD_SAFE
+# ifndef E4C_THREADSAFE
 
 ExceptionContext * getExceptionContext(){
 
@@ -654,7 +654,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	ExceptionContext *	context;
 	ExceptionFrame *	newFrame;
 
-# ifdef E4C_THREAD_SAFE
+# ifdef E4C_THREADSAFE
 
 	THREAD_TYPE			self		= THREAD_CURRENT;
 	ThreadEnvironment *	environment;
@@ -703,7 +703,7 @@ void beginExceptionContext(e4c_bool handleSignals, UncaughtHandler uncaughtHandl
 	context = currentContext;
 
 	/* check if beginExceptionContext was called twice for this program */
-	/* this can also happen when the program uses threads but E4C_THREAD_SAFE is not defined */
+	/* this can also happen when the program uses threads but E4C_THREADSAFE is not defined */
 	if(context != NULL){
 		fatalErrorFlag = e4c_true;
 		e4c_propagate(context, ContextHasAlreadyBegun, E4C_FILE_BEGIN, E4C_LINE_INFO, errno);
@@ -745,7 +745,7 @@ void endExceptionContext(){
 	ExceptionContext *	context;
 	ExceptionFrame *	frame;
 
-# ifdef E4C_THREAD_SAFE
+# ifdef E4C_THREADSAFE
 
 	ThreadEnvironment *	environment;
 
@@ -786,7 +786,7 @@ void endExceptionContext(){
 	/* reset all signal handlers */
 	e4c_setHandlers(context, NULL, 0);
 
-# ifdef E4C_THREAD_SAFE
+# ifdef E4C_THREADSAFE
 
 	/* deallocate the thread environment */
 	free(environment);
