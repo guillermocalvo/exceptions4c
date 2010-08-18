@@ -44,9 +44,9 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define E4C_VERSION(version)			version(1, 5, 0)
+# define E4C_VERSION(version)			version(1, 5, 1)
 
-# if !defined(E4C_THREAD_SAFE) && ( \
+# if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
 	||	defined(PTHREAD_H) \
 	||	defined(PTHREAD_BARRIER_SERIAL_THREAD) \
@@ -58,7 +58,7 @@
 	||	defined(PTHREAD_CREATE_DETACHED) \
 	||	defined(PTHREAD_CREATE_JOINABLE) \
 	)
-# error Please define E4C_THREAD_SAFE at compiler level to enable the \
+# error Please define E4C_THREADSAFE at compiler level to enable the \
           thread-safe version of exceptions4c.
 # endif
 
@@ -90,11 +90,18 @@
 # define E4C_MANGLE_NAME(_prefix_, _name_, _line_)		E4C_PASTE_TOKENS(_prefix_, _name_, _, _line_, _)
 # define E4C_RECYCLING(name)							E4C_MANGLE_NAME(_recycling_, name, __LINE__)
 
-# define E4C_V_NUMBER(major, minor, revision)			( ( (long)major * 1000000) + ( (long)minor * 1000) + (long)revision )
+# define E4C_V_NUMBER(major, minor, revision)			( (E4C_V_THREADSAFE * 10000000) + ( (long)major * 1000000) + ( (long)minor * 1000) + (long)revision )
+# ifdef E4C_THREADSAFE
+# define E4C_V_THREADSAFE								( (int) 1 )
+# define E4C_V_THREADSAFE_STRING						" (thread-safe)"
+# else
+# define E4C_V_THREADSAFE								( (int) 0 )
+# define E4C_V_THREADSAFE_STRING						" (thread-unsafe)"
+# endif
 # define E4C_V_MAJOR(major, minor, revision)			( (int)major	)
 # define E4C_V_MINOR(major, minor, revision)			( (int)minor	)
 # define E4C_V_REVISION(major, minor, revision)			( (int)revision	)
-# define E4C_V_STRING(major, minor, revision)			#major "." #minor "." #revision
+# define E4C_V_STRING(major, minor, revision)			#major "." #minor "." #revision E4C_V_THREADSAFE_STRING
 
 /*
  * Next macros are undocumented on purpose, because they shouldn't be used
@@ -597,6 +604,7 @@
  * </p>
  *
  * <ul>
+ *     <li>library <em>thread-safe</em> mode</li>
  *     <li>library <em>major</em> version number</li>
  *     <li>library <em>minor</em> version number</li>
  *     <li>library <em>revision</em> number</li>
@@ -604,7 +612,10 @@
  *
  * <p>
  * The formula to encode these version numbers into a single <code>long</code>
- * value is: <code>MAJOR * 1000000 + MINOR * 1000 + REVISION</code>
+ * value is:
+ * <pre class="fragment">
+ * THREADSAFE * 10000000 + MAJOR * 1000000 + MINOR * 1000 + REVISION
+ * </pre>
  * </p>
  *
  * <p>
@@ -614,8 +625,15 @@
  * </p>
  *
  * <p>
+ * The thread-safe mode can be obtained via <code>#E4C_VERSION_THREADSAFE</code>
+ * macro. If the thread-safe mode is enabled, then the macro will yield
+ * <code>(int)1</code>, otherwise <code>(int)1</code>.
+ * </p>
+ *
+ * <p>
  * The library version number can be also obtained as a string literal in the
- * format "MAJOR.MINOR.REVISION" via <code>#E4C_VERSION_STRING</code> macro.
+ * format "MAJOR.MINOR.REVISION (THREADSAFE)" via
+ * <code>#E4C_VERSION_STRING</code> macro.
  * </p>
  *
  * <p>
@@ -633,6 +651,7 @@
  *
  *
  * @see e4c_getLibraryVersion
+ * @see E4C_VERSION_THREADSAFE
  * @see E4C_VERSION_MAJOR
  * @see E4C_VERSION_MINOR
  * @see E4C_VERSION_REVISION
@@ -679,10 +698,24 @@
 # define E4C_VERSION_REVISION	E4C_VERSION(E4C_V_REVISION)
 
 /**
+ * Provides whether the library thread-safe mode is enabled
+ *
+ * <p>
+ * When the library is compiled with the E4C_THREADSAFE compile-time parameter,
+ * <code>E4C_VERSION_THREADSAFE</code> will yield the <code>int</code> value
+ * <code>1</code>, otherwise it will yield the <code>int</code> value
+ * <code>0</code>.
+ *</p>
+ *
+ * @see E4C_VERSION_NUMBER
+ */
+# define E4C_VERSION_THREADSAFE	E4C_V_THREADSAFE
+
+/**
  * Provides the library version number as a string literal
  *
  * <p>
- * The format of the string literal is: "MAJOR.MINOR.REVISION".
+ * The format of the string literal is: "MAJOR.MINOR.REVISION (THREADSAFE)".
  * </p>
  *
  * @see E4C_VERSION_NUMBER
