@@ -59,7 +59,7 @@
 #	define	MUTEX_DEFINE(mutex)		static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER
 #	define	MUTEX_LOCK(mutex)		pthread_mutex_lock(&mutex)
 #	define	MUTEX_UNLOCK(mutex)		pthread_mutex_unlock(&mutex)
-#	define	STOP_EXECUTION			THREAD_EXIT(NULL)
+#	define	STOP_EXECUTION			THREAD_EXIT(PTHREAD_CANCELED)
 #	define	DANGLING_CONTEXT		(environmentCollection != NULL)
 	typedef struct ThreadEnvironmentStruct ThreadEnvironment;
 	struct ThreadEnvironmentStruct{
