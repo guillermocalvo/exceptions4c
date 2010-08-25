@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version 1.5
+ * @version 1.6
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -44,7 +44,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define E4C_VERSION(version)			version(1, 5, 1)
+# define E4C_VERSION(version)			version(1, 6, 0)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -59,7 +59,7 @@
 	||	defined(PTHREAD_CREATE_JOINABLE) \
 	)
 # error Please define E4C_THREADSAFE at compiler level to enable the \
-          thread-safe version of exceptions4c.
+          multi-thread version of exceptions4c.
 # endif
 
 # include <stdlib.h>
@@ -93,10 +93,10 @@
 # define E4C_V_NUMBER(major, minor, revision)			( (E4C_V_THREADSAFE * 10000000) + ( (long)major * 1000000) + ( (long)minor * 1000) + (long)revision )
 # ifdef E4C_THREADSAFE
 # define E4C_V_THREADSAFE								( (int) 1 )
-# define E4C_V_THREADSAFE_STRING						" (thread-safe)"
+# define E4C_V_THREADSAFE_STRING						" (single-thread)"
 # else
 # define E4C_V_THREADSAFE								( (int) 0 )
-# define E4C_V_THREADSAFE_STRING						" (thread-unsafe)"
+# define E4C_V_THREADSAFE_STRING						" (multi-thread)"
 # endif
 # define E4C_V_MAJOR(major, minor, revision)			( (int)major	)
 # define E4C_V_MINOR(major, minor, revision)			( (int)minor	)
@@ -135,7 +135,7 @@
 
 # define E4C_TRY \
 	E4C_LOOP(e4c_acquiring) \
-	if( e4c_hook(e4c_trying, INVALID_EXCEPTION) \
+	if( e4c_hook(e4c_trying, E4C_NULL_EXCEPTION) \
 		&& e4c_next() )
 	/* simple optimization: e4c_next() will avoid e4c_disposing stage */
 
@@ -146,7 +146,7 @@
 
 # define E4C_FINALLY \
 	else if( \
-		e4c_hook(e4c_finalizing, INVALID_EXCEPTION) \
+		e4c_hook(e4c_finalizing, E4C_NULL_EXCEPTION) \
 	)
 
 # define E4C_THROW(_exception_) \
@@ -156,38 +156,38 @@
 
 # define E4C_WITH(_resource_, _dispose_) \
 	E4C_LOOP(e4c_beginning) \
-	if( e4c_hook(e4c_disposing, INVALID_EXCEPTION) ){ \
+	if( e4c_hook(e4c_disposing, E4C_NULL_EXCEPTION) ){ \
 		_dispose_(_resource_, E4C_CONTEXT->currentFrame->thrown, E4C_CONTEXT); \
-	}else if( e4c_hook(e4c_acquiring, INVALID_EXCEPTION) ){
+	}else if( e4c_hook(e4c_acquiring, E4C_NULL_EXCEPTION) ){
 
 # define E4C_USE \
 	}else if( \
-		e4c_hook(e4c_trying, INVALID_EXCEPTION) \
+		e4c_hook(e4c_trying, E4C_NULL_EXCEPTION) \
 	)
 
 # define E4C_USING(_type_, _resource_, _args_) \
-	with(_resource_, dispose##_type_){ \
-		_resource_ = acquire##_type_ _args_; \
+	with(_resource_, e4c_dispose##_type_){ \
+		_resource_ = e4c_acquire##_type_ _args_; \
 	}use
 
-# define E4C_RECYCLE_EXCEPTION_CONTEXT(_thrownException_) \
+# define E4C_REUSING_EXCEPTION_CONTEXT(_thrownException_) \
 	\
-	e4c_RecyclingStage	E4C_RECYCLING(stage)	= e4c_beforePayload; \
-	e4c_bool			E4C_RECYCLING(recycled)	= (E4C_CONTEXT != NULL); \
-	const Exception *	_thrownException_		= NULL; \
+	enum e4c_RecyclingStage			E4C_RECYCLING(stage)	= e4c_beforePayload; \
+	e4c_bool						E4C_RECYCLING(recycled)	= (E4C_CONTEXT != NULL); \
+	const struct e4c_Exception *	_thrownException_		= NULL; \
 	\
 	if( !E4C_RECYCLING(recycled) ){ \
-        beginExceptionContext(e4c_false, NULL); \
+        e4c_beginExceptionContext(e4c_false, NULL); \
         try{ \
 			goto E4C_RECYCLING(payload); \
 			E4C_RECYCLING(cleanup): \
             ; \
 		}catch(RuntimeException){ \
-			_thrownException_ = &EXCEPTION; \
+			_thrownException_ = &E4C_EXCEPTION; \
 		}finally{ \
 			E4C_RECYCLING(stage) = e4c_recyclingDone; \
             e4c_next(); \
-			endExceptionContext(); \
+			e4c_endExceptionContext(); \
 			break; \
 		} \
 	} \
@@ -200,6 +200,22 @@
             }else{ \
             	break; \
         	} \
+		}else
+
+# define E4C_USING_EXCEPTION_CONTEXT(_handleSignals_, _uncaughtHandler_) \
+	\
+	enum e4c_RecyclingStage			E4C_RECYCLING(stage)	= e4c_beforePayload; \
+	\
+    e4c_beginExceptionContext(_handleSignals_, _uncaughtHandler_); \
+	goto E4C_RECYCLING(payload); \
+	E4C_RECYCLING(cleanup): \
+	e4c_endExceptionContext(); \
+	E4C_RECYCLING(stage) = e4c_recyclingDone; \
+	\
+	E4C_RECYCLING(payload): \
+	for(; E4C_RECYCLING(stage) < e4c_recyclingDone; E4C_RECYCLING(stage)++) \
+		if( E4C_RECYCLING(stage) == e4c_afterPayload){ \
+            goto E4C_RECYCLING(cleanup); \
 		}else
 
 /**
@@ -318,11 +334,12 @@
  * Legacy functions can be reused by defining macros. For example, a file
  * resource needs to be closed regardless of the errors. Since the function
  * <code>fclose</code> only takes a parameter, we could provide
- * <code>disposeFile</code> as the disposal function and define the next macro:
+ * <code>e4c_disposeFile</code> as the disposal function and define the next
+ * macro:
  * </p>
  *
  * <pre class="fragment">
- * # define disposeFile(_file_, _failed_, _context_) fclose(_file_)
+ * # define e4c_disposeFile(_file_, _failed_, _context_) fclose(_file_)
  * </pre>
  *
  * <p>
@@ -330,8 +347,8 @@
  * </p>
  *
  * <pre class="fragment">
- * with(foo, disposeFoo){
- *     foo = acquireFoo(foobar);
+ * with(foo, e4c_disposeFoo){
+ *     foo = e4c_acquireFoo(foobar);
  *     someAssertion(foo, bar);
  *     ...
  * }use{
@@ -354,20 +371,20 @@
  * </p>
  *
  * <pre class="fragment">
- * with(foo, disposeFoo) foo = acquireFoo(bar, foobar); use fooSomething(foo);
+ * with(foo, e4c_disposeFoo) foo = e4c_acquireFoo(bar, foobar); use fooSomething(foo);
  * </pre>
  *
  * <p>
  * There is a way to lighten up even more this pattern by defining convenience
  * macros, customized for a specific kind of resources. For example,
- * <code>#usingFile</code> or <code>#usingMemory</code>.
+ * <code>#e4c_usingFile</code> or <code>#e4c_usingMemory</code>.
  * </p>
  *
  * @see use
  * @see using
- * @see usingIfNotNull
- * @see usingMemory
- * @see usingFile
+ * @see e4c_usingIfNotNull
+ * @see e4c_usingMemory
+ * @see e4c_usingFile
  */
 # define with(_resource_, _dispose_) E4C_WITH(_resource_, _dispose_)
 
@@ -393,19 +410,20 @@
  * @param _args_ A list of arguments to be passed to the acquisition function
  *
  * <p>
- * The specified resource will be aquired, used and then disposed. The automatic
- * acquisition and disposal is achieved by calling the <em>magic</em> functions:
+ * The specified resource will be acquired, used and then disposed. The
+ * automatic acquisition and disposal is achieved by calling the <em>magic</em>
+ * functions:
  * </p>
  *
  * <ul>
- * <li><code>_type_ acquire<em>_type_</em>(_args_)</code></li>
- * <li><code>void dispose<em>_type_</em>(_resource_, failed,
+ * <li><code>_type_ e4c_acquire<em>_type_</em>(_args_)</code></li>
+ * <li><code>void e4c_dispose<em>_type_</em>(_resource_, failed,
  * context)</code></li>
  * </ul>
  *
  * <p>
  * The resource will be acquired implicitly by assigning it the result of the
- * <em>magic</em> acquisition function <code>acquire<em>_type_</em></code>.
+ * <em>magic</em> acquisition function <code>e4c_acquire<em>_type_</em></code>.
  * </p>
  *
  * <p>
@@ -414,9 +432,9 @@
  * </p>
  *
  * @see with
- * @see usingIfNotNull
- * @see usingMemory
- * @see usingFile
+ * @see e4c_usingIfNotNull
+ * @see e4c_usingMemory
+ * @see e4c_usingFile
  */
 
 # define using(_type_, _resource_, _args_) E4C_USING(_type_, _resource_, _args_)
@@ -437,12 +455,12 @@
 /**
  * Binds the acquisition of memory to the standard function <code>malloc</code>
  */
-# define acquireMemory malloc
+# define e4c_acquireMemory malloc
 
 /**
  * Binds the disposal of memory to the standard function <code>malloc</code>
  */
-# define disposeMemory(_buffer_, _failure_, _context_) free(_buffer_)
+# define e4c_disposeMemory(_buffer_, _failure_, _context_) free(_buffer_)
 
 /**
  * Introduces a block of code with automatic acquisition and disposal of a
@@ -459,7 +477,7 @@
  * <pre class="fragment">
  * void * buffer;
  * &nbsp;
- * usingMemory(buffer, 1024){
+ * e4c_usingMemory(buffer, 1024){
  *     /<span>* implicit: buffer = malloc(1024); *</span>/
  *     memset(buffer, 0, 1024);
  *     /<span>* implicit: free(buffer); *</span>/
@@ -472,20 +490,20 @@
  * </p>
  *
  */
-# define usingMemory(_buffer_, _bytes_) \
-	usingIfNotNull( \
+# define e4c_usingMemory(_buffer_, _bytes_) \
+	e4c_usingIfNotNull( \
 		Memory, _buffer_, (_bytes_), NotEnoughMemoryException \
 	)
 
 /**
  * Binds the acquisition of file to the standard function <code>fopen</code>
  */
-# define acquireFile fopen
+# define e4c_acquireFile fopen
 
 /**
  * Binds the disposal of memory to the standard function <code>fclose</code>
  */
-# define disposeFile(_file_, _failure_, _context_) fclose(_file_)
+# define e4c_disposeFile(_file_, _failure_, _context_) fclose(_file_)
 
 /**
  * Introduces a block of code with automatic acquisition and disposal of a
@@ -503,7 +521,7 @@
  * <pre class="fragment">
  * FILE * file;
  * &nbsp;
- * usingFile(file, "log.txt", "a"){
+ * e4c_usingFile(file, "log.txt", "a"){
  *     /<span>* implicit: file = fopen("log.txt", "a"); *</span>/
  *     fputs("hello, world!\n", file);
  *     /<span>* implicit: fclose(file); *</span>/
@@ -521,8 +539,8 @@
  * </p>
  *
  */
-# define usingFile(_file_, _path_, _mode_) \
-	usingIfNotNull( \
+# define e4c_usingFile(_file_, _path_, _mode_) \
+	e4c_usingIfNotNull( \
 		File, _file_, (_path_, _mode_), FileOpenException \
 	)
 
@@ -551,18 +569,18 @@
  * </p>
  *
  * <pre class="fragment">
- * # define acquireMemory malloc
- * # define disposeMemory free
- * # define usingMemory(_resource_, _bytes_) \
- *          usingIf(Memory, _resource_, ( _bytes_ ), _resource_ != NULL, \
+ * # define e4c_acquireMemory malloc
+ * # define e4c_disposeMemory free
+ * # define e4c_usingMemory(_resource_, _bytes_) \
+ *          e4c_usingIf(Memory, _resource_, ( _bytes_ ), _resource_ != NULL, \
  *          NotEnoughMemoryException )
  * </pre>
  *
  * @see using
  */
-# define usingIf(_type_, _resource_, _args_, _cond_, _exception_) \
-	with(_resource_, dispose##_type_){ \
-		_resource_ = acquire##_type_ _args_; \
+# define e4c_usingIf(_type_, _resource_, _args_, _cond_, _exception_) \
+	with(_resource_, e4c_dispose##_type_){ \
+		_resource_ = e4c_acquire##_type_ _args_; \
 		if( !(_cond_) ) throw(_exception_); \
 	}use
 
@@ -576,10 +594,10 @@
  * @param _exception_ The exception to be thrown if the acquisition function
  *        yields a <code>NULL</code> pointer.
  *
- * @see usingIf
+ * @see e4c_usingIf
  */
-# define usingIfNotNull(_type_, _resource_, _args_, _exception_) \
-	usingIf( \
+# define e4c_usingIfNotNull(_type_, _resource_, _args_, _exception_) \
+	e4c_usingIf( \
 		_type_, _resource_, _args_, _resource_ != NULL, _exception_ \
 	)
 
@@ -604,7 +622,8 @@
  * </p>
  *
  * <ul>
- *     <li>library <em>thread-safe</em> mode</li>
+ *     <li>library <em>thread</em> mode (either <em>single-thread</em> or
+ *     <em>multi-thread</em>)</li>
  *     <li>library <em>major</em> version number</li>
  *     <li>library <em>minor</em> version number</li>
  *     <li>library <em>revision</em> number</li>
@@ -625,8 +644,9 @@
  * </p>
  *
  * <p>
- * The thread-safe mode can be obtained via <code>#E4C_VERSION_THREADSAFE</code>
- * macro. If the thread-safe mode is enabled, then the macro will yield
+ * The multi-thread (or <em>thread-safe</em>) mode can be obtained by compiling
+ * the library with the <code>#E4C_VERSION_THREADSAFE</code> compile-time
+ * parameter. When the multi-thread mode is enabled, the macro will yield
  * <code>(int)1</code>, otherwise <code>(int)1</code>.
  * </p>
  *
@@ -698,14 +718,15 @@
 # define E4C_VERSION_REVISION	E4C_VERSION(E4C_V_REVISION)
 
 /**
- * Provides whether the library thread-safe mode is enabled
+ * Provides the library thread mode (either single-thread or multi-thread)
  *
  * <p>
  * When the library is compiled with the E4C_THREADSAFE compile-time parameter,
  * <code>E4C_VERSION_THREADSAFE</code> will yield the <code>int</code> value
- * <code>1</code>, otherwise it will yield the <code>int</code> value
- * <code>0</code>.
- *</p>
+ * <code>1</code> (meaning <em>multi-thread</em> mode), otherwise it will yield
+ * the <code>int</code> value <code>0</code> (meaning <em>single-thread</em>
+ * mode).
+ * </p>
  *
  * @see E4C_VERSION_NUMBER
  */
@@ -741,7 +762,7 @@
  * </p>
  *
  * <p>
- * A block introduced by <code>recycleExceptionContext</code> is guaranteed to
+ * A block introduced by <code>reusingExceptionContext</code> is guaranteed to
  * take place <em>inside</em> an execution context. When the block completes,
  * the system returns to its previous status (if it was necessary to open a new
  * exception context, it will be automatically closed).
@@ -754,9 +775,10 @@
  * </p>
  *
  * <p>
- * <code>recycleExceptionContext</code> needs to be given a name to reference
+ * <code>reusingExceptionContext</code> needs to be given a name to reference
  * whichever exception thrown inside the block. This variable will be implicitly
- * created within the scope; its type will be <code>const #Exception *</code>.
+ * created within the scope; its type will be
+ * <code>const #e4c_Exception *</code>.
  * </p>
  *
  * <pre class="fragment">
@@ -766,13 +788,13 @@
  *     We don't know where this function is going to be called from, so:
  *       * We cannot use "try", "throw", etc. right here, because the exception
  *       context COULD be uninitialized at this very moment.
- *       * We cannot call "beginExceptionContext" either, because the exception
- *       context COULD be already initialized.
+ *       * We cannot call "e4c_beginExceptionContext" either, because the
+ *       exception context COULD be already initialized.
  *     If we have to make use of the exception handling system, we need to
- *     "recycle" the exception context.
+ *     "reuse" the existing exception context or "use" a new one.
  *     *</span>/
  * &nbsp;
- *     recycleExceptionContext(exception){
+ *     e4c_reusingExceptionContext(exception){
  *         /<span>* Now we can safely use "try", "throw", etc. *</span>/
  *         if(pointer == NULL){
  *             throw(NullPointerException);
@@ -803,7 +825,7 @@
  * </pre>
  *
  * <p>
- * Next, the semantics of <code>recycleExceptionContext</code> are explained,
+ * Next, the semantics of <code>reusingExceptionContext</code> are explained,
  * step by step.
  * </p>
  *
@@ -811,8 +833,7 @@
  *   <li>
  *   If there is an exception context at the time the block starts:
  *   <ol>
- *     <li>The existing exception context will be reused
- *       (<em>recycled</em>).</li>
+ *     <li>The existing exception context will be reused.</li>
  *     <li>The code block will take place.</li>
  *     <li>
  *       If any exception is thrown during the execution of the block:
@@ -867,7 +888,7 @@
  *
  * <pre class="fragment">
  * ...
- * recycleExceptionContext(exception){
+ * e4c_reusingExceptionContext(exception){
  * &nbsp;
  *     void * buffer = NULL;
  *     try{
@@ -882,39 +903,46 @@
  *
  * <p>
  * If you need to rely on the signal handling system, you should call
- * <code>#setSignalHandlers</code> explicitely. You could also call
- * <code>#getSignalHandlers</code>, so you can restore the previous mapping when
- * you are done:
+ * <code>#e4c_setSignalMappings</code> explicitely. You must take into account
+ * that you could be <em>hijacking</em> your client's original signal handlers,
+ * so you should also call <code>#e4c_getSignalMappings</code> in order to
+ * restore the previous mapping when you are done:
  * </p>
  *
  * <pre class="fragment">
  * ...
- * recycleExceptionContext(exception){
+ * e4c_reusingExceptionContext(exception){
  * &nbsp;
  *     int prevMappings;
- *     const SignalMapping * prevMapping = getSignalHandlers(&prevMappings);
+ *     const struct e4c_SignalMapping * prevMapping = e4c_getSignalMappings(&prevMappings);
  * &nbsp;
- *     setSignalHandlers(newMapping, newMappings);
+ *     e4c_setSignalMappings(newMapping, newMappings);
  * &nbsp;
  *     try{
  *         ...
  *     }finally{
- *         setSignalHandlers(prevMapping, prevMappings);
+ *         e4c_setSignalMappings(prevMapping, prevMappings);
  *     }
  * }
  * ...
  * </pre>
  *
+ * <p>
+ * This macro only begins a new exception context <strong>if there is no one,
+ * already begun, to be used</strong> whereas
+ * <code>#e4c_usingExceptionContext</code> always attempts to begin a new one.
+ * </p>
+ *
  * @param _thrownException_ The name of a pointer to find out whether an
  *        exception was thrown inside the block.
  *
  * @see e4c_ExceptionContext
- * @see beginExceptionContext
- * @see endExceptionContext
+ * @see e4c_beginExceptionContext
+ * @see e4c_endExceptionContext
  * @see E4C_CONTEXT
  */
-# define recycleExceptionContext(_thrownException_) \
-	E4C_RECYCLE_EXCEPTION_CONTEXT(_thrownException_)
+# define e4c_reusingExceptionContext(_thrownException_) \
+	E4C_REUSING_EXCEPTION_CONTEXT(_thrownException_)
 
 /*@}*/
 
@@ -937,16 +965,16 @@
 
 /**
  * Accesses the current exception context of the program (or current thread)
- * @see ExceptionContext
- * @see getExceptionContext
- * @see beginExceptionContext
- * @see endExceptionContext
+ * @see e4c_ExceptionContext
+ * @see e4c_getExceptionContext
+ * @see e4c_beginExceptionContext
+ * @see e4c_endExceptionContext
  */
-# define E4C_CONTEXT			getExceptionContext()
+# define E4C_CONTEXT			e4c_getExceptionContext()
 
 /**
  * Accesses the current frame of the exception context
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  */
 # define E4C_FRAME				(E4C_CONTEXT->currentFrame)
 
@@ -954,8 +982,8 @@
  * Accesses the current exception being thrown from the current exception frame
  *
  * <p>
- * If no exception was thrown, then the value of <code>EXCEPTION</code> will be
- * <code>INVALID_EXCEPTION</code>.
+ * If no exception was thrown, then the value of <code>E4C_EXCEPTION</code> will
+ * be <code>E4C_NULL_EXCEPTION</code>.
  * </p>
  *
  * <p>
@@ -963,27 +991,27 @@
  * exception was actually thrown.
  * </p>
  *
- * @see ExceptionFrame
- * @see INVALID_EXCEPTION
+ * @see e4c_ExceptionFrame
+ * @see E4C_NULL_EXCEPTION
  * @see E4C_STATUS_THROWN
  */
-# define EXCEPTION				(E4C_FRAME->exception)
+# define E4C_EXCEPTION			(E4C_FRAME->exception)
 
 /**
  * Accesses the error number of the current exception frame
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  */
 # define E4C_ERRNO				(E4C_FRAME->errorNumber)
 
 /**
  * Accesses the error file of the current exception frame
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  */
 # define E4C_FILE				(E4C_FRAME->file)
 
 /**
  * Accesses the error line of the current exception frame
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  */
 # define E4C_LINE				(E4C_FRAME->line)
 
@@ -995,7 +1023,7 @@
  * current exception frame, regardless of whether it gets caught or not.
  * </p>
  *
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  * @see E4C_STATUS_UNCAUGHT
  */
 # define E4C_STATUS_THROWN		(E4C_FRAME->thrown)
@@ -1008,28 +1036,28 @@
  * the current exception frame.
  * </p>
  *
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  * @see E4C_STATUS_THROWN
  */
 # define E4C_STATUS_UNCAUGHT	(E4C_FRAME->uncaught)
 
 /**
  * Checks whether the current exception frame did complete without an error.
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  */
-# define E4C_SUCCEED			(!E4C_STATUS_THROWN)
+# define E4C_SUCCEEDED			(!E4C_STATUS_THROWN)
 
 /**
  * Checks whether the current exception frame did fail and then did recover of
  * the error.
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  */
 # define E4C_RECOVERED			(E4C_STATUS_THROWN && !E4C_STATUS_UNCAUGHT)
 
 /**
  * Checks whether the current exception frame did fail and did not recover of
  * the error.
- * @see ExceptionFrame
+ * @see e4c_ExceptionFrame
  */
 # define E4C_FAILED				(E4C_STATUS_THROWN && E4C_STATUS_UNCAUGHT)
 
@@ -1039,55 +1067,117 @@
  * @name Other convenience macros
  *
  * <p>
- * These macros let you represent and define #Exception and #SignalMapping
- * literals and variables.
+ * These macros provide a handy way to begin (and end) an
+ * <code>#e4c_ExceptionContext</code>, as well as to define or declare
+ * <code>#e4c_Exception</code>s.
  * </p>
  *
  * @{
  */
 
 /**
- * Defines a new, const exception
+ * Introduces a block of code which will use a new exception context.
+ *
+ * <p>
+ * This macro begins a new exception context to be used by the code block right
+ * next to it. When the code completes, <code>#e4c_endExceptionContext</code>
+ * will be called implicitly.
+ * </p>
+ *
+ * <p>
+ * This macro is very convenient when the beginning and the ending of the
+ * current exception context are next to each other. For example, there is no
+ * semantic difference between this block of code...
+ * </p>
+ *
+ * <pre class="fragment">
+ * e4c_usingExceptionContext(e4c_true, NULL){
+ *     /<span>* ... *</span>/
+ * }
+ * </pre>
+ *
+ * <p>
+ * ...and the next one:
+ * </p>
+ *
+ * <pre class="fragment">
+ * e4c_beginExceptionContext(e4c_true, NULL);
+ * /<span>* ... *</span>/
+ * e4c_endExceptionContext();
+ * </pre>
+ *
+ * <p>
+ * This macro <strong>always</strong> attempts to begin a new exception context,
+ * whereas <code>#e4c_reusingExceptionContext</code> only does if there is no
+ * exception context, already begun, to be used.
+ * </p>
+ *
+ * <p>
+ * This macro <strong>should be used whenever possible</strong>, rather than
+ * doing the explicit, manual calls to <code>#e4c_beginExceptionContext</code>
+ * and <code>#e4c_endExceptionContext</code>, because it is less prone to errors.
+ * </p>
+ *
+ * <p>
+ * You might refer to documentation on functions
+ * <code>#e4c_beginExceptionContext</code> and
+ * <code>#e4c_endExceptionContext</code> for further information on exception
+ * context beginning and ending,
+ * </p>
+ *
+ * @param _handleSignals_ If <code>true</code>, the signal handling system will
+ *        be set up with the default mapping.
+ * @param _uncaughtHandler_ If not <code>NULL</code>, this function will be
+ *        called in the event of an uncaught exception.
+ *
+ * @see e4c_ExceptionContext
+ * @see e4c_beginExceptionContext
+ * @see e4c_endExceptionContext
+ * @see e4c_reusingExceptionContext
+ * @see E4C_CONTEXT
+ */
+# define e4c_usingExceptionContext(_handleSignals_, _uncaughtHandler_) \
+	E4C_USING_EXCEPTION_CONTEXT(_handleSignals_, _uncaughtHandler_)
+
+/**
+ * Defines an exception
+ *
+ * <p>
+ * This macro allocates a new, <code>const</code> exception.
+ * </p>
  *
  * @param _name_ Name of the new exception
  * @param _description_ Description of the new exception
  * @param _super_ Supertype of the new exception
  *
- * @see Exception
+ * @see e4c_Exception
+ * @see RuntimeException
+ * @see E4C_DECLARE_EXCEPTION
  */
-# define DEFINE_EXCEPTION(_name_, _description_, _super_) \
-	const Exception _name_ = { \
+# define E4C_DEFINE_EXCEPTION(_name_, _description_, _super_) \
+	const struct e4c_Exception _name_ = { \
 		name: #_name_, description: _description_, super: &_super_ \
 	}
 
 /**
- * Represents a mapping literal
+ * Declares an exception
  *
- * @param _signalNumber_ Signal to be converted
- * @param _exception_ Exception representing the signal
+ * <p>
+ * This macro introduces the name of an <code>extern</code>, <code>const</code>
+ * exception which will be available to be thrown or caught. It is only a
+ * <em>declaration</em> (i.e. the exception has to be <em>defined</em>
+ * somewhere else). This macro is intended to be used inside a header file.
+ * </p>
  *
- * @see SignalMapping
- * @see beginExceptionContext
- * @see setSignalHandlers
- * @see getSignalHandlers
- * @see defaultSignalMapping
- * @see defaultSignalMappings
+ * @param _name_ Name of the new exception
+ *
+ * @see e4c_Exception
+ * @see E4C_DEFINE_EXCEPTION
  */
-# define SIGNAL_MAPPING(_signalNumber_, _exception_) \
-	{ \
-		signalNumber:   _signalNumber_, \
-		exception:      &_exception_, \
-	}
+# define E4C_DECLARE_EXCEPTION(_name_) \
+	extern const struct e4c_Exception _name_
 
 /*@}*/
-
-# ifdef __DOXYGEN
-/* This is a kludge to work around Doxygen */
-typedef e4c_Exception Exception;
-typedef e4c_SignalMapping SignalMapping;
-typedef e4c_ExceptionFrame ExceptionFrame;
-typedef e4c_ExceptionContext ExceptionContext;
-# endif
 
 /**
  * Represents an exception in the exception handling system
@@ -1098,13 +1188,13 @@ typedef e4c_ExceptionContext ExceptionContext;
  * </p>
  *
  * <p>
- * They are defined through the macro <code>#DEFINE_EXCEPTION</code>:
+ * They are defined through the macro <code>#E4C_DEFINE_EXCEPTION</code>:
  * </p>
  *
  * <pre class="fragment">
- * DEFINE_EXCEPTION(StackException, "Stack overflow", RuntimeException);
- * DEFINE_EXCEPTION(StackOverflowException, "Stack overflow", StackException);
- * DEFINE_EXCEPTION(StackUnderflowException, "Stack underflow", StackException);
+ * E4C_DEFINE_EXCEPTION(StackException, "Stack overflow", RuntimeException);
+ * E4C_DEFINE_EXCEPTION(StackOverflowException, "Stack overflow", StackException);
+ * E4C_DEFINE_EXCEPTION(StackUnderflowException, "Stack underflow", StackException);
  * </pre>
  *
  * <p>
@@ -1132,22 +1222,21 @@ typedef e4c_ExceptionContext ExceptionContext;
  * </p>
  *
  * @see RuntimeException
- * @see DEFINE_EXCEPTION
+ * @see E4C_DEFINE_EXCEPTION
  * @see throw
  * @see catch
- * @see EXCEPTION
+ * @see E4C_EXCEPTION
  */
-typedef struct e4c_Exception Exception;
 struct e4c_Exception{
 
 	/** The name of this exception */
-	const char *			name;
+	const char *					name;
 
 	/** The description of this exception */
-	const char *			description;
+	const char *					description;
 
 	/** The supertype of this exception */
-	const Exception *		super;
+	const struct e4c_Exception *	super;
 };
 
 /*
@@ -1169,7 +1258,7 @@ struct e4c_Exception{
  * one of the different blocks is run.
  * </p>
  */
-typedef enum{
+enum e4c_Stage{
 	/* No block has been executed yet */
 	e4c_beginning,
 	/* Acquiring a resource */
@@ -1184,7 +1273,7 @@ typedef enum{
 	e4c_finalizing,
 	/* The group of blocks has been executed */
 	e4c_end
-} e4c_Stage;
+};
 
 /*
  * Represents the current execution status of a <em>recycled</em> block
@@ -1194,16 +1283,17 @@ typedef enum{
  * by the user of the library.</em>
  * </p>
  *
- * @see recycleExceptionContext
+ * @see e4c_reusingExceptionContext
+ * @see e4c_usingExceptionContext
  */
-typedef enum{
+enum e4c_RecyclingStage{
 	/* The block has not been executed yet */
 	e4c_beforePayload,
 	/* The block has just been executed */
 	e4c_afterPayload,
 	/* The block is about to complete */
 	e4c_recyclingDone
-} e4c_RecyclingStage;
+};
 
 /**
  * This is the signature of a function which will be executed in the event of an
@@ -1215,7 +1305,7 @@ typedef enum{
  * the function returns.
  * </p>
  *
- * @see beginExceptionContext
+ * @see e4c_beginExceptionContext
  *
  * @param exception The uncaught exception
  * @param file The path of the source code file from which the exception was
@@ -1223,11 +1313,11 @@ typedef enum{
  * @param line The number of line from which the exception was thrown
  * @param errorNumber The value of errno at the time the exception was thrown
  */
-typedef void (*UncaughtHandler)(
-	Exception		exception,
-	const char *	file,
-	int				line,
-	int				errorNumber
+typedef void (*e4c_UncaughtHandler)(
+	struct e4c_Exception	exception,
+	const char *			file,
+	int						line,
+	int						errorNumber
 );
 
 
@@ -1236,9 +1326,9 @@ typedef void (*UncaughtHandler)(
  *
  * <p>
  * <strong>exceptions4c</strong> can make your life easier by converting signals
- * to <code>#Exception</code>s. Most of these signals would crash your program
- * as soon as they were raised. Now you can <code>#catch</code> signals and
- * avoid core dumps.
+ * to <code>#e4c_Exception</code>s. Most of these signals would crash your
+ * program as soon as they were raised. Now you can <code>#catch</code> signals
+ * and avoid core dumps.
  * </p>
  *
  * <p>
@@ -1265,26 +1355,21 @@ typedef void (*UncaughtHandler)(
  * </p>
  *
  * <p>
- * The simpler way to get this working is by calling function:
- * </p>
- *
- * <pre class="fragment">
- * extern void beginExceptionContext(bool handleSignals);</pre>
- *
- * <p>
- * <code>beginExceptionContext</code> will set up for you the default handlers
- * for the available signals in the platform if you pass
+ * The simpler way to get this working is by calling function
+ * <code>e4c_beginExceptionContext</code>. This function will set up for you the
+ * default handlers for the available signals in the platform if you pass
  * <code>handleSignals=true</code>.
  * </p>
  *
  * <p>
  * If you need to be more specific about which signals get converted to
- * exceptions, you can define an array of <code>SignalMapping</code> this way:
+ * exceptions, you can define an array of <code>e4c_SignalMapping</code> this
+ * way:
  * </p>
  *
  * <pre class="fragment">
- * SignalMapping mapping[] = {
- *     SIGNAL_MAPPING(SIGABRT, YourVeryOwnException),
+ * struct e4c_SignalMapping mapping[] = {
+ *     {signalNumber: SIGABRT, exception: &YourVeryOwnException},
  *     ...
  * }
  * </pre>
@@ -1294,7 +1379,7 @@ typedef void (*UncaughtHandler)(
  * </p>
  *
  * <pre class="fragment">
- * extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
+ * extern void e4c_setSignalMappings(const struct e4c_SignalMapping * mapping, int mappings);
  * </pre>
  *
  * <p>
@@ -1316,21 +1401,19 @@ typedef void (*UncaughtHandler)(
  * termination.</li>
  * </ul>
  *
- * @see SIGNAL_MAPPING
- * @see beginExceptionContext
- * @see setSignalHandlers
- * @see getSignalHandlers
- * @see defaultSignalMapping
- * @see defaultSignalMappings
+ * @see e4c_beginExceptionContext
+ * @see e4c_setSignalMappings
+ * @see e4c_getSignalMappings
+ * @see e4c_defaultSignalMapping
+ * @see e4c_defaultSignalMappings
  */
-typedef struct e4c_SignalMapping SignalMapping;
 struct e4c_SignalMapping{
 
 	/** The signal to be converted */
-	int						signalNumber;
+	int								signalNumber;
 
 	/** The exception representing the signal */
-	const Exception *		exception;
+	const struct e4c_Exception *	exception;
 };
 
 /**
@@ -1349,35 +1432,34 @@ struct e4c_SignalMapping{
  * previous frames until it gets caught, otherwise the program ends.
  * </p>
  */
-typedef struct e4c_ExceptionFrame ExceptionFrame;
 struct e4c_ExceptionFrame{
 
 	/** The continuation address of the current block */
-	E4C_READ_ONLY	E4C_JMP_BUF			address;
+	E4C_READ_ONLY	E4C_JMP_BUF					address;
 
 	/** The previous (upper) frame */
-	ExceptionFrame * E4C_READ_ONLY		previous;
+	struct e4c_ExceptionFrame * E4C_READ_ONLY	previous;
 
 	/** The current stage of this frame */
-	E4C_READ_ONLY	e4c_Stage			stage;
+	E4C_READ_ONLY	enum e4c_Stage				stage;
 
 	/** A flag that is set when an exception was thrown */
-	E4C_READ_ONLY	e4c_bool			thrown;
+	E4C_READ_ONLY	e4c_bool					thrown;
 
 	/** A flag that is set when the exception was caught */
-	E4C_READ_ONLY	e4c_bool			uncaught;
+	E4C_READ_ONLY	e4c_bool					uncaught;
 
 	/** The current exception being thrown */
-	E4C_READ_ONLY	Exception			exception;
+	E4C_READ_ONLY	struct e4c_Exception		exception;
 
 	/** The path of the source code file from which the exception was thrown */
-	const char *	E4C_READ_ONLY		file;
+	const char *	E4C_READ_ONLY				file;
 
 	/** The number of line from which the exception was thrown */
-	E4C_READ_ONLY	int					line;
+	E4C_READ_ONLY	int							line;
 
 	/** The value of errno at the time the exception was thrown */
-	E4C_READ_ONLY	int					errorNumber;
+	E4C_READ_ONLY	int							errorNumber;
 };
 
 /**
@@ -1386,23 +1468,22 @@ struct e4c_ExceptionFrame{
  * <p>
  * Each part of the program that makes use of the exception handling system,
  * needs an exception context. This context holds a stack of
- * <code>#ExceptionFrame</code>s, in which exception information is recorded.
+ * <code>#e4c_ExceptionFrame</code>s, in which exception information is recorded.
  * </p>
  */
-typedef struct e4c_ExceptionContext ExceptionContext;
 struct e4c_ExceptionContext{
 
 	/** The current (inner) exception frame of this context */
-	E4C_READ_ONLY ExceptionFrame * E4C_READ_ONLY	currentFrame;
+	E4C_READ_ONLY struct e4c_ExceptionFrame * E4C_READ_ONLY currentFrame;
 
 	/** The array of mappings between the signals and exceptions */
-	const SignalMapping * E4C_READ_ONLY				signalMapping;
+	const struct e4c_SignalMapping * E4C_READ_ONLY signalMapping;
 
 	/** The number of elements in the array of mappings */
-	E4C_READ_ONLY	int								signalMappings;
+	E4C_READ_ONLY int signalMappings;
 
 	/** The function to be executed in the event of an uncaught exception */
-	E4C_READ_ONLY	UncaughtHandler					uncaughtHandler;
+	E4C_READ_ONLY e4c_UncaughtHandler uncaughtHandler;
 };
 
 /**
@@ -1425,23 +1506,22 @@ struct e4c_ExceptionContext{
  * <li>...and so on</li>
  * </ul>
  *
- * @see SignalMapping
- * @see SIGNAL_MAPPING
- * @see beginExceptionContext
- * @see setSignalHandlers
- * @see getSignalHandlers
+ * @see e4c_SignalMapping
+ * @see e4c_beginExceptionContext
+ * @see e4c_setSignalMappings
+ * @see e4c_getSignalMappings
  * @{
  */
 
 /**
  * The array of predefined signal mappings.
  */
-extern const SignalMapping defaultSignalMapping[];
+extern const struct e4c_SignalMapping e4c_defaultSignalMapping[];
 
 /**
  * The number of predefined signal mappings.
  */
-extern const int defaultSignalMappings;
+extern const int e4c_defaultSignalMappings;
 
 /*@}*/
 
@@ -1466,7 +1546,7 @@ extern const int defaultSignalMappings;
  * This represents an invalid exception.
  *
  * <p>
- * <code>INVALID_EXCEPTION</code> honors the Null Object pattern:
+ * <code>E4C_NULL_EXCEPTION</code> honors the Null Object pattern:
  * </p>
  *
  * <ul>
@@ -1474,7 +1554,7 @@ extern const int defaultSignalMappings;
  * <li>Catching it does nothing</li>
  * </ul>
  */
-extern const Exception INVALID_EXCEPTION;
+E4C_DECLARE_EXCEPTION(E4C_NULL_EXCEPTION);
 
 /**
  * This is the root of the exception pseudo-hierarchy
@@ -1522,7 +1602,7 @@ extern const Exception INVALID_EXCEPTION;
  *     </ul></li>
  * </ul>
  */
-extern const Exception RuntimeException;
+E4C_DECLARE_EXCEPTION(RuntimeException);
 
 /**
  * This exception is thrown when the system runs out of memory.
@@ -1530,7 +1610,7 @@ extern const Exception RuntimeException;
  * NotEnoughMemoryException is thrown when there is not enough memory to
  * continue the execution of the program.
  */
-extern const Exception NotEnoughMemoryException;
+E4C_DECLARE_EXCEPTION(NotEnoughMemoryException);
 
 /**
  * This exception is thrown when an unexpected null pointer is found.
@@ -1538,19 +1618,19 @@ extern const Exception NotEnoughMemoryException;
  * NullPointerException is thrown when some part of the program gets a pointer
  * which was expected or required to contain a valid memory address.
  */
-extern const Exception NullPointerException;
+E4C_DECLARE_EXCEPTION(NullPointerException);
 
 /**
  * This exception is thrown when a file cannot be opened.
  *
- * FileOpenException is thrown by <code>#usingFile</code> when
+ * FileOpenException is thrown by <code>#e4c_usingFile</code> when
  * <code>fopen</code> returns <code>NULL</code> for whatever reason.
  *
  * The value of <code>errno</code> at the time the exception was thrown (right
  * after <code>fopen</code>) can be accessed through the macro
  * <code>E4C_ERRNO</code>.
  */
-extern const Exception FileOpenException;
+E4C_DECLARE_EXCEPTION(FileOpenException);
 
 /**
  * This exception is the common supertype of all signal exceptions
@@ -1598,7 +1678,7 @@ extern const Exception FileOpenException;
  *     </ul></li>
  * </ul>
  */
-extern const Exception SignalException;
+E4C_DECLARE_EXCEPTION(SignalException);
 
 /**
  * This exception is thrown when a time limit has elapsed
@@ -1606,7 +1686,7 @@ extern const Exception SignalException;
  * SignalAlarmException represents <code>SIGALRM</code>, the signal sent to a
  * process when a time limit has elapsed.
  */
-extern const Exception SignalAlarmException;
+E4C_DECLARE_EXCEPTION(SignalAlarmException);
 
 /**
  * This exception is thrown when a child process terminates
@@ -1614,7 +1694,7 @@ extern const Exception SignalAlarmException;
  * SignalChildException represents <code>SIGCHLD</code>, the signal sent to a
  * process when a child process terminates (ignored by default).
  */
-extern const Exception SignalChildException;
+E4C_DECLARE_EXCEPTION(SignalChildException);
 
 /**
  * This exception is thrown when a condition arises that a debugger has
@@ -1624,7 +1704,7 @@ extern const Exception SignalChildException;
  * process when a condition arises that a debugger has requested to be informed
  * of.
  */
-extern const Exception SignalTrapException;
+E4C_DECLARE_EXCEPTION(SignalTrapException);
 
 /**
  * This exception is the common supertype of all error signal exceptions.
@@ -1647,7 +1727,7 @@ extern const Exception SignalTrapException;
  *     </ul></li>
  * </ul>
  */
-extern const Exception ErrorSignalException;
+E4C_DECLARE_EXCEPTION(ErrorSignalException);
 
 /**
  * This exception is thrown when the process attempts to execute an illegal
@@ -1657,7 +1737,7 @@ extern const Exception ErrorSignalException;
  * to a process when it attempts to execute a malformed, unknown, or privileged
  * instruction.
  */
-extern const Exception IllegalInstructionException;
+E4C_DECLARE_EXCEPTION(IllegalInstructionException);
 
 /**
  * This exception is thrown when the process performs an erroneous arithmetic
@@ -1666,7 +1746,7 @@ extern const Exception IllegalInstructionException;
  * ArithmeticException represents <code>SIGFPE</code>, the signal sent to a
  * process when it performs an erroneous arithmetic operation.
  */
-extern const Exception ArithmeticException;
+E4C_DECLARE_EXCEPTION(ArithmeticException);
 
 /**
  * This exception is thrown when the process tries to dereference an invalid
@@ -1675,7 +1755,7 @@ extern const Exception ArithmeticException;
  * BadPointerException represents <code>SIGSEGV</code>, the signal sent to a
  * process when it makes an invalid memory reference, or segmentation fault.
  */
-extern const Exception BadPointerException;
+E4C_DECLARE_EXCEPTION(BadPointerException);
 
 /**
  * This exception is thrown when the process attempts to write to a broken pipe.
@@ -1684,7 +1764,7 @@ extern const Exception BadPointerException;
  * process when it attempts to write to a pipe without a process connected to
  * the other end.
  */
-extern const Exception BrokenPipeException;
+E4C_DECLARE_EXCEPTION(BrokenPipeException);
 
 /**
  * This exception is the common supertype of all control signal exceptions.
@@ -1714,7 +1794,7 @@ extern const Exception BrokenPipeException;
  *     </ul></li>
  * </ul>
  */
-extern const Exception ControlSignalException;
+E4C_DECLARE_EXCEPTION(ControlSignalException);
 
 /**
  * This exception is thrown to stop the process for later resumption.
@@ -1725,7 +1805,7 @@ extern const Exception ControlSignalException;
  * Since <code>SIGSTOP</code> is unblock-able, it cannot be handled and
  * converted to this exception automatically.
  */
-extern const Exception StopException;
+E4C_DECLARE_EXCEPTION(StopException);
 
 /**
  * This exception is thrown to terminate the process immediately.
@@ -1736,7 +1816,7 @@ extern const Exception StopException;
  * Since <code>SIGKILL</code> is unblock-able, it cannot be handled and
  * converted to this exception automatically.
  */
-extern const Exception KillException;
+E4C_DECLARE_EXCEPTION(KillException);
 
 /**
  * This exception is thrown when the process' terminal is closed.
@@ -1744,7 +1824,7 @@ extern const Exception KillException;
  * HangUpException represents <code>SIGHUP</code>, the signal sent to a process
  * when its controlling terminal is closed.
  */
-extern const Exception HangUpException;
+E4C_DECLARE_EXCEPTION(HangUpException);
 
 /**
  * This exception is thrown to request the termination of the process.
@@ -1752,7 +1832,7 @@ extern const Exception HangUpException;
  * TerminationException represents <code>SIGTERM</code>, the signal sent to a
  * process to request its termination.
  */
-extern const Exception TerminationException;
+E4C_DECLARE_EXCEPTION(TerminationException);
 
 /**
  * This exception is thrown to abort the process.
@@ -1760,7 +1840,7 @@ extern const Exception TerminationException;
  * AbortException represents <code>SIGABRT</code>, the signal sent by computer
  * programs to abort the process.
  */
-extern const Exception AbortException;
+E4C_DECLARE_EXCEPTION(AbortException);
 
 /**
  * This exception is thrown when the process has used up the CPU for too long.
@@ -1769,7 +1849,7 @@ extern const Exception AbortException;
  * process when it has used up the CPU for a duration that exceeds a certain
  * predetermined user-settable value.
  */
-extern const Exception CPUTimeException;
+E4C_DECLARE_EXCEPTION(CPUTimeException);
 
 /**
  * This exception is the common supertype of all control signal exceptions
@@ -1793,7 +1873,7 @@ extern const Exception CPUTimeException;
  *     </ul></li>
  * </ul>
  */
-extern const Exception UserControlSignalException;
+E4C_DECLARE_EXCEPTION(UserControlSignalException);
 
 /**
  * This exception is thrown when the user requests to quit the process.
@@ -1802,7 +1882,7 @@ extern const Exception UserControlSignalException;
  * process by its controlling terminal when the user requests that the process
  * dump core.
  */
-extern const Exception UserQuitException;
+E4C_DECLARE_EXCEPTION(UserQuitException);
 
 /**
  * This exception is thrown when the user requests to interrupt the process.
@@ -1810,7 +1890,7 @@ extern const Exception UserQuitException;
  * UserInterruptionException represents <code>SIGINT</code>, the signal sent to
  * a process by its controlling terminal when a user wishes to interrupt it.
  */
-extern const Exception UserInterruptionException;
+E4C_DECLARE_EXCEPTION(UserInterruptionException);
 
 /**
  * This exception is thrown when a user wishes to break the process.
@@ -1818,7 +1898,7 @@ extern const Exception UserInterruptionException;
  * UserBreakException represents <code>SIGBREAK</code>, the signal sent to a
  * process by its controlling terminal when a user wishes to break it.
  */
-extern const Exception UserBreakException;
+E4C_DECLARE_EXCEPTION(UserBreakException);
 
 /**
  * This exception is the common supertype of all user-defined signal exceptions
@@ -1839,7 +1919,7 @@ extern const Exception UserBreakException;
  *     </ul></li>
  * </ul>
  */
-extern const Exception ProgramSignalException;
+E4C_DECLARE_EXCEPTION(ProgramSignalException);
 
 /**
  * This exception is thrown when user-defined conditions occur.
@@ -1847,7 +1927,7 @@ extern const Exception ProgramSignalException;
  * ProgramSignal1Exception represents <code>SIGUSR1</code>, the signal sent to a
  * process to indicate user-defined conditions.
  */
-extern const Exception ProgramSignal1Exception;
+E4C_DECLARE_EXCEPTION(ProgramSignal1Exception);
 
 /**
  * This exception is thrown when user-defined conditions occur.
@@ -1855,7 +1935,7 @@ extern const Exception ProgramSignal1Exception;
  * ProgramSignal2Exception represents <code>SIGUSR1</code>, the signal sent to a
  * process to indicate user-defined conditions.
  */
-extern const Exception ProgramSignal2Exception;
+E4C_DECLARE_EXCEPTION(ProgramSignal2Exception);
 
 /*@}*/
 
@@ -1875,32 +1955,32 @@ extern const Exception ProgramSignal2Exception;
  *
  * <p>
  * This function begins the current exception context to be used by the program
- * (or current thread), until <code>#endExceptionContext</code> is called.
+ * (or current thread), until <code>#e4c_endExceptionContext</code> is called.
  * </p>
  *
  * <p>
  * A program (or thread) <strong>must not</strong> use the keywords
  * <code>#try</code>, <code>#catch</code>, <code>#throw</code>, etc. prior to
- * calling <code>beginExceptionContext</code>. Such programming error will lead
- * to an abrupt exit of the program (or thread).
+ * calling <code>e4c_beginExceptionContext</code>. Such programming error will
+ * lead to an abrupt exit of the program (or thread).
  * </p>
  *
  * <p>
- * Calling <code>beginExceptionContext</code> <em>twice</em> is also considered
- * a programming error, and therefore the program (or thread) will exit abruptly
- * too. Nevertheless, <code>beginExceptionContext</code> can be called several
- * times <em>if, and only if,</em> <code>#endExceptionContext</code> is called
- * in between.
+ * Calling <code>e4c_beginExceptionContext</code> <em>twice</em> is also
+ * considereda programming error, and therefore the program (or thread) will
+ * exit abruptly too. Nevertheless, <code>e4c_beginExceptionContext</code> can
+ * be called several times <em>if, and only if,</em>
+ * <code>#e4c_endExceptionContext</code> is called in between.
  * </p>
  *
  * <p>
  * The signal handling system can be automatically initialized with the default
  * signal mapping via <code>handleSignals</code> parameter when calling
- * <code>beginExceptionContext</code>. This is equivalent to:
+ * <code>e4c_beginExceptionContext</code>. This is equivalent to:
  * </p>
  *
  * <pre class="fragment">
- * setSignalHandlers(defaultSignalMapping, defaultSignalMappings);
+ * e4c_setSignalMappings(e4c_defaultSignalMapping, e4c_defaultSignalMappings);
  * </pre>
  *
  * <p>
@@ -1916,25 +1996,27 @@ extern const Exception ProgramSignal2Exception;
  *
  * <p>
  * There exist a convenience function to be used as the default
- * <em>uncaught handler</em>, called <code>#dumpException</code>. This function
- * simply prints information regarding the exception to <code>stderr</code>, and
- * then exits.
+ * <em>uncaught handler</em>, called <code>#e4c_dumpException</code>. This
+ * function simply prints information regarding the exception to
+ * <code>stderr</code>, and then exits.
  * </p>
  *
- * @see endExceptionContext
- * @see setSignalHandlers
- * @see defaultSignalMapping
- * @see defaultSignalMappings
- * @see UncaughtHandler
- * @see dumpException
+ * @see e4c_endExceptionContext
+ * @see e4c_usingExceptionContext
+ * @see e4c_reusingExceptionContext
+ * @see e4c_setSignalMappings
+ * @see e4c_defaultSignalMapping
+ * @see e4c_defaultSignalMappings
+ * @see e4c_UncaughtHandler
+ * @see e4c_dumpException
  *
  * @param handleSignals If <code>true</code>, the signal handling system will be
  *        set up with the default mapping.
  * @param uncaughtHandler If not <code>NULL</code>, this function will be called
  *        in the event of an uncaught exception.
  */
-extern void beginExceptionContext(e4c_bool handleSignals,
-	UncaughtHandler uncaughtHandler);
+extern void e4c_beginExceptionContext(e4c_bool handleSignals,
+	e4c_UncaughtHandler uncaughtHandler);
 
 /**
  * Retrieves the current exception context of the program (or current thread)
@@ -1955,15 +2037,15 @@ extern void beginExceptionContext(e4c_bool handleSignals,
  * not yet begun, or has already been ended.
  * </p>
  *
- * @see ExceptionContext
- * @see beginExceptionContext
- * @see endExceptionContext
+ * @see e4c_ExceptionContext
+ * @see e4c_beginExceptionContext
+ * @see e4c_endExceptionContext
  * @see E4C_CONTEXT
  *
  * @return The current exception context of the program (or current thread),
  *   otherwise <code>NULL</code>
  */
-extern ExceptionContext * getExceptionContext();
+extern struct e4c_ExceptionContext * e4c_getExceptionContext();
 
 /**
  * Ends the current exception context
@@ -1974,14 +2056,16 @@ extern ExceptionContext * getExceptionContext();
  *
  * <p>
  * A program (or thread) <strong>must</strong> call
- * <code>#endExceptionContext</code> when the exception handling system is no
- * longer needed. Exiting a program (or thread) without calling before
- * <code>#endExceptionContext</code> is a programming error.
+ * <code>#e4c_endExceptionContext</code> when the exception handling system is
+ * no longer needed. Exiting a program (or thread) without calling before
+ * <code>#e4c_endExceptionContext</code> is a programming error.
  * </p>
  *
- * @see beginExceptionContext
+ * @see e4c_beginExceptionContext
+ * @see e4c_usingExceptionContext
+ * @see e4c_reusingExceptionContext
  */
-extern void endExceptionContext();
+extern void e4c_endExceptionContext();
 
 /*@}*/
 
@@ -2006,9 +2090,9 @@ extern void endExceptionContext();
  *
  * <p>
  * A program (or thread) <strong>must</strong> call
- * <code>#beginExceptionContext</code> prior to calling
- * <code>setSignalHandlers</code>. Such programming error will lead to an abrupt
- * exit of the program (or thread).
+ * <code>#e4c_beginExceptionContext</code> prior to calling
+ * <code>e4c_setSignalMappings</code>. Such programming error will lead to an
+ * abrupt exit of the program (or thread).
  * </p>
  *
  * <p>
@@ -2016,15 +2100,14 @@ extern void endExceptionContext();
  * multithreaded program, so use the signal handling system with caution.
  * </p>
  *
- * @see SignalMapping
- * @see SIGNAL_MAPPING
- * @see defaultSignalMapping
- * @see defaultSignalMappings
+ * @see e4c_SignalMapping
+ * @see e4c_defaultSignalMapping
+ * @see e4c_defaultSignalMappings
  *
  * @param mapping The array of mappings
  * @param mappings The number of elements in the array
  */
-extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
+extern void e4c_setSignalMappings(const struct e4c_SignalMapping * mapping, int mappings);
 
 /**
  * Retrieves the current signal mapping for the program (or thread)
@@ -2034,15 +2117,14 @@ extern void setSignalHandlers(const SignalMapping * mapping, int mappings);
  * be handled and the corresponding exception to be thrown.
  * </p>
  *
- * @see SignalMapping
- * @see SIGNAL_MAPPING
- * @see defaultSignalMapping
- * @see defaultSignalMappings
+ * @see e4c_SignalMapping
+ * @see e4c_defaultSignalMapping
+ * @see e4c_defaultSignalMappings
  *
  * @param mappings Will be set to the current number of mappings
  * @return The current array of mappings
  */
-extern const SignalMapping * getSignalHandlers(int * mappings);
+extern const struct e4c_SignalMapping * e4c_getSignalMappings(int * mappings);
 
 /*@}*/
 
@@ -2062,7 +2144,8 @@ extern const SignalMapping * getSignalHandlers(int * mappings);
  * <p>
  * This is a convenience function for showing an error message through the
  * standard error output. It can be passed to
- * <code>#beginExceptionContext</code> as the handler for uncaught exceptions.
+ * <code>#e4c_beginExceptionContext</code> as the handler for uncaught
+ * exceptions.
  * </p>
  *
  * @param exception The uncaught exception
@@ -2071,7 +2154,7 @@ extern const SignalMapping * getSignalHandlers(int * mappings);
  * @param line The number of line from which the exception was thrown
  * @param errorNumber The value of errno at the time the exception was thrown
  */
-extern void dumpException(Exception exception,
+extern void e4c_dumpException(struct e4c_Exception exception,
 	const char * file, int line, int errorNumber);
 
 /**
@@ -2084,7 +2167,7 @@ extern void dumpException(Exception exception,
  *
  * @param exception The exception whose hierarchy is to be printed
  */
-extern void printExceptionHierarchy(Exception exception);
+extern void e4c_printExceptionHierarchy(struct e4c_Exception exception);
 
 /**
  * Gets the library version number
@@ -2118,10 +2201,10 @@ extern long e4c_getLibraryVersion();
  * Next functions are undocumented on purpose, because they shouldn't be used
  * directly (but through the 'keyword' macros).
  */
-extern E4C_JMP_BUF * e4c_first(e4c_Stage stage, const char * file, int line);
+extern E4C_JMP_BUF * e4c_first(enum e4c_Stage stage, const char * file, int line);
 extern e4c_bool e4c_next();
-extern e4c_bool e4c_hook(e4c_Stage stage, const Exception exception);
-extern void e4c_throw(const Exception exception, const char * file, int line);
+extern e4c_bool e4c_hook(enum e4c_Stage stage, const struct e4c_Exception exception);
+extern void e4c_throw(const struct e4c_Exception exception, const char * file, int line);
 
 # undef E4C_READ_ONLY
 
