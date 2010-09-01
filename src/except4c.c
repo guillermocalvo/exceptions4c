@@ -234,7 +234,6 @@ struct e4c_environment{
 static E4C_INLINE e4c_exception			_e4c_new_exception(const e4c_exception * prototype, const char * message, const char * file, int line, int error_number, const e4c_exception * cause);
 static E4C_INLINE e4c_frame				_e4c_new_frame(e4c_frame * previous, e4c_stage stage);
 static E4C_INLINE void					_e4c_delete_frame(e4c_frame * frame);
-static E4C_INLINE void					_e4c_print_exception_hierarchy(const e4c_exception * exception);
 static E4C_INLINE void					_e4c_fatal_error(const e4c_exception * prototype, const char * message, const char * file, int line, int error_number, const e4c_exception * cause);
 static E4C_INLINE e4c_bool				_e4c_extends(const e4c_exception * child, const e4c_exception * parent);
 static void								_e4c_propagate(e4c_context * context, const e4c_exception * exception) E4C_NORETURN;
@@ -245,6 +244,7 @@ static void								e4c_handle_signal(int signal_number);
 # ifndef NDEBUG
 static void								e4c_at_exit();
 static void								_e4c_initialize();
+static E4C_INLINE void					_e4c_print_exception_hierarchy(const e4c_exception * exception);
 # endif
 
 # ifdef E4C_THREADSAFE
@@ -474,11 +474,6 @@ e4c_bool e4c_frame_step(void){
 	e4c_frame *		frame;
 	e4c_frame		tmp;
 
-# ifdef NDEBUG
-	/* get rid of the "unused parameter" warnings */
-	if(file != NULL && line != 0) file = NULL;
-# endif
-
 	context = E4C_CONTEXT;
 	/* check if the current exception context is NULL (unlikely) */
 	DEBUG_ASSERT(context != NULL, "e4c_frame_step: " DESC_NOT_BEGUN_YET);
@@ -562,7 +557,9 @@ void e4c_throw_exception(const e4c_exception * exception, const char * message, 
 
 void e4c_print_exception(const e4c_exception * exception){
 
+# ifndef NDEBUG
 	const e4c_exception * cause;
+# endif
 
 	if(exception == NULL){
 		if(CONTEXT_IS_READY) throw(NullPointerException, "Null exception");
@@ -788,7 +785,7 @@ void e4c_context_end(void){
 
 
 
-
+# ifndef NDEBUG
 static E4C_INLINE void _e4c_print_exception_hierarchy(const e4c_exception * exception){
 
 	const char *			separator	= "________________________________________________________________";
@@ -810,6 +807,7 @@ static E4C_INLINE void _e4c_print_exception_hierarchy(const e4c_exception * exce
 	}
 	fprintf(stderr, "%s\n", separator);
 }
+# endif
 
 static E4C_INLINE void _e4c_fatal_error(const e4c_exception * prototype, const char * message, const char * file, int line, int error_number, const e4c_exception * cause){
 
