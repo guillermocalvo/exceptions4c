@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version 1.6
+ * @version 2.0
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(1, 6, 1)
+# define _E4C_VERSION(version)			version(2, 0, 0)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -163,7 +163,7 @@ multi-thread version of exceptions4c.
 
 # define E4C_CATCH(_exception_) \
 	else if( \
-		e4c_frame_hook(_e4c_catching, _exception_, \
+		e4c_frame_hook(_e4c_catching, &_exception_, \
 			_E4C_FILE_INFO, _E4C_LINE_INFO) \
 	)
 
@@ -172,9 +172,9 @@ multi-thread version of exceptions4c.
 		e4c_frame_hook(_e4c_finalizing, NULL, _E4C_FILE_INFO, _E4C_LINE_INFO) \
 	)
 
-# define E4C_THROW(_exception_, _message_) \
+# define E4C_THROW(_exception_type_, _message_) \
 	e4c_throw_exception( \
-		_exception_, _message_, _E4C_FILE_INFO, _E4C_LINE_INFO \
+		(_exception_type_).type, _message_, _E4C_FILE_INFO, _E4C_LINE_INFO \
 	)
 
 # define E4C_WITH(_resource_, _dispose_) \
@@ -194,7 +194,7 @@ multi-thread version of exceptions4c.
 		_resource_ = e4c_acquire_##_type_ _args_; \
 	}use
 
-# define E4C_REUSING_EXCEPTION_CONTEXT(_thrown_exception_) \
+# define E4C_REUSING_CONTEXT(_thrown_exception_) \
 	\
 	int				_E4C_AUTO(STAGE)	= /* e4c_before_payload */ 0; \
 	e4c_bool		_E4C_AUTO(READY)	= e4c_context_is_ready(); \
@@ -231,7 +231,7 @@ multi-thread version of exceptions4c.
 			} \
 		}else
 
-# define E4C_USING_EXCEPTION_CONTEXT(_handle_signals_, _uncaught_handler_) \
+# define E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_) \
 	\
 	int _E4C_AUTO(STAGE) = /* e4c_before_payload */ 0; \
 	\
@@ -249,20 +249,19 @@ multi-thread version of exceptions4c.
 		}else
 
 # define _E4C_DECLARE_EXCEPTION(_name_) \
-	extern const e4c_exception * const _name_;
+	extern const e4c_exception _name_
 
 # define _E4C_DEFINE_EXCEPTION(_name_, _message_, _super_) \
-	static const e4c_exception __##_name_ = { \
+	const e4c_exception _name_ = { \
 		/* name			*/	#_name_, \
 		/* message		*/	_message_, \
 		/* super		*/	&_super_, \
 		/* file			*/	_E4C_FILE_INFO, \
 		/* line			*/	_E4C_LINE_INFO, \
 		/* error_number	*/	0, \
-		/* type			*/	(const e4c_exception *)NULL, \
-		/* cause		*/	(const e4c_exception *)NULL \
-	}; \
-	const e4c_exception * const _name_ = &__##_name_;
+		/* type			*/	&_name_, \
+		/* cause		*/	NULL \
+	}
 
 # define _E4C_SIGNAL_MAPPING(_signal_number_, _exception_) \
 	{_signal_number_, &_exception_}
@@ -315,7 +314,8 @@ multi-thread version of exceptions4c.
  * If a <code>catch</code> block handles (at <em>compile-time</em>) a generic
  * type of exceptions, the specific type of the actual exception can be
  * determined (at <em>run-time</em>) by comparing the <code>type</code> of
- * the caught exception against other exceptions defined in the program.
+ * the caught exception against the type of another exceptions previously
+ * defined in the program.
  * </p>
  *
  * <pre class="fragment">
@@ -323,13 +323,53 @@ multi-thread version of exceptions4c.
  *    ...
  * }#catch(#RuntimeException){
  *    const #e4c_exception * exception = #e4c_get_exception();
- *    if(exception->type == #NullPointerException){
+ *    if(exception->type == SignalException.type){
  *        ...
- *    }else if(exception->type == #NotEnoughMemoryException){
+ *    }else if(exception->type == NotEnoughMemoryException.type){
  *        ...
  *    }
  * }
  * </pre>
+ *
+ * <p>
+ * However, this check compares the exception against a specific type. So, if
+ * the thrown exception was a <em>subtype</em> of the given exception type, this
+ * comparison would then yield <code>false</code>. For example, in the previous
+ * example, if the thrown exception was of type
+ * <code>#BadPointerException</code>: it would be caught by the
+ * <code>catch</code> block, because an instance of a
+ * <code>#BadPointerException</code> is also an instance of a
+ * <code>#RuntimeException</code>, but the comparison
+ * <code>(exception->type == SignalException.type)</code> would
+ * yield <code>false</code> because the type of the thrown exception was not
+ * <em>strictly speaking</em> <code>#SignalException</code>, but
+ * <code>#BadPointerException</code>.
+ * </p>
+ *
+ * <p>
+ * There is a more powerful way to find out if the thrown exception <strong>is
+ * an instance of</strong> a given type of exception <em>or any subtype</em>.
+ * The function <code>#e4c_is_instance_of</code> can determines that:
+ * </p>
+ *
+ * <pre class="fragment">
+ * #try{
+ *    ...
+ * }#catch(#RuntimeException){
+ *    const #e4c_exception * exception = #e4c_get_exception();
+ *    if( #e4c_is_instance_of(exception, SignalException.type) ){
+ *        ...
+ *    }else if(exception->type == NotEnoughMemoryException.type){
+ *        ...
+ *    }
+ * }
+ * </pre>
+ *
+ * <p>
+ * In this example, the <code>if</code> condition would evaluate to
+ * <code>true</code> because a <code>#BadPointerException</code>
+ * <strong>is an instance of a</strong> <code>#RuntimeException</code>.
+ * </p>
  *
  * <p>
  * After the <code>catch</code> block completes, the <code>finally</code> block
@@ -413,17 +453,10 @@ multi-thread version of exceptions4c.
  * Signals an exceptional situation represented by an exception object
  *
  * <p>
- * Creates a new instance of the specified exception and throws it. The provided
- * message is copied into the thrown exception, so it can be freely deallocated.
- * If <code>NULL</code> is passed, then the default message for that type of
- * exception will be used.
- * </p>
- *
- * <p>
- * The exception pointer Creates a new instance of the specified exception and throws it. The provided
- * message is copied into the thrown exception, so it can be freely deallocated.
- * If <code>NULL</code> is passed, then the default message for that type of
- * exception will be used.
+ * Creates a new instance of the specified type of exception and then throws it.
+ * The provided message is copied into the thrown exception, so it can be freely
+ * deallocated. If <code>NULL</code> is passed, then the default message for
+ * that type of exception will be used.
  * </p>
  *
  * <p>
@@ -443,13 +476,13 @@ multi-thread version of exceptions4c.
  * @see e4c_uncaught_handler
  * @see e4c_get_exception
  *
- * @param _exception_ The exception to be thrown
+ * @param _exception_type_ The type of exception to be thrown
  * @param _message_ The <em>ad hoc</em> message describing the exception. If
  *        <code>NULL</code>, then the default message for the specified
  *        exception will be used
  */
 # ifndef E4C_NOKEYWORDS
-# define throw(_exception_, _message_) E4C_THROW(_exception_, _message_)
+# define throw(_exception_type_, _message_) E4C_THROW(_exception_type_, _message_)
 # endif
 
 /*@}*/
@@ -1008,8 +1041,8 @@ multi-thread version of exceptions4c.
  *
  * <p>
  * <code>e4c_reusing_context</code> needs to be given a variable that will point
- * to whichever exception thrown inside the block. This variable must be of type
- * <code>const e4c_exception *</code> and will be set to <code>NULL</code> if
+ * to whichever exception thrown inside the block. This variable must be a
+ * pointer to <code>e4c_exception</code> and will be set to <code>NULL</code> if
  * no exception was thrown inside the block.
  * </p>
  *
@@ -1026,7 +1059,7 @@ multi-thread version of exceptions4c.
  *     "reuse" the existing exception context or "use" a new one.
  *     *</span>/
  * &nbsp;
- *     const #e4c_exception * exception;
+ *     #e4c_exception * exception;
  * &nbsp;
  *     #e4c_reusing_context(exception){
  *         /<span>* Now we can safely use "try", "throw", etc. *</span>/
@@ -1189,7 +1222,7 @@ multi-thread version of exceptions4c.
  * @see e4c_exception
  */
 # define e4c_reusing_context(_thrown_exception_) \
-	E4C_REUSING_EXCEPTION_CONTEXT(_thrown_exception_)
+	E4C_REUSING_CONTEXT(_thrown_exception_)
 
 /*@}*/
 
@@ -1255,7 +1288,7 @@ multi-thread version of exceptions4c.
  * @see e4c_reusing_context
  */
 # define e4c_using_context(_handle_signals_, _uncaught_handler_) \
-	E4C_USING_EXCEPTION_CONTEXT(_handle_signals_, _uncaught_handler_)
+	E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
 
 /**
  * Expresses a program assertion
@@ -1467,16 +1500,16 @@ typedef struct e4c_exception e4c_exception;
 struct e4c_exception{
 
 	/** The name of this exception */
-	const char const *				name;
+	const char *					name;
 
 	/** The message of this exception */
 	char							message[E4C_EXCEPTION_MESSAGE_SIZE];
 
 	/** The supertype of this exception */
-	const e4c_exception const * const * super;
+	const e4c_exception *			super;
 
 	/** The path of the source code file from which the exception was thrown */
-	const char const *				file;
+	const char *					file;
 
 	/** The number of line from which the exception was thrown */
 	int								line;
@@ -1485,10 +1518,10 @@ struct e4c_exception{
 	int								error_number;
 
 	/** The class of this exception */
-	const e4c_exception const *		type;
+	const e4c_exception *			type;
 
 	/** The cause of this exception */
-	const e4c_exception const *		cause;
+	const e4c_exception *			cause;
 };
 
 /**
@@ -1586,7 +1619,7 @@ struct e4c_signal_mapping{
 	int								signal_number;
 
 	/** The exception representing the signal */
-	const e4c_exception * const * const exception;
+	const e4c_exception * const		exception;
 
 };
 
@@ -2193,7 +2226,7 @@ extern e4c_bool e4c_context_is_ready(void);
  * </pre>
  *
  * <p>
- * Note that the behaviour of <code>signal</code> is undefined in a
+ * Note that the behavior of <code>signal</code> is undefined in a
  * multithreaded program, so use the signal handling system with caution.
  * </p>
  *
@@ -2260,7 +2293,7 @@ extern void e4c_context_end(void);
  * </p>
  *
  * <p>
- * Note that the behaviour of <code>signal</code> is undefined in a
+ * Note that the behavior of <code>signal</code> is undefined in a
  * multithreaded program, so use the signal handling system with caution.
  * </p>
  *
@@ -2385,6 +2418,45 @@ extern e4c_status e4c_get_status(void);
  *   any) otherwise <code>NULL</code>
  */
 extern const e4c_exception * e4c_get_exception(void);
+
+/**
+ * Returns whether an exception is of a given exception type
+ *
+ * <p>
+ * <code>e4c_is_instance_of</code> can be used to determine if a thrown
+ * exception <strong>is an instance of a given type</strong> defined through
+ * <code>E4C_DEFINE_EXCEPTION</code> and/or declared through
+ * <code>E4C_DECLARE_EXCEPTION</code>
+ * </p>
+ *
+ * <p>
+ * This clause is intended to be used in a <code>catch</code> block, or in a
+ * <code>finally</code> block provided that some exception was actually thrown
+ * (i.e. <code>e4c_get_status</code> returned <code>e4c_failed</code> or
+ * <code>e4c_recovered</code>)
+ * </p>
+ *
+ * <pre class="fragment">
+ * #try{
+ *    ...
+ * }#catch(#RuntimeException){
+ *    const #e4c_exception * exception = #e4c_get_exception();
+ *    if( #e4c_is_instance_of(exception, SignalException.type) ){
+ *        ...
+ *    }else if(exception->type == NotEnoughMemoryException.type){
+ *        ...
+ *    }
+ * }
+ * </pre>
+ *
+ * @see e4c_exception
+ * @see e4c_get_exception
+ *
+ * @param instance The thrown exception
+ * @param type A previously defined type of exception
+ * @return Whether the specified exception is an instance of the given type
+ */
+extern e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception * type);
 
 /*@}*/
 

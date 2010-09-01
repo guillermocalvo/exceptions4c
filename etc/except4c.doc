@@ -11,7 +11,7 @@
  *
  * @section e4c exceptions4c
  *
- * @version 1.5
+ * @version 2.0
  * @author Copyright (c) 2010 Guillermo Calvo
  * @see http://code.google.com/p/exceptions4c/
  *
@@ -110,16 +110,16 @@
  * </p>
  *
  * <pre class="fragment">
- * Foo foo;
- * #with(foo, disposeFoo) foo = acquireFoo(bar, foobar); #use fooSomething(foo);
+ * FOO foo;
+ * #with(foo, dispose_FOO) foo = acquire_FOO(bar, foobar); #use do_something(foo);
  * &nbsp;
- * Bar bar;
- * #using(Bar, bar, ("BAR", 123) ){
- *     barSomething(bar);
+ * BAR bar;
+ * #using(BAR, bar, ("BAR", 123) ){
+ *     do_something_else(bar);
  * }
  * &nbsp;
  * FILE * file;
- * #usingFile(file, "log.txt", "a"){
+ * #e4c_using_file(file, "log.txt", "a"){
  *     fputs("hello, world!\n", file);
  * }
  * </pre>
@@ -153,7 +153,7 @@
  * <p>
  * If you are using threads in your program, you must switch on the
  * <em>thread-safe</em> version of the library by defining
- * <code>E4C_THREAD_SAFE</code> at compiler level.
+ * <code>E4C_THREADSAFE</code> at compiler level.
  * </p>
  *
  * <p>
