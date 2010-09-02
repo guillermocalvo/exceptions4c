@@ -35,10 +35,18 @@
 
 
 
-
-# if __STDC_VERSION__ >= 199901L
-#	define E4C_INLINE inline
+# if __STDC_VERSION__ < 199901L
+#	if __GNUC__ < 2
+#		define E4C_INLINE
+#	else
+#		define E4C_INLINE		__extension__ inline
+#	endif
 # else
+#	define E4C_INLINE			inline
+# endif
+
+# ifdef __NO_INLINE__
+#	undef E4C_INLINE
 #	define E4C_INLINE
 # endif
 
@@ -52,149 +60,192 @@
 
 # define CONTEXT_IS_READY				(E4C_CONTEXT != NULL)
 
-# define INTERNAL_ERROR(exception, message) \
-	_e4c_fatal_error(&exception, message, _E4C_FILE_INFO, _E4C_LINE_INFO, errno, NULL)
+# define INITIALIZE_ONCE				if(!isInitialized) _e4c_initialize()
 
-# define CLIENT_ERROR(exception, message, file, line) \
-	_e4c_fatal_error(&exception, message, file, line, errno, NULL)
+# define INTERNAL_ERROR(exception, function, message) \
+	_e4c_fatal_error(&exception, message, __FILE__, __LINE__, function, errno, NULL)
 
-# define EXCEPTION_LITERAL(_name_, _message_, _super_, _file_, _line_, _error_number_, _type_, _cause_) \
+# define CLIENT_ERROR(exception, message, file, line, function) \
+	_e4c_fatal_error(&exception, message, file, line, function, errno, NULL)
+
+# define EXCEPTION_LITERAL(_name_, _message_, _super_, _file_, _line_, _function_, _error_number_, _type_, _cause_) \
 	{ \
 		/* name			*/	_name_, \
 		/* message		*/	_message_, \
 		/* super		*/	_super_, \
 		/* file			*/	_file_, \
 		/* line			*/	_line_, \
+		/* function		*/	_function_, \
 		/* error_number	*/	_error_number_, \
 		/* type			*/	_type_, \
 		/* cause		*/	_cause_ \
 	}
 
 # define NULL_EXCEPTION_LITERAL \
-	EXCEPTION_LITERAL(NULL, { '\0' }, NULL, NULL, 0, 0, NULL, NULL)
+	EXCEPTION_LITERAL(NULL, { '\0' }, NULL, NULL, 0, NULL, 0, NULL, NULL)
 
 # define EXCEPTION_TYPE_LITERAL(_name_, _message_, _super_) \
-	EXCEPTION_LITERAL(#_name_, _message_, _super_, _E4C_FILE_INFO, _E4C_LINE_INFO, 0, NULL, NULL)
+	EXCEPTION_LITERAL(#_name_, _message_, _super_, _E4C_FILE_INFO, _E4C_LINE_INFO, NULL, 0, NULL, NULL)
 
 # define DEFINE_RAW_EXCEPTION(_name_, _message_, _super_) \
 	const e4c_exception _name_ = EXCEPTION_TYPE_LITERAL(_name_, _message_, _super_)
 
 # ifdef E4C_THREADSAFE
 #	include <pthread.h>
-#	define	E4C_CONTEXT				_e4c_get_context()
-#	define	DESC_INVALID_CONTEXT	"The exception context for this thread is in an invalid state."
-#	define	DESC_ALREADY_BEGUN		"The exception context for this thread has already begun."
-#	define	DESC_NOT_BEGUN_YET		"The exception context for this thread has not begun yet."
-#	define	DESC_NOT_ENDED			"There is at least one thread that did not end its exception context properly."
-#	define	THREAD_TYPE				pthread_t
-#	define	THREAD_CURRENT			pthread_self()
-#	define	THREAD_SAME				pthread_equal
-#	define	THREAD_EXIT				pthread_exit
-#	define	MUTEX_DEFINE(mutex)		static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER
-#	define	MUTEX_LOCK(mutex)		pthread_mutex_lock(&mutex)
-#	define	MUTEX_UNLOCK(mutex)		pthread_mutex_unlock(&mutex)
-#	define	STOP_EXECUTION			THREAD_EXIT(PTHREAD_CANCELED)
-#	define	DANGLING_CONTEXT		(environmentCollection != NULL)
+#	define E4C_CONTEXT				_e4c_get_context()
+#	define DESC_INVALID_CONTEXT		"The exception context for this thread is in an invalid state."
+#	define DESC_ALREADY_BEGUN		"The exception context for this thread has already begun."
+#	define DESC_NOT_BEGUN_YET		"The exception context for this thread has not begun yet."
+#	define DESC_NOT_ENDED			"There is at least one thread that did not end its exception context properly."
+#	define MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n"
+#	define MSG_AT_EXIT_ERROR		"\n\nThe program will now yield a failure exit code due to exception system errors.\n"
+#	define THREAD_TYPE				pthread_t
+#	define THREAD_CURRENT			pthread_self()
+#	define THREAD_SAME				pthread_equal
+#	define THREAD_EXIT				pthread_exit
+#	define MUTEX_DEFINE(mutex)		static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+#	define MUTEX_LOCK(mutex)		pthread_mutex_lock(&mutex)
+#	define MUTEX_UNLOCK(mutex)		pthread_mutex_unlock(&mutex)
+#	define STOP_EXECUTION			THREAD_EXIT(PTHREAD_CANCELED)
+#	define DANGLING_CONTEXT			(environmentCollection != NULL)
 # else
-#	define	E4C_CONTEXT				current_context
-#	define	DESC_INVALID_CONTEXT	"The exception context for this program is in an invalid state."
-#	define	DESC_ALREADY_BEGUN		"The exception context for this program has already begun."
-#	define	DESC_NOT_BEGUN_YET		"The exception context for this program has not begun yet."
-#	define	DESC_NOT_ENDED			"The program did not end its exception context properly."
-#	define	MUTEX_LOCK(mutex)
-#	define	MUTEX_UNLOCK(mutex)
-#	define	STOP_EXECUTION			exit(EXIT_FAILURE)
-#	define	DANGLING_CONTEXT		(current_context != NULL)
+#	define E4C_CONTEXT				current_context
+#	define DESC_INVALID_CONTEXT		"The exception context for this program is in an invalid state."
+#	define DESC_ALREADY_BEGUN		"The exception context for this program has already begun."
+#	define DESC_NOT_BEGUN_YET		"The exception context for this program has not begun yet."
+#	define DESC_NOT_ENDED			"The program did not end its exception context properly."
+#	define MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n"
+#	define MSG_AT_EXIT_ERROR		"\n\nIf this application is making use of threads, please recompile exceptions4c\nwith thread support (by defining the macro E4C_THREADSAFE).\n\n\nThe program will now yield a failure exit code due to exception system errors.\n"
+#	define MUTEX_DEFINE(mutex)
+#	define MUTEX_LOCK(mutex)
+#	define MUTEX_UNLOCK(mutex)
+#	define STOP_EXECUTION			exit(EXIT_FAILURE)
+#	define DANGLING_CONTEXT			(current_context != NULL)
 # endif
 
 # ifndef NDEBUG
-#	ifdef E4C_THREADSAFE
-#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n"
-#		define	MSG_AT_EXIT_ERROR		"\n\nThe program will now yield a failure exit code due to exception system errors.\n"
-#	else
-#		define	MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n"
-#		define	MSG_AT_EXIT_ERROR		"\n\nIf this application is making use of threads, please recompile exceptions4c\nwith thread support (by defining the macro E4C_THREADSAFE).\n\n\nThe program will now yield a failure exit code due to exception system errors.\n"
-#	endif
-#	define	PRINT_MSG_FATAL_ERROR		fprintf(stderr, MSG_FATAL_ERROR)
-#	define	DEBUG_INITIALIZE_ONCE		if(!isInitialized) _e4c_initialize()
-#	define	DEBUG_ASSERT(condition, message) \
-				if( !(condition) ) INTERNAL_ERROR(ExceptionSystemFatalError, message)
+#	define DEBUG_ASSERT(condition, function, message)	if( !(condition) ) INTERNAL_ERROR(ExceptionSystemFatalError, function, message)
 # else
-#	define	PRINT_MSG_FATAL_ERROR
-#	define	DEBUG_INITIALIZE_ONCE
-#	define	DEBUG_ASSERT(condition, message)
+#	define DEBUG_ASSERT(condition, function, message)
 # endif
 
+static const char * signal_name_UNKNOWN		= "{unknown signal}";
+static const char * signal_name_SIGABRT		= "SIGABRT";
+static const char * signal_name_SIGFPE      = "SIGFPE";
+static const char * signal_name_SIGILL      = "SIGILL";
+static const char * signal_name_SIGSEGV     = "SIGSEGV";
+static const char * signal_name_SIGTERM     = "SIGTERM";
+static const char * signal_name_SIGINT      = "SIGINT";
+
+# define WHEN_SIGNAL(signal_id) \
+	case signal_id:	signal_name = signal_name_##signal_id;	break;
+
 # ifdef SIGALRM
-# define	E4C_SIGNAL_MAPPING_SIGALRM		E4C_SIGNAL_MAPPING(SIGALRM,		SignalAlarmException),
+	static const char * signal_name_SIGALRM		= "SIGALRM";
+#	define WHEN_SIGNAL_SIGALRM					WHEN_SIGNAL(SIGALRM)
+#	define E4C_SIGNAL_MAPPING_SIGALRM			E4C_SIGNAL_MAPPING(SIGALRM,		SignalAlarmException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGALRM
+#	define WHEN_SIGNAL_SIGALRM
+#	define E4C_SIGNAL_MAPPING_SIGALRM
 # endif
 
 # ifdef SIGCHLD
-# define	E4C_SIGNAL_MAPPING_SIGCHLD		E4C_SIGNAL_MAPPING(SIGCHLD,		SignalChildException),
+	static const char * signal_name_SIGCHLD		= "SIGCHLD";
+#	define WHEN_SIGNAL_SIGCHLD					WHEN_SIGNAL(SIGCHLD)
+#	define E4C_SIGNAL_MAPPING_SIGCHLD			E4C_SIGNAL_MAPPING(SIGCHLD,		SignalChildException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGCHLD
+#	define WHEN_SIGNAL_SIGCHLD
+#	define E4C_SIGNAL_MAPPING_SIGCHLD
 # endif
 
 # ifdef SIGTRAP
-# define	E4C_SIGNAL_MAPPING_SIGTRAP		E4C_SIGNAL_MAPPING(SIGTRAP,		SignalTrapException),
+	static const char * signal_name_SIGTRAP		= "SIGTRAP";
+#	define WHEN_SIGNAL_SIGTRAP					WHEN_SIGNAL(SIGTRAP)
+#	define E4C_SIGNAL_MAPPING_SIGTRAP			E4C_SIGNAL_MAPPING(SIGTRAP,		SignalTrapException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGTRAP
+#	define WHEN_SIGNAL_SIGTRAP
+#	define E4C_SIGNAL_MAPPING_SIGTRAP
 # endif
 
 # ifdef SIGPIPE
-# define	E4C_SIGNAL_MAPPING_SIGPIPE		E4C_SIGNAL_MAPPING(SIGPIPE,		BrokenPipeException),
+	static const char * signal_name_SIGPIPE		= "SIGPIPE";
+#	define WHEN_SIGNAL_SIGPIPE					WHEN_SIGNAL(SIGPIPE)
+#	define E4C_SIGNAL_MAPPING_SIGPIPE			E4C_SIGNAL_MAPPING(SIGPIPE,		BrokenPipeException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGPIPE
+#	define WHEN_SIGNAL_SIGPIPE
+#	define E4C_SIGNAL_MAPPING_SIGPIPE
 # endif
 
 # ifdef SIGSTOP
-# define	E4C_SIGNAL_MAPPING_SIGSTOP		E4C_SIGNAL_MAPPING(SIGSTOP,		StopException),
+	static const char * signal_name_SIGSTOP		= "SIGSTOP";
+#	define WHEN_SIGNAL_SIGSTOP					WHEN_SIGNAL(SIGSTOP)
+#	define E4C_SIGNAL_MAPPING_SIGSTOP			E4C_SIGNAL_MAPPING(SIGSTOP,		StopException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGSTOP
+#	define WHEN_SIGNAL_SIGSTOP
+#	define E4C_SIGNAL_MAPPING_SIGSTOP
 # endif
 
 # ifdef SIGKILL
-# define	E4C_SIGNAL_MAPPING_SIGKILL		E4C_SIGNAL_MAPPING(SIGKILL,		KillException),
+	static const char * signal_name_SIGKILL		= "SIGKILL";
+#	define WHEN_SIGNAL_SIGKILL					WHEN_SIGNAL(SIGKILL)
+#	define E4C_SIGNAL_MAPPING_SIGKILL			E4C_SIGNAL_MAPPING(SIGKILL,		KillException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGKILL
+#	define WHEN_SIGNAL_SIGKILL
+#	define E4C_SIGNAL_MAPPING_SIGKILL
 # endif
 
 # ifdef SIGHUP
-# define	E4C_SIGNAL_MAPPING_SIGHUP		E4C_SIGNAL_MAPPING(SIGHUP,		HangUpException),
+	static const char * signal_name_SIGHUP		= "SIGHUP";
+#	define WHEN_SIGNAL_SIGHUP					WHEN_SIGNAL(SIGHUP)
+#	define E4C_SIGNAL_MAPPING_SIGHUP			E4C_SIGNAL_MAPPING(SIGHUP,		HangUpException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGHUP
+#	define WHEN_SIGNAL_SIGHUP
+#	define E4C_SIGNAL_MAPPING_SIGHUP
 # endif
 
 # ifdef SIGXCPU
-# define	E4C_SIGNAL_MAPPING_SIGXCPU		E4C_SIGNAL_MAPPING(SIGXCPU,		CPUTimeException),
+	static const char * signal_name_SIGXCPU		= "SIGXCPU";
+#	define WHEN_SIGNAL_SIGXCPU					WHEN_SIGNAL(SIGXCPU)
+#	define E4C_SIGNAL_MAPPING_SIGXCPU			E4C_SIGNAL_MAPPING(SIGXCPU,		CPUTimeException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGXCPU
+#	define WHEN_SIGNAL_SIGXCPU
+#	define E4C_SIGNAL_MAPPING_SIGXCPU
 # endif
 
 # ifdef SIGQUIT
-# define	E4C_SIGNAL_MAPPING_SIGQUIT		E4C_SIGNAL_MAPPING(SIGQUIT,		UserQuitException),
+	static const char * signal_name_SIGQUIT		= "SIGQUIT";
+#	define WHEN_SIGNAL_SIGQUIT					WHEN_SIGNAL(SIGQUIT)
+#	define E4C_SIGNAL_MAPPING_SIGQUIT			E4C_SIGNAL_MAPPING(SIGQUIT,		UserQuitException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGQUIT
+#	define WHEN_SIGNAL_SIGQUIT
+#	define E4C_SIGNAL_MAPPING_SIGQUIT
 # endif
 
 # ifdef SIGBREAK
-# define	E4C_SIGNAL_MAPPING_SIGBREAK		E4C_SIGNAL_MAPPING(SIGBREAK,	UserBreakException),
+	static const char * signal_name_SIGBREAK    = "SIGBREA";
+#	define WHEN_SIGNAL_SIGBREAK					WHEN_SIGNAL(SIGBREAK)
+#	define E4C_SIGNAL_MAPPING_SIGBREAK			E4C_SIGNAL_MAPPING(SIGBREAK,	UserBreakException),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGBREAK
+#	define WHEN_SIGNAL_SIGBREAK
+#	define E4C_SIGNAL_MAPPING_SIGBREAK
 # endif
 
 # ifdef SIGUSR1
-# define	E4C_SIGNAL_MAPPING_SIGUSR1		E4C_SIGNAL_MAPPING(SIGUSR1,		ProgramSignal1Exception),
+	static const char * signal_name_SIGUSR1		= "SIGUSR1";
+#	define WHEN_SIGNAL_SIGUSR1					WHEN_SIGNAL(SIGUSR1)
+#	define E4C_SIGNAL_MAPPING_SIGUSR1			E4C_SIGNAL_MAPPING(SIGUSR1,		ProgramSignal1Exception),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGUSR1
+#	define WHEN_SIGNAL_SIGUSR1
+#	define E4C_SIGNAL_MAPPING_SIGUSR1
 # endif
 
 # ifdef SIGUSR2
-# define	E4C_SIGNAL_MAPPING_SIGUSR2		E4C_SIGNAL_MAPPING(SIGUSR2,		ProgramSignal2Exception),
+	static const char * signal_name_SIGUSR2		= "SIGUSR2";
+#	define WHEN_SIGNAL_SIGUSR2					WHEN_SIGNAL(SIGUSR2)
+#	define E4C_SIGNAL_MAPPING_SIGUSR2			E4C_SIGNAL_MAPPING(SIGUSR2,		ProgramSignal2Exception),
 # else
-# define	E4C_SIGNAL_MAPPING_SIGUSR2
+#	define WHEN_SIGNAL_SIGUSR2
+#	define E4C_SIGNAL_MAPPING_SIGUSR2
 # endif
 
 
@@ -231,43 +282,39 @@ struct e4c_environment{
 
 
 
-static E4C_INLINE e4c_exception			_e4c_new_exception(const e4c_exception * prototype, const char * message, const char * file, int line, int error_number, const e4c_exception * cause);
+static E4C_INLINE e4c_exception			_e4c_new_exception(const e4c_exception * prototype, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause);
 static E4C_INLINE e4c_frame				_e4c_new_frame(e4c_frame * previous, e4c_stage stage);
 static E4C_INLINE void					_e4c_delete_frame(e4c_frame * frame);
-static E4C_INLINE void					_e4c_fatal_error(const e4c_exception * prototype, const char * message, const char * file, int line, int error_number, const e4c_exception * cause);
+static E4C_INLINE void					_e4c_fatal_error(const e4c_exception * prototype, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause);
 static E4C_INLINE e4c_bool				_e4c_extends(const e4c_exception * child, const e4c_exception * parent);
 static void								_e4c_propagate(e4c_context * context, const e4c_exception * exception) E4C_NORETURN;
 static void								_e4c_at_uncaught_exception(e4c_context * context);
 static void								_e4c_set_signal_handlers(e4c_context * context, const e4c_signal_mapping * mappings);
-static void								e4c_handle_signal(int signal_number);
-
-# ifndef NDEBUG
-static void								e4c_at_exit();
 static void								_e4c_initialize();
-static E4C_INLINE void					_e4c_print_exception_hierarchy(const e4c_exception * exception);
-# endif
-
-# ifdef E4C_THREADSAFE
-static void								_e4c_add_environment(e4c_environment * environment);
-static e4c_environment *				_e4c_remove_environment();
-static e4c_environment *				_e4c_get_environment();
-static E4C_INLINE e4c_context *			_e4c_get_context();
-# endif
-
-
-
-
-static e4c_bool fatalErrorFlag = e4c_false;
+static void								e4c_handle_signal(int signal_number);
+static void								e4c_at_exit();
 
 # ifndef NDEBUG
-	static e4c_bool isInitialized = e4c_false;
-#	ifdef E4C_THREADSAFE
-		MUTEX_DEFINE(isInitializedMutex);
-#	endif
+	static E4C_INLINE void				_e4c_print_exception_hierarchy(const e4c_exception * exception);
 # endif
 
 # ifdef E4C_THREADSAFE
-	MUTEX_DEFINE(environmentCollectionMutex);
+	static void							_e4c_add_environment(e4c_environment * environment);
+	static e4c_environment *			_e4c_remove_environment();
+	static e4c_environment *			_e4c_get_environment();
+	static E4C_INLINE e4c_context *		_e4c_get_context();
+# endif
+
+
+
+
+static e4c_bool fatalErrorFlag	= e4c_false;
+static e4c_bool isInitialized	= e4c_false;
+
+MUTEX_DEFINE(isInitializedMutex)
+MUTEX_DEFINE(environmentCollectionMutex)
+
+# ifdef E4C_THREADSAFE
 	static e4c_environment * environmentCollection = NULL;
 # else
 	static e4c_context mainContext;
@@ -358,13 +405,13 @@ e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception 
 		if(instance != type){
 			if(instance == NULL){
 				/* the instance is NULL: maybe no exception was thrown */
-				throw(NullPointerException, "e4c_is_instance_of: Null exception instance.");
+				e4c_throw_exception(NullPointerException.type, "Null exception instance.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of");
 			}
 			/* the type is NULL: this is actually strange */
-			throw(NullPointerException, "e4c_is_instance_of: Null exception type.");
+			e4c_throw_exception(NullPointerException.type, "Null exception type.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of");
 		}
 		/* both of the parameters are NULL: now this would be really weird */
-		throw(NullPointerException, "e4c_is_instance_of: Null exception instance and type.");
+		e4c_throw_exception(NullPointerException.type, "Null exception instance and type.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of");
 	}
 
 	if(instance->type == type)	return(e4c_true);
@@ -385,11 +432,11 @@ e4c_status e4c_get_status(void){
 
 	context = E4C_CONTEXT;
 	/* check if 'e4c_get_status' was called before calling e4c_context_begin */
-	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_get_status: " DESC_NOT_BEGUN_YET);
+	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_get_status", NULL);
 
 	frame = context->current_frame;
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_ASSERT(frame != NULL, "e4c_get_status: The exception context has an invalid frame.");
+	DEBUG_ASSERT(frame != NULL, "e4c_get_status", "The exception context has an invalid frame.");
 
 	if(!frame->thrown) return(e4c_succeeded);
 
@@ -398,7 +445,7 @@ e4c_status e4c_get_status(void){
 	return(e4c_recovered);
 }
 
-_E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line){
+_E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line, const char * function){
 
 	e4c_context *	context;
 	e4c_frame *		current_frame;
@@ -406,18 +453,18 @@ _E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line){
 
 	context = E4C_CONTEXT;
 	/* check if 'try' was used before calling e4c_context_begin */
-	if(context == NULL) CLIENT_ERROR(ContextHasNotBegunYet, "e4c_frame_init: " DESC_NOT_BEGUN_YET, file, line);
+	if(context == NULL) CLIENT_ERROR(ContextHasNotBegunYet, "e4c_frame_init: " DESC_NOT_BEGUN_YET, file, line, function);
 
 	current_frame = context->current_frame;
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_ASSERT(current_frame != NULL, "e4c_frame_init: The exception context has an invalid frame.");
+	DEBUG_ASSERT(current_frame != NULL, "e4c_frame_init", "The exception context has an invalid frame.");
 
 	/* create a new frame */
 	new_frame = malloc( sizeof(*new_frame) );
 
 	/* check if there wasn't enough memory */
 	if(new_frame == NULL){
-		const e4c_exception new_exception = _e4c_new_exception(&NotEnoughMemoryException, "e4c_frame_init: Could not create a new exception frame.", _E4C_FILE_INFO, _E4C_LINE_INFO, errno, NULL);
+		const e4c_exception new_exception = _e4c_new_exception(&NotEnoughMemoryException, "e4c_frame_init: Could not create a new exception frame.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_frame_init", errno, NULL);
 		_e4c_propagate(context, &new_exception);
 	}
 
@@ -429,23 +476,18 @@ _E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line){
 	return( &(new_frame->address) );
 }
 
-e4c_bool e4c_frame_hook(e4c_stage stage, const e4c_exception * catch_exception, const char * file, int line){
+e4c_bool e4c_frame_hook(e4c_stage stage, const e4c_exception * catch_exception, const char * file, int line, const char * function){
 
 	e4c_context *	context;
 	e4c_frame *		frame;
 
-# ifdef NDEBUG
-	/* get rid of the "unused parameter" warnings */
-	if(file != NULL && line != 0) file = NULL;
-# endif
-
 	context = E4C_CONTEXT;
 	/* check if the current exception context is NULL (unlikely) */
-	DEBUG_ASSERT(context != NULL, "e4c_frame_hook: " DESC_NOT_BEGUN_YET);
+	DEBUG_ASSERT(context != NULL, "e4c_frame_hook", DESC_NOT_BEGUN_YET);
 
 	frame = context->current_frame;
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_ASSERT(frame != NULL, "e4c_frame_hook: The exception context has an invalid frame.");
+	DEBUG_ASSERT(frame != NULL, "e4c_frame_hook", "The exception context has an invalid frame.");
 
 	if(frame->stage != stage) return(e4c_false);
 
@@ -453,7 +495,7 @@ e4c_bool e4c_frame_hook(e4c_stage stage, const e4c_exception * catch_exception, 
 
 		if(catch_exception == NULL){
 			/* passing NULL to a catch block is considered a fatal error */
-			CLIENT_ERROR(NullPointerException, "e4c_frame_hook: A NULL argument was passed to E4C_CATCH.", file, line);
+			CLIENT_ERROR(NullPointerException, "e4c_frame_hook: A NULL argument was passed to E4C_CATCH.", file, line, function);
 		}
 		/* does this block catch current exception? */
 		/* assert: thrown_exception->super != NULL (otherwise we would have skipped the "catching" stage in e4c_frame_step) */
@@ -476,11 +518,11 @@ e4c_bool e4c_frame_step(void){
 
 	context = E4C_CONTEXT;
 	/* check if the current exception context is NULL (unlikely) */
-	DEBUG_ASSERT(context != NULL, "e4c_frame_step: " DESC_NOT_BEGUN_YET);
+	DEBUG_ASSERT(context != NULL, "e4c_frame_step", DESC_NOT_BEGUN_YET);
 
 	frame = context->current_frame;
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_ASSERT(frame != NULL, "e4c_frame_step: The exception context has an invalid frame.");
+	DEBUG_ASSERT(frame != NULL, "e4c_frame_step", "The exception context has an invalid frame.");
 
 	frame->stage++;
 
@@ -505,7 +547,7 @@ e4c_bool e4c_frame_step(void){
 	context->current_frame = frame = tmp.previous;
 
 	/* check if the current frame is NULL (unlikely) */
-	DEBUG_ASSERT(frame != NULL, "e4c_frame_step: The exception context has an invalid frame.");
+	DEBUG_ASSERT(frame != NULL, "e4c_frame_step", "The exception context has an invalid frame.");
 
 	/* if the current frame has an uncaught exception, then we will propagate it */
 	if(tmp.uncaught){
@@ -517,7 +559,7 @@ e4c_bool e4c_frame_step(void){
 	return(e4c_false);
 }
 
-void e4c_throw_exception(const e4c_exception * exception, const char * message, const char * file, int line){
+void e4c_throw_exception(const e4c_exception * exception, const char * message, const char * file, int line, const char * function){
 
 	e4c_context *		context;
 	e4c_frame *			frame;
@@ -533,13 +575,13 @@ void e4c_throw_exception(const e4c_exception * exception, const char * message, 
 	context = E4C_CONTEXT;
 
 	/* check if 'throw' was used before calling e4c_context_begin */
-	if(context == NULL) CLIENT_ERROR(ContextHasNotBegunYet, "e4c_throw_exception: " DESC_NOT_BEGUN_YET, file, line);
+	if(context == NULL) CLIENT_ERROR(ContextHasNotBegunYet, "e4c_throw_exception: " DESC_NOT_BEGUN_YET, file, line, function);
 
 	/* get the current frame */
 	frame = context->current_frame;
 
 	/* check if the current frame is NULL (unlikely) */
-	DEBUG_ASSERT(frame != NULL, "e4c_throw_exception: The exception context has an invalid frame.");
+	DEBUG_ASSERT(frame != NULL, "e4c_throw_exception", "The exception context has an invalid frame.");
 
 	/* get the cause of this exception */
 	cause = ( frame->thrown ? malloc( sizeof(*cause) ) : NULL );
@@ -551,7 +593,7 @@ void e4c_throw_exception(const e4c_exception * exception, const char * message, 
 	}
 
 	/* "instantiate" the specified exception */
-	new_exception = _e4c_new_exception(exception, message, file, line, errno, cause);
+	new_exception = _e4c_new_exception(exception, message, file, line, function, errno, cause);
 	_e4c_propagate(context, &new_exception);
 }
 
@@ -571,10 +613,10 @@ void e4c_print_exception(const e4c_exception * exception){
 	fprintf(stderr, "\n\nUncaught %s: %s\n\n", exception->name, exception->message);
 
 	if(exception->file != NULL){
-		if(exception->file[0] == '<'){
-			fprintf(stderr, "    received %s number %d\n\n", exception->file, exception->line);
+		if(exception->function != NULL){
+			fprintf(stderr, "    thrown at %s (%s:%d)\n\n", exception->function, exception->file, exception->line);
 		}else{
-			fprintf(stderr, "    thrown at line %d of %s\n\n", exception->line, exception->file);
+			fprintf(stderr, "    thrown at %s:%d\n\n", exception->file, exception->line);
 		}
 	}
 
@@ -582,10 +624,10 @@ void e4c_print_exception(const e4c_exception * exception){
 	while(cause != NULL){
 		fprintf(stderr, "Caused by %s: %s\n\n", cause->name, cause->message);
 		if(cause->file != NULL){
-			if(exception->file[0] == '<'){
-				fprintf(stderr, "    received %s number %d\n\n", cause->file, cause->line);
+			if(cause->function != NULL){
+				fprintf(stderr, "    thrown at %s (%s:%d)\n\n", cause->function, cause->file, cause->line);
 			}else{
-				fprintf(stderr, "    thrown at line %d of %s\n\n", cause->line, cause->file);
+				fprintf(stderr, "    thrown at %s:%d\n\n", cause->file, cause->line);
 			}
 		}
 		cause = cause->cause;
@@ -611,7 +653,7 @@ void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings){
 
 	context = E4C_CONTEXT;
 	/* check if e4c_context_set_signal_mappings was called before calling e4c_context_begin */
-	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_set_signal_mappings: " DESC_NOT_BEGUN_YET);
+	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_set_signal_mappings", NULL);
 
 	_e4c_set_signal_handlers(context, mappings);
 }
@@ -622,7 +664,7 @@ const e4c_signal_mapping * e4c_context_get_signal_mappings(void){
 
 	context = E4C_CONTEXT;
 	/* check if e4c_context_get_signal_mappings was called before calling e4c_context_begin */
-	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_get_signal_mappings: " DESC_NOT_BEGUN_YET);
+	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_get_signal_mappings", NULL);
 
 	return(context->signal_mappings);
 }
@@ -634,12 +676,12 @@ const e4c_exception * e4c_get_exception(void){
 
 	context = E4C_CONTEXT;
 	/* check if 'e4c_get_exception' was called before calling e4c_context_begin */
-	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_get_exception: " DESC_NOT_BEGUN_YET);
+	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_get_exception", NULL);
 
 	frame = context->current_frame;
 
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_ASSERT(frame != NULL, "e4c_get_exception: The exception context has an invalid frame.");
+	DEBUG_ASSERT(frame != NULL, "e4c_get_exception", "The exception context has an invalid frame.");
 
 	return(frame->thrown ? &frame->thrown_exception : NULL);
 }
@@ -653,20 +695,20 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 
 	e4c_environment *	environment;
 
-	DEBUG_INITIALIZE_ONCE;
+	INITIALIZE_ONCE;
 
 	/* get the current environment */
 	environment = _e4c_get_environment();
 
 	/* check if e4c_context_begin was called twice for this thread */
-	if(environment != NULL) INTERNAL_ERROR(ContextAlreadyBegun, "e4c_context_begin: " DESC_ALREADY_BEGUN);
+	if(environment != NULL) INTERNAL_ERROR(ContextAlreadyBegun, "e4c_context_begin", NULL);
 
 	/* allocate memory for the new frame */
 	environment	= malloc( sizeof(*environment) );
 
 	/* check if there wasn't enough memory */
 	if(environment == NULL){
-		INTERNAL_ERROR(NotEnoughMemoryException, "e4c_context_begin: Could not create a new exception context.");
+		INTERNAL_ERROR(NotEnoughMemoryException, "e4c_context_begin", "Could not create a new exception context.");
 	}
 
 	/* allocate memory for the new frame */
@@ -675,7 +717,7 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 	/* check if there wasn't enough memory */
 	if(new_frame == NULL){
 		free(environment);
-		INTERNAL_ERROR(NotEnoughMemoryException, "e4c_context_begin: Could not create a new exception frame.");
+		INTERNAL_ERROR(NotEnoughMemoryException, "e4c_context_begin", "Could not create a new exception frame.");
 	}
 
 	/* add the new environment to the collection */
@@ -689,14 +731,14 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 
 # else
 
-	DEBUG_INITIALIZE_ONCE;
+	INITIALIZE_ONCE;
 
 	/* get the current context */
 	context = current_context;
 
 	/* check if e4c_context_begin was called twice for this program */
 	/* this can also happen when the program uses threads but E4C_THREADSAFE is not defined */
-	if(context != NULL) INTERNAL_ERROR(ContextAlreadyBegun, "e4c_context_begin: " DESC_ALREADY_BEGUN);
+	if(context != NULL) INTERNAL_ERROR(ContextAlreadyBegun, "e4c_context_begin", NULL);
 
 	/* update local and global variable */
 	context = current_context = &mainContext;
@@ -706,7 +748,7 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 
 	/* check if there wasn't enough memory */
 	if(new_frame == NULL){
-		INTERNAL_ERROR(NotEnoughMemoryException, "e4c_context_begin: Could not create a new exception frame.");
+		INTERNAL_ERROR(NotEnoughMemoryException, "e4c_context_begin", "Could not create a new exception frame.");
 	}
 
 # endif
@@ -733,13 +775,13 @@ void e4c_context_end(void){
 	environment = _e4c_remove_environment();
 
 	/* check if e4c_context_end was called before calling e4c_context_begin */
-	if(environment == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_end: " DESC_NOT_BEGUN_YET);
+	if(environment == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_end", NULL);
 
 	/* update local variable */
 	context = &environment->context;
 
 	/* check if the current context is NULL (unlikely) */
-	DEBUG_ASSERT(context != NULL, "e4c_context_end: The exception context is invalid.");
+	DEBUG_ASSERT(context != NULL, "e4c_context_end", "The exception context is invalid.");
 
 # else
 
@@ -747,7 +789,7 @@ void e4c_context_end(void){
 	context = current_context;
 
 	/* check if e4c_context_end was called before calling e4c_context_begin */
-	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_end: " DESC_NOT_BEGUN_YET);
+	if(context == NULL) INTERNAL_ERROR(ContextHasNotBegunYet, "e4c_context_end", NULL);
 
 # endif
 
@@ -755,10 +797,12 @@ void e4c_context_end(void){
 	frame = context->current_frame;
 
 	/* check if there are no frames left (unlikely) */
-	DEBUG_ASSERT(frame != NULL, "e4c_context_end: There are no frames left.");
+	DEBUG_ASSERT(frame != NULL, "e4c_context_end", "There are no exception frames left.");
 
-	/* check if there are too many frames left (unlikely) */
-	DEBUG_ASSERT(IS_TOP_FRAME(frame), "e4c_context_end: There are too many frames.");
+	/* check if there are too many frames left (breaking out of a try block) */
+	if(!IS_TOP_FRAME(frame)){
+		INTERNAL_ERROR(ExceptionSystemFatalError, "e4c_context_end", "There are too many exception frames. Probably some try{...} block was exited through 'return' or 'break'.");
+	}
 
 	/* deallocate the current, top frame */
 	_e4c_delete_frame(frame);
@@ -809,17 +853,17 @@ static E4C_INLINE void _e4c_print_exception_hierarchy(const e4c_exception * exce
 }
 # endif
 
-static E4C_INLINE void _e4c_fatal_error(const e4c_exception * prototype, const char * message, const char * file, int line, int error_number, const e4c_exception * cause){
+static E4C_INLINE void _e4c_fatal_error(const e4c_exception * prototype, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
 
-	const e4c_exception exception = _e4c_new_exception(prototype, message, file, line, error_number, cause);
+	const e4c_exception exception = _e4c_new_exception(prototype, message, file, line, function, error_number, cause);
 
-	DEBUG_INITIALIZE_ONCE;
+	INITIALIZE_ONCE;
 
 	fatalErrorFlag = e4c_true;
 
 	e4c_print_exception(&exception);
 
-	PRINT_MSG_FATAL_ERROR;
+	fprintf(stderr, MSG_FATAL_ERROR);
 
 	STOP_EXECUTION;
 }
@@ -855,7 +899,7 @@ static E4C_INLINE void _e4c_delete_frame(e4c_frame * frame){
 	free(frame);
 }
 
-static E4C_INLINE e4c_exception _e4c_new_exception(const e4c_exception * prototype, const char * message, const char * file, int line, int error_number, const e4c_exception * cause){
+static E4C_INLINE e4c_exception _e4c_new_exception(const e4c_exception * prototype, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
 
 	/* assert: prototype != NULL */
 
@@ -868,6 +912,7 @@ static E4C_INLINE e4c_exception _e4c_new_exception(const e4c_exception * prototy
 	exception.super			= prototype->super;
 	exception.file			= file;
 	exception.line			= line;
+	exception.function		= function;
 	exception.error_number	= error_number;
 	exception.type			= prototype->type;
 	exception.cause			= cause;
@@ -931,10 +976,10 @@ static void e4c_handle_signal(int signal_number){
 
 	context = E4C_CONTEXT;
 	/* check if 'handleSignal' was called before e4c_context_begin or after e4c_context_end (very unlikely) */
-	DEBUG_ASSERT(context != NULL, "e4c_handle_signal: The exception context is invalid.");
+	DEBUG_ASSERT(context != NULL, "e4c_handle_signal", "The exception context is invalid.");
 
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_ASSERT(context->current_frame != NULL, "e4c_handle_signal: The exception context has an invalid frame.");
+	DEBUG_ASSERT(context->current_frame != NULL, "e4c_handle_signal", "The exception context has an invalid frame.");
 
 	if(context->signal_mappings != NULL){
 		/* try to find a mapping for this signal */
@@ -942,15 +987,36 @@ static void e4c_handle_signal(int signal_number){
 		/* loop until we find the NULL terminator */
 		while(mapping->exception != NULL){
 			if(signal_number == mapping->signal_number){
-
-				/* make sure we have a proper exception to throw */
-				DEBUG_ASSERT(mapping->exception != NULL, "e4c_handle_signal: The signal mappings are invalid");
-
+				const char * signal_name;
+				switch(signal_number){
+					WHEN_SIGNAL(SIGABRT)
+					WHEN_SIGNAL(SIGFPE)
+					WHEN_SIGNAL(SIGILL)
+					WHEN_SIGNAL(SIGSEGV)
+					WHEN_SIGNAL(SIGTERM)
+					WHEN_SIGNAL(SIGINT)
+					WHEN_SIGNAL_SIGALRM
+					WHEN_SIGNAL_SIGCHLD
+					WHEN_SIGNAL_SIGTRAP
+					WHEN_SIGNAL_SIGPIPE
+					WHEN_SIGNAL_SIGSTOP
+					WHEN_SIGNAL_SIGKILL
+					WHEN_SIGNAL_SIGHUP
+					WHEN_SIGNAL_SIGXCPU
+					WHEN_SIGNAL_SIGQUIT
+					WHEN_SIGNAL_SIGBREAK
+					WHEN_SIGNAL_SIGUSR1
+					WHEN_SIGNAL_SIGUSR2
+					default:
+						signal_name = signal_name_UNKNOWN;
+						break;
+				}
 				/* reset the handler for this signal */
 				signal(signal_number, e4c_handle_signal);
 
 				/* throw the appropriate exception to the current context */
-				new_exception = _e4c_new_exception(mapping->exception, NULL, "<system signal>", signal_number, errno, NULL);
+
+				new_exception = _e4c_new_exception(mapping->exception, NULL, signal_name, signal_number, "e4c_handle_signal", errno, NULL);
 				_e4c_propagate(context, &new_exception);
 			}
 			mapping++;
@@ -958,7 +1024,7 @@ static void e4c_handle_signal(int signal_number){
 	}
 	/* this should never happen, but anyway... */
 	/* we were unable to find the exception that represents the received signal number */
-	new_exception = _e4c_new_exception(&ExceptionSystemFatalError, "e4c_handle_signal: There is no exception mapping for the received signal.", _E4C_FILE_INFO, _E4C_LINE_INFO, errno, NULL);
+	new_exception = _e4c_new_exception(&ExceptionSystemFatalError, "e4c_handle_signal: There is no exception mapping for the received signal.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_handle_signal", errno, NULL);
 	_e4c_propagate(context, &new_exception);
 }
 
@@ -1014,12 +1080,10 @@ static E4C_INLINE e4c_bool _e4c_extends(const e4c_exception * child, const e4c_e
 	return( _e4c_extends(child->super, parent) );
 }
 
-# ifndef NDEBUG
-
 static void e4c_at_exit(void){
 
 	if(DANGLING_CONTEXT){
-		const e4c_exception exception = _e4c_new_exception(&ContextNotEnded, "e4c_at_exit: " DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, errno, NULL);
+		const e4c_exception exception = _e4c_new_exception(&ContextNotEnded, "e4c_at_exit: " DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_at_exit", errno, NULL);
 		e4c_print_exception(&exception);
 		fatalErrorFlag = e4c_true;
 	}
@@ -1043,8 +1107,6 @@ static void _e4c_initialize(void){
 
 	MUTEX_UNLOCK(isInitializedMutex);
 }
-
-# endif
 
 # ifdef E4C_THREADSAFE
 
