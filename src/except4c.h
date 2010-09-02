@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 0, 1)
+# define _E4C_VERSION(version)			version(2, 0, 2)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -78,6 +78,23 @@
 multi-thread version of exceptions4c.
 # endif
 
+/*
+	The _E4C_FUNCTION_NAME compile-time parameter
+	could be defined in order to work with some specific compiler.
+*/
+# ifndef _E4C_FUNCTION_NAME
+#	if __STDC_VERSION__ < 199901L
+#		if __GNUC__ < 2
+#			define _E4C_FUNCTION_NAME	NULL
+#		else
+#			define _E4C_FUNCTION_NAME	__extension__ __FUNCTION__
+#		endif
+#	else
+#		define _E4C_FUNCTION_NAME		__func__
+#	endif
+# endif
+
+
 # include <stdlib.h>
 # include <setjmp.h>
 
@@ -85,6 +102,7 @@ multi-thread version of exceptions4c.
 # if __STDC_VERSION__ >= 199901L
 #	include <stdbool.h>
 # endif
+
 
 # ifdef __bool_true_false_are_defined
 #	define e4c_bool						bool
@@ -107,18 +125,25 @@ multi-thread version of exceptions4c.
 # endif
 
 # ifndef NDEBUG
-#	define _E4C_FILE_INFO				(const char *)__FILE__
+#	define _E4C_FILE_INFO				__FILE__
 #	define _E4C_LINE_INFO				__LINE__
+#	define _E4C_FUNC_INFO				_E4C_FUNCTION_NAME
 #	define _E4C_ASSERT(_condition_) ( \
 		(_condition_) \
 		? (void)0 \
 		: throw(AssertionException, "Assertion failed: " #_condition_) \
 	)
 # else
-#	define _E4C_FILE_INFO				(const char *)NULL
+#	define _E4C_FILE_INFO				NULL
 #	define _E4C_LINE_INFO				0
+#	define _E4C_FUNC_INFO				NULL
 #	define _E4C_ASSERT(_ignore_)		( (void)0 )
 # endif
+
+# define _E4C_INFO \
+			_E4C_FILE_INFO, \
+			_E4C_LINE_INFO, \
+			_E4C_FUNC_INFO
 
 # define _E4C_PASTE(_x_, _y_, _z_)		_x_ ## _ ## _y_ ## _ ## _z_
 # define _E4C_MANGLE(_pre_, _id_, _post_) _E4C_PASTE(_pre_, _id_, _post_)
@@ -152,42 +177,31 @@ multi-thread version of exceptions4c.
  */
 
 # define _E4C_FRAME_LOOP(stage) \
-	_E4C_SETJMP( *( e4c_frame_init(stage, _E4C_FILE_INFO, _E4C_LINE_INFO) ) ); \
+	_E4C_SETJMP( *( e4c_frame_init(stage, _E4C_INFO) ) ); \
 	while( e4c_frame_step() )
 
 # define E4C_TRY \
 	_E4C_FRAME_LOOP(_e4c_acquiring) \
-	if( e4c_frame_hook(_e4c_trying, NULL, _E4C_FILE_INFO, _E4C_LINE_INFO) \
-		&& e4c_frame_step() )
+	if( e4c_frame_hook(_e4c_trying, NULL, _E4C_INFO) && e4c_frame_step() )
 	/* simple optimization: e4c_frame_step() will avoid disposing stage */
 
-# define E4C_CATCH(_exception_) \
-	else if( \
-		e4c_frame_hook(_e4c_catching, &_exception_, \
-			_E4C_FILE_INFO, _E4C_LINE_INFO) \
-	)
+# define E4C_CATCH(_exception_type_) \
+	else if( e4c_frame_hook(_e4c_catching, (_exception_type_).type, _E4C_INFO) )
 
 # define E4C_FINALLY \
-	else if( \
-		e4c_frame_hook(_e4c_finalizing, NULL, _E4C_FILE_INFO, _E4C_LINE_INFO) \
-	)
+	else if( e4c_frame_hook(_e4c_finalizing, NULL, _E4C_INFO) )
 
 # define E4C_THROW(_exception_type_, _message_) \
-	e4c_throw_exception( \
-		(_exception_type_).type, _message_, _E4C_FILE_INFO, _E4C_LINE_INFO \
-	)
+	e4c_throw_exception( (_exception_type_).type, _message_, _E4C_INFO )
 
 # define E4C_WITH(_resource_, _dispose_) \
 	_E4C_FRAME_LOOP(_e4c_beginning) \
-	if(e4c_frame_hook(_e4c_disposing, NULL, _E4C_FILE_INFO, _E4C_LINE_INFO)){ \
+	if( e4c_frame_hook(_e4c_disposing, NULL, _E4C_INFO) ){ \
 		_dispose_( _resource_, (e4c_get_status() == e4c_failed) ); \
-	}else if( e4c_frame_hook(_e4c_acquiring, NULL, \
-				_E4C_FILE_INFO, _E4C_LINE_INFO) ){
+	}else if( e4c_frame_hook(_e4c_acquiring, NULL, _E4C_INFO) ){
 
 # define E4C_USE \
-	}else if( \
-		e4c_frame_hook(_e4c_trying, NULL, _E4C_FILE_INFO, _E4C_LINE_INFO) \
-	)
+	}else if( e4c_frame_hook(_e4c_trying, NULL, _E4C_INFO) )
 
 # define E4C_USING(_type_, _resource_, _args_) \
 	with(_resource_, e4c_dispose_##_type_){ \
@@ -258,6 +272,7 @@ multi-thread version of exceptions4c.
 		/* super		*/	&_super_, \
 		/* file			*/	_E4C_FILE_INFO, \
 		/* line			*/	_E4C_LINE_INFO, \
+		/* function		*/	NULL, \
 		/* error_number	*/	0, \
 		/* type			*/	&_name_, \
 		/* cause		*/	NULL \
@@ -290,7 +305,7 @@ multi-thread version of exceptions4c.
 /**
  * Introduces a block of code capable of handling a specific kind of exceptions
  *
- * @param _exception_ The type of exceptions to be handled
+ * @param _exception_type_ The type of exceptions to be handled
  *
  * <p>
  * <code>catch</code> blocks are optional code blocks that must be preceded by
@@ -393,7 +408,7 @@ multi-thread version of exceptions4c.
  * @see e4c_get_exception
  */
 # ifndef E4C_NOKEYWORDS
-# define catch(_exception_) E4C_CATCH(_exception_)
+# define catch(_exception_type_) E4C_CATCH(_exception_type_)
 # endif
 
 /**
@@ -1514,6 +1529,9 @@ struct e4c_exception{
 	/** The number of line from which the exception was thrown */
 	int								line;
 
+	/** The function from which the exception was thrown */
+	const char *					function;
+
 	/** The value of errno at the time the exception was thrown */
 	int								error_number;
 
@@ -2518,10 +2536,10 @@ extern void e4c_print_exception(const e4c_exception * exception);
  * Next functions are undocumented on purpose, because they shouldn't be used
  * directly (but through the 'keyword' macros).
  */
-extern _E4C_JMP_BUF * e4c_frame_init(enum _e4c_frame_stage stage, const char * file, int line);
+extern _E4C_JMP_BUF * e4c_frame_init(enum _e4c_frame_stage stage, const char * file, int line, const char * function);
 extern e4c_bool e4c_frame_step(void);
-extern e4c_bool e4c_frame_hook(enum _e4c_frame_stage stage, const e4c_exception * exception, const char * file, int line);
-extern void e4c_throw_exception(const e4c_exception * exception, const char * message, const char * file, int line)
+extern e4c_bool e4c_frame_hook(enum _e4c_frame_stage stage, const e4c_exception * exception, const char * file, int line, const char * function);
+extern void e4c_throw_exception(const e4c_exception * exception, const char * message, const char * file, int line, const char * function)
 #ifdef	__GNUC__
 	__attribute__ ((noreturn))
 #endif
