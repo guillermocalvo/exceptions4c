@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 0, 2)
+# define _E4C_VERSION(version)			version(2, 0, 3)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
