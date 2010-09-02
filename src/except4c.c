@@ -464,8 +464,7 @@ _E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line, cons
 
 	/* check if there wasn't enough memory */
 	if(new_frame == NULL){
-		const e4c_exception new_exception = _e4c_new_exception(&NotEnoughMemoryException, "e4c_frame_init: Could not create a new exception frame.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_frame_init", errno, NULL);
-		_e4c_propagate(context, &new_exception);
+		INTERNAL_ERROR(NotEnoughMemoryException, "e4c_frame_init", "Could not create a new exception frame.");
 	}
 
 	*new_frame = _e4c_new_frame(current_frame, stage);
@@ -495,7 +494,7 @@ e4c_bool e4c_frame_hook(e4c_stage stage, const e4c_exception * catch_exception, 
 
 		if(catch_exception == NULL){
 			/* passing NULL to a catch block is considered a fatal error */
-			CLIENT_ERROR(NullPointerException, "e4c_frame_hook: A NULL argument was passed to E4C_CATCH.", file, line, function);
+			CLIENT_ERROR(NullPointerException, "A NULL argument was passed to E4C_CATCH.", file, line, function);
 		}
 		/* does this block catch current exception? */
 		/* assert: thrown_exception->super != NULL (otherwise we would have skipped the "catching" stage in e4c_frame_step) */
@@ -566,11 +565,6 @@ void e4c_throw_exception(const e4c_exception * exception, const char * message, 
 	e4c_exception *		cause;
 	e4c_exception		new_exception;
 
-	/* convert NULL or unnamed exceptions to NPE */
-	if(exception == NULL || exception->name == NULL){
-		exception = &NullPointerException;
-	}
-
 	/* get the current context */
 	context = E4C_CONTEXT;
 
@@ -590,6 +584,11 @@ void e4c_throw_exception(const e4c_exception * exception, const char * message, 
 	/* copy the previous thrown exception in the newly allocated buffer */
 	if(cause != NULL){
 		*cause = frame->thrown_exception;
+	}
+
+	/* convert NULL exceptions to NPE */
+	if(exception == NULL){
+		exception = &NullPointerException;
 	}
 
 	/* "instantiate" the specified exception */
@@ -1083,7 +1082,7 @@ static E4C_INLINE e4c_bool _e4c_extends(const e4c_exception * child, const e4c_e
 static void e4c_at_exit(void){
 
 	if(DANGLING_CONTEXT){
-		const e4c_exception exception = _e4c_new_exception(&ContextNotEnded, "e4c_at_exit: " DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_at_exit", errno, NULL);
+		const e4c_exception exception = _e4c_new_exception(&ContextNotEnded, DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_at_exit", errno, NULL);
 		e4c_print_exception(&exception);
 		fatalErrorFlag = e4c_true;
 	}
