@@ -1,0 +1,28 @@
+
+# include "testing.h"
+
+# define e4c_acquire_buffer malloc
+# define e4c_dispose_buffer(resource, failed) free(resource)
+
+
+DEFINE_TEST(
+	a04,
+	"using{...} without beginning",
+	"This test uses the library improperly, by attempting to <strong>start a <code>using</code> block</strong>, without calling <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
+	EXIT_FAILURE,
+	"before_USING_block",
+	"ContextHasNotBegunYet"
+){
+
+	char * tmp;
+
+	printf("before_USING_block\n");
+
+	using(buffer, tmp, (256) ){
+		printf("inside_USING_block\n");
+	}
+
+	printf("after_USING_block\n");
+
+	return(EXIT_SUCCESS);
+}
