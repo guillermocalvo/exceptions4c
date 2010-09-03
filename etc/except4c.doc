@@ -70,21 +70,21 @@
  * When an exception is <code>#throw</code>n, control is transferred to the
  * nearest dynamically-enclosing <code>#catch</code> code block that handles the
  * exception. Whether a particular <code>#catch</code> block handles an
- * exception is found out by comparing the <strong>names</strong> of the
- * exceptions.
+ * exception is found out by comparing the <strong>type</strong> (and
+ * <em>supertypes</em>) of the actual <code>#throw</code>n exception against the
+ * specified exception type in the catch clause.
  * </p>
  *
  * <p>
- * A <code>#catch</code> block is given an exception as a parameter. This
+ * A <code>#catch</code> block is given an exception type as a parameter. This
  * parameter determines the set of exceptions that can be handled by the code
  * block. A block handles an actual exception that was thrown if the name of the
  * parameter is either:
  * </p>
  *
  * <ul>
- * <li>the same as the name of that exception.</li>
- * <li>the same as the name of any of the <em>supertypes</em> of that
- *   exception.</li>
+ * <li>the same type of that exception.</li>
+ * <li>the same type of any of the <em>supertypes</em> of that exception.</li>
  * </ul>
  *
  * <p>
