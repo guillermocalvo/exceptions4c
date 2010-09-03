@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 0, 3)
+# define _E4C_VERSION(version)			version(2, 0, 4)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -1468,8 +1468,8 @@ multi-thread version of exceptions4c.
  *
  * <ul>
  * <li>An <em>ad hoc</em> message (as opposed to the <em>default</em> one)</li>
- * <li>The exact point of the program where it was thrown (source code file and
- *     line)</li>
+ * <li>The exact point of the program where it was thrown (source code file,
+ *     line and function name, if available)</li>
  * <li>The value of the standard error code <code>errno</code> at the time the
  *     exception was thrown</li>
  * <li>The <em>cause</em> of the exception, which is the previous exception (if
@@ -1501,12 +1501,14 @@ multi-thread version of exceptions4c.
  * <p>
  * <code>#RuntimeException</code> is the root of the exceptions
  * <em>pseudo-hierarchy</em>. <strong>Any</strong> exception can be caught by a
- * <code>catch(RuntimeException)</code> block.
+ * <code>catch(RuntimeException)</code> block, except
+ * <code>AssertionException</code>.
  * </p>
  *
  * @see E4C_DEFINE_EXCEPTION
  * @see E4C_DECLARE_EXCEPTION
  * @see RuntimeException
+ * @see AssertionException
  * @see throw
  * @see catch
  * @see e4c_get_exception
@@ -2437,6 +2439,40 @@ extern e4c_status e4c_get_status(void);
  */
 extern const e4c_exception * e4c_get_exception(void);
 
+/*@}*/
+
+/**
+ * @name Other integration and convenience functions
+ *
+ * @{
+ */
+
+/**
+ * Gets the library version number
+ *
+ * <p>
+ * This function provides the same information as the
+ * <code>E4C_VERSION_NUMBER</code> macro, but the returned version number is
+ * associated with the actual, compiled library.
+ * </p>
+ *
+ * <p>
+ * This version number can be considered as the <em>run-time</em> library
+ * version number, as opposed to the <em>compile-time</em> library version
+ * number (specified by the header file).
+ * </p>
+ *
+ * <p>
+ * The library must be compiled with the corresponding header (i.e. library
+ * version number should be equal to header version number).
+ * </p>
+ *
+ * @see E4C_VERSION_NUMBER
+ *
+ * @return The version number associated with the library
+ */
+extern long e4c_library_version(void);
+
 /**
  * Returns whether an exception is of a given exception type
  *
@@ -2474,41 +2510,8 @@ extern const e4c_exception * e4c_get_exception(void);
  * @param type A previously defined type of exception
  * @return Whether the specified exception is an instance of the given type
  */
-extern e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception * type);
-
-/*@}*/
-
-/**
- * @name Other integration and convenience functions
- *
- * @{
- */
-
-/**
- * Gets the library version number
- *
- * <p>
- * This function provides the same information as the
- * <code>E4C_VERSION_NUMBER</code> macro, but the returned version number is
- * associated with the actual, compiled library.
- * </p>
- *
- * <p>
- * This version number can be considered as the <em>run-time</em> library
- * version number, as opposed to the <em>compile-time</em> library version
- * number (specified by the header file).
- * </p>
- *
- * <p>
- * The library must be compiled with the corresponding header (i.e. library
- * version number should be equal to header version number).
- * </p>
- *
- * @see E4C_VERSION_NUMBER
- *
- * @return The version number associated with the library
- */
-extern long e4c_library_version(void);
+extern e4c_bool e4c_is_instance_of(const e4c_exception * instance,
+	const e4c_exception * type);
 
 /**
  * Prints a fatal error message regarding the specified exception
@@ -2536,10 +2539,17 @@ extern void e4c_print_exception(const e4c_exception * exception);
  * Next functions are undocumented on purpose, because they shouldn't be used
  * directly (but through the 'keyword' macros).
  */
-extern _E4C_JMP_BUF * e4c_frame_init(enum _e4c_frame_stage stage, const char * file, int line, const char * function);
+extern _E4C_JMP_BUF * e4c_frame_init(enum _e4c_frame_stage stage,
+	const char * file, int line, const char * function);
+
 extern e4c_bool e4c_frame_step(void);
-extern e4c_bool e4c_frame_hook(enum _e4c_frame_stage stage, const e4c_exception * exception, const char * file, int line, const char * function);
-extern void e4c_throw_exception(const e4c_exception * exception, const char * message, const char * file, int line, const char * function)
+
+extern e4c_bool e4c_frame_hook(enum _e4c_frame_stage stage,
+	const e4c_exception * exception, const char * file, int line,
+	const char * function);
+
+extern void e4c_throw_exception(const e4c_exception * exception,
+	const char * message, const char * file, int line, const char * function)
 #ifdef	__GNUC__
 	__attribute__ ((noreturn))
 #endif
