@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 0, 4)
+# define _E4C_VERSION(version)			version(2, 0, 5)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -99,7 +99,7 @@ multi-thread version of exceptions4c.
 # include <setjmp.h>
 
 
-# if __STDC_VERSION__ >= 199901L
+# if __STDC_VERSION__ >= 199901L || defined(HAVE_STD_BOOL_H)
 #	include <stdbool.h>
 # endif
 
@@ -109,7 +109,7 @@ multi-thread version of exceptions4c.
 #	define e4c_false					false
 #	define e4c_true						true
 # else
-#	define e4c_bool						unsigned char
+#	define e4c_bool						int
 #	define e4c_false					0
 #	define e4c_true						1
 # endif
@@ -176,8 +176,8 @@ multi-thread version of exceptions4c.
  * These undocumented macros hide implementation details from documentation.
  */
 
-# define _E4C_FRAME_LOOP(stage) \
-	_E4C_SETJMP( *( e4c_frame_init(stage, _E4C_INFO) ) ); \
+# define _E4C_FRAME_LOOP(_stage_) \
+	_E4C_SETJMP( *( e4c_frame_init(_stage_, _E4C_INFO) ) ); \
 	while( e4c_frame_step() )
 
 # define E4C_TRY \
@@ -197,16 +197,16 @@ multi-thread version of exceptions4c.
 # define E4C_WITH(_resource_, _dispose_) \
 	_E4C_FRAME_LOOP(_e4c_beginning) \
 	if( e4c_frame_hook(_e4c_disposing, NULL, _E4C_INFO) ){ \
-		_dispose_( _resource_, (e4c_get_status() == e4c_failed) ); \
+		_dispose_( (_resource_), (e4c_get_status() == e4c_failed) ); \
 	}else if( e4c_frame_hook(_e4c_acquiring, NULL, _E4C_INFO) ){
 
 # define E4C_USE \
 	}else if( e4c_frame_hook(_e4c_trying, NULL, _E4C_INFO) )
 
 # define E4C_USING(_type_, _resource_, _args_) \
-	with(_resource_, e4c_dispose_##_type_){ \
-		_resource_ = e4c_acquire_##_type_ _args_; \
-	}use
+	E4C_WITH( (_resource_), e4c_dispose_##_type_){ \
+		(_resource_) = e4c_acquire_##_type_ _args_; \
+	}E4C_USE
 
 # define E4C_REUSING_CONTEXT(_thrown_exception_) \
 	\
@@ -214,20 +214,20 @@ multi-thread version of exceptions4c.
 	e4c_bool		_E4C_AUTO(READY)	= e4c_context_is_ready(); \
 	e4c_exception	_E4C_AUTO(EXCEPTION); \
 	\
-	_thrown_exception_ = NULL; \
+	(_thrown_exception_) = NULL; \
 	\
 	if( !_E4C_AUTO(READY) ){ \
 		e4c_context_begin(e4c_false, NULL); \
-		try{ \
+		E4C_TRY{ \
 			goto _E4C_AUTO(PAYLOAD); \
 			\
 			_E4C_AUTO(CLEANUP): \
 			( (void)0 ); \
-		}catch(RuntimeException){ \
+		}E4C_CATCH(RuntimeException){ \
 			_E4C_AUTO(EXCEPTION) = *e4c_get_exception(); \
 			*( (void * *)&_E4C_AUTO(EXCEPTION).cause ) = NULL; \
-			_thrown_exception_ = &_E4C_AUTO(EXCEPTION); \
-		}finally{ \
+			(_thrown_exception_) = &_E4C_AUTO(EXCEPTION); \
+		}E4C_FINALLY{ \
 			_E4C_AUTO(STAGE) = /* e4c_reused */ 2; \
 			e4c_frame_step(); \
 			e4c_context_end(); \
@@ -249,7 +249,7 @@ multi-thread version of exceptions4c.
 	\
 	int _E4C_AUTO(STAGE) = /* e4c_before_payload */ 0; \
 	\
-	e4c_context_begin(_handle_signals_, _uncaught_handler_); \
+	e4c_context_begin( (_handle_signals_), (_uncaught_handler_) ); \
 	goto _E4C_AUTO(PAYLOAD); \
 	\
 	_E4C_AUTO(CLEANUP): \
@@ -838,10 +838,10 @@ multi-thread version of exceptions4c.
  * @see using
  */
 # define e4c_using_if(_type_, _resource_, _args_, _cond_, _exception_, _msg_) \
-	with(_resource_, e4c_dispose_##_type_){ \
+	E4C_WITH(_resource_, e4c_dispose_##_type_){ \
 		_resource_ = e4c_acquire_##_type_ _args_; \
-		if( !(_cond_) ) throw(_exception_, _msg_); \
-	}use
+		if( !(_cond_) ) E4C_THROW(_exception_, _msg_); \
+	}E4C_USE
 
 /**
  * Introduces a block of code with automatic disposal of a resource and
@@ -2390,18 +2390,20 @@ extern e4c_status e4c_get_status(void);
  * </p>
  *
  * <p>
- * In order to determine if the thrown exception is an instance of any of the
- * exceptions declared and defined by the program, the <code>type</code> must be
- * compared against them.
+ * The function <code>e4c_is_instance_of</code> will determine if the thrown
+ * exception is an instance of any of the defined exception types. The
+ * <code>type</code> of the thrown exception can also be compared for an exact
+ * type match.
  * </p>
  *
  * <pre class="fragment">
  * #try{
  *    ...
  * }#catch(#RuntimeException){
- *    if(#e4c_get_exception()->type == #NotEnoughMemoryException){
+ *    const #e4c_exception * exception = #e4c_get_exception();
+ *    if( #e4c_is_instance_of(exception, SignalException.type) ){
  *        ...
- *    }else{
+ *    }else if(exception->type == NotEnoughMemoryException.type){
  *        ...
  *    }
  * }
@@ -2430,12 +2432,13 @@ extern e4c_status e4c_get_status(void);
  * </p>
  *
  * @see e4c_exception
+ * @see e4c_is_instance_of
  * @see throw
  * @see catch
  * @see finally
  *
  * @return the exception that was thrown in the current exception context (if
- *   any) otherwise <code>NULL</code>
+ *         any) otherwise <code>NULL</code>
  */
 extern const e4c_exception * e4c_get_exception(void);
 
@@ -2509,6 +2512,8 @@ extern long e4c_library_version(void);
  * @param instance The thrown exception
  * @param type A previously defined type of exception
  * @return Whether the specified exception is an instance of the given type
+ * @throws NullPointerException if either <code>instance</code> or
+ *         <code>type</code> is <code>NULL</code>
  */
 extern e4c_bool e4c_is_instance_of(const e4c_exception * instance,
 	const e4c_exception * type);
@@ -2530,6 +2535,7 @@ extern e4c_bool e4c_is_instance_of(const e4c_exception * instance,
  * </p>
  *
  * @param exception The uncaught exception
+ * @throws NullPointerException if <code>exception</code> is <code>NULL</code>
  */
 extern void e4c_print_exception(const e4c_exception * exception);
 
