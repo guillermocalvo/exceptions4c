@@ -415,7 +415,7 @@ e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception 
 
 	if(instance->type == type)	return(e4c_true);
 
-	if(instance->super != NULL || instance->super == instance){
+	if(instance->super == NULL || instance->super == instance){
 		/* If instance is an actual thrown exception, then the instance will
 		never be equal to an instance's supertpe, but just in case... */
 		return(e4c_false);
