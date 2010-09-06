@@ -4,7 +4,7 @@
  *
  * exceptions4c source code file
  *
- * @version 2.0
+ * @version 2.1
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -31,6 +31,7 @@
 # include <stdio.h>
 # include <signal.h>
 # include <errno.h>
+# include <stdarg.h>
 # include "except4c.h"
 
 
@@ -60,7 +61,7 @@
 
 # define CONTEXT_IS_READY				(E4C_CONTEXT != NULL)
 
-# define INITIALIZE_ONCE				if(!isInitialized) _e4c_initialize()
+# define INITIALIZE_ONCE				if(!is_initialized) _e4c_initialize()
 
 # define INTERNAL_ERROR(exception, function, message) \
 	_e4c_fatal_error(&exception, message, __FILE__, __LINE__, function, errno, NULL)
@@ -107,7 +108,7 @@
 #	define MUTEX_LOCK(mutex)		pthread_mutex_lock(&mutex)
 #	define MUTEX_UNLOCK(mutex)		pthread_mutex_unlock(&mutex)
 #	define STOP_EXECUTION			THREAD_EXIT(PTHREAD_CANCELED)
-#	define DANGLING_CONTEXT			(environmentCollection != NULL)
+#	define DANGLING_CONTEXT			(environment_collection != NULL)
 # else
 #	define E4C_CONTEXT				current_context
 #	define DESC_INVALID_CONTEXT		"The exception context for this program is in an invalid state."
@@ -308,14 +309,14 @@ static void								e4c_at_exit();
 
 
 
-static e4c_bool fatalErrorFlag	= e4c_false;
-static e4c_bool isInitialized	= e4c_false;
+static e4c_bool fatal_error_flag	= e4c_false;
+static e4c_bool is_initialized		= e4c_false;
 
-MUTEX_DEFINE(isInitializedMutex)
-MUTEX_DEFINE(environmentCollectionMutex)
+MUTEX_DEFINE(is_initialized_mutex)
+MUTEX_DEFINE(environment_collection_mutex)
 
 # ifdef E4C_THREADSAFE
-	static e4c_environment * environmentCollection = NULL;
+	static e4c_environment * environment_collection = NULL;
 # else
 	static e4c_context mainContext;
 	static e4c_context * current_context = NULL;
@@ -404,13 +405,13 @@ e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception 
 		if(instance != type){
 			if(instance == NULL){
 				/* the instance is NULL: maybe no exception was thrown */
-				e4c_throw_exception(NullPointerException.type, "Null exception instance.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of");
+				e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception instance.");
 			}
 			/* the type is NULL: this is actually strange */
-			e4c_throw_exception(NullPointerException.type, "Null exception type.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of");
+			e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception type.");
 		}
 		/* both of the parameters are NULL: now this would be really weird */
-		e4c_throw_exception(NullPointerException.type, "Null exception instance and type.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of");
+		e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception instance and type.");
 	}
 
 	if(instance->type == type)	return(e4c_true);
@@ -557,12 +558,21 @@ e4c_bool e4c_frame_step(void){
 	return(e4c_false);
 }
 
-void e4c_throw_exception(const e4c_exception * exception, const char * message, const char * file, int line, const char * function){
+void e4c_throw_exception(const e4c_exception * exception, const char * file, int line, const char * function, e4c_bool verbatim, const char * message, ...){
 
+# ifdef HAVE_VSNPRINTF
+	/* we will only format the message if we can rely on vsnprintf */
+	char				formatted_message[E4C_EXCEPTION_MESSAGE_SIZE];
+# endif
+
+	int					error_number;
 	e4c_context *		context;
 	e4c_frame *			frame;
 	e4c_exception *		cause;
 	e4c_exception		new_exception;
+
+	/* store the current error number up front */
+	error_number = errno;
 
 	/* get the current context */
 	context = E4C_CONTEXT;
@@ -590,8 +600,23 @@ void e4c_throw_exception(const e4c_exception * exception, const char * message, 
 		exception = &NullPointerException;
 	}
 
+	if(verbatim){
+# ifdef HAVE_VSNPRINTF
+		va_list		arguments_list;
+		int			printed;
+		va_start(arguments_list, message);
+		printed = vsnprintf(formatted_message, E4C_EXCEPTION_MESSAGE_SIZE, message, arguments_list);
+		va_end(arguments_list);
+		if(printed > 0) message = formatted_message;
+# else
+		/* if vsnprintf is absent, the message will be copied verbatim anyway */
+		(void)0;
+# endif
+	}
+
 	/* "instantiate" the specified exception */
-	new_exception = _e4c_new_exception(exception, message, file, line, function, errno, cause);
+	new_exception = _e4c_new_exception(exception, message, file, line, function, error_number, cause);
+
 	_e4c_propagate(context, &new_exception);
 }
 
@@ -602,7 +627,7 @@ void e4c_print_exception(const e4c_exception * exception){
 # endif
 
 	if(exception == NULL){
-		e4c_throw_exception(NullPointerException.type, "Null exception.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_print_exception");
+		e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_print_exception", e4c_true, "Null exception.");
 	}
 
 # ifndef NDEBUG
@@ -856,7 +881,7 @@ static E4C_INLINE void _e4c_fatal_error(const e4c_exception * prototype, const c
 
 	INITIALIZE_ONCE;
 
-	fatalErrorFlag = e4c_true;
+	fatal_error_flag = e4c_true;
 
 	e4c_print_exception(&exception);
 
@@ -904,7 +929,7 @@ static E4C_INLINE e4c_exception _e4c_new_exception(const e4c_exception * prototy
 
 	exception.name			= prototype->name;
 
-	sprintf(exception.message, "%.*s", sizeof(exception.message) - 1, message != NULL ? message : prototype->message);
+	(void)sprintf(exception.message, "%.*s", sizeof(exception.message) - 1, message != NULL ? message : prototype->message);
 
 	exception.super			= prototype->super;
 	exception.file			= file;
@@ -1082,10 +1107,10 @@ static void e4c_at_exit(void){
 	if(DANGLING_CONTEXT){
 		const e4c_exception exception = _e4c_new_exception(&ContextNotEnded, DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_at_exit", errno, NULL);
 		e4c_print_exception(&exception);
-		fatalErrorFlag = e4c_true;
+		fatal_error_flag = e4c_true;
 	}
 
-	if(fatalErrorFlag){
+	if(fatal_error_flag){
 		fprintf(stderr, MSG_AT_EXIT_ERROR);
 		/* force failure exit status */
 		exit(EXIT_FAILURE);
@@ -1095,14 +1120,13 @@ static void e4c_at_exit(void){
 
 static void _e4c_initialize(void){
 
-	MUTEX_LOCK(isInitializedMutex);
+	MUTEX_LOCK(is_initialized_mutex);
 
-		if(!isInitialized){
-			isInitialized = e4c_true;
-			atexit(e4c_at_exit);
+		if(!is_initialized){
+			is_initialized = (atexit(e4c_at_exit) == 0 ? e4c_true : e4c_false);
 		}
 
-	MUTEX_UNLOCK(isInitializedMutex);
+	MUTEX_UNLOCK(is_initialized_mutex);
 }
 
 # ifdef E4C_THREADSAFE
@@ -1111,12 +1135,12 @@ static void _e4c_add_environment(e4c_environment * environment){
 
 	/* assert: environment != NULL */
 
-	MUTEX_LOCK(environmentCollectionMutex);
+	MUTEX_LOCK(environment_collection_mutex);
 
-		environment->next		= environmentCollection;
-		environmentCollection	= environment;
+		environment->next		= environment_collection;
+		environment_collection	= environment;
 
-	MUTEX_UNLOCK(environmentCollectionMutex);
+	MUTEX_UNLOCK(environment_collection_mutex);
 }
 
 static e4c_environment * _e4c_remove_environment(void){
@@ -1126,9 +1150,9 @@ static e4c_environment * _e4c_remove_environment(void){
 	e4c_environment *	previous	= NULL;
 	e4c_environment *	environment;
 
-	MUTEX_LOCK(environmentCollectionMutex);
+	MUTEX_LOCK(environment_collection_mutex);
 
-		environment = environmentCollection;
+		environment = environment_collection;
 
 		while(environment != NULL){
 			if( THREAD_SAME(self, environment->self) ){
@@ -1140,11 +1164,11 @@ static e4c_environment * _e4c_remove_environment(void){
 		}
 
 		if(found){
-			if(previous == NULL)	environmentCollection	= environment->next;
+			if(previous == NULL)	environment_collection	= environment->next;
 			else					previous->next			= environment->next;
 		}
 
-	MUTEX_UNLOCK(environmentCollectionMutex);
+	MUTEX_UNLOCK(environment_collection_mutex);
 
 	return(found ? environment : NULL);
 }
@@ -1155,9 +1179,9 @@ static e4c_environment * _e4c_get_environment(void){
 	e4c_bool			found		= e4c_false;
 	e4c_environment *	environment;
 
-	MUTEX_LOCK(environmentCollectionMutex);
+	MUTEX_LOCK(environment_collection_mutex);
 
-		environment	= environmentCollection;
+		environment	= environment_collection;
 
 		while(environment != NULL){
 			if( THREAD_SAME(self, environment->self) ){
@@ -1167,7 +1191,7 @@ static e4c_environment * _e4c_get_environment(void){
 			environment	= environment->next;
 		}
 
-	MUTEX_UNLOCK(environmentCollectionMutex);
+	MUTEX_UNLOCK(environment_collection_mutex);
 
 	return(found ? environment : NULL);
 }

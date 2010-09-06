@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version 2.0
+ * @version 2.1
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 0, 6)
+# define _E4C_VERSION(version)			version(2, 1, 0)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -94,15 +94,29 @@ multi-thread version of exceptions4c.
 #	endif
 # endif
 
+/* All of these are C99 standard features */
+# if __STDC_VERSION__ >= 199901L
+
+#	ifndef HAVE_STD_BOOL_H
+#		define HAVE_STD_BOOL_H
+#	endif
+
+#	ifndef HAVE_C99_VARIADIC_MACROS
+#		define HAVE_C99_VARIADIC_MACROS
+#	endif
+
+#	ifndef HAVE_VSNPRINTF
+#		define HAVE_VSNPRINTF
+#	endif
+
+# endif
 
 # include <stdlib.h>
 # include <setjmp.h>
 
-
-# if __STDC_VERSION__ >= 199901L || defined(HAVE_STD_BOOL_H)
+# ifdef HAVE_STD_BOOL_H
 #	include <stdbool.h>
 # endif
-
 
 # ifdef __bool_true_false_are_defined
 #	define e4c_bool						bool
@@ -131,7 +145,7 @@ multi-thread version of exceptions4c.
 #	define _E4C_ASSERT(_condition_) ( \
 		(_condition_) \
 		? (void)0 \
-		: throw(AssertionException, "Assertion failed: " #_condition_) \
+		: E4C_THROW(AssertionException, "Assertion failed: " #_condition_) \
 	)
 # else
 #	define _E4C_FILE_INFO				NULL
@@ -177,7 +191,7 @@ multi-thread version of exceptions4c.
  */
 
 # define _E4C_FRAME_LOOP(_stage_) \
-	_E4C_SETJMP( *( e4c_frame_init(_stage_, _E4C_INFO) ) ); \
+	(void)_E4C_SETJMP( *( e4c_frame_init(_stage_, _E4C_INFO) ) ); \
 	while( e4c_frame_step() )
 
 # define E4C_TRY \
@@ -192,7 +206,8 @@ multi-thread version of exceptions4c.
 	else if( e4c_frame_hook(_e4c_finalizing, NULL, _E4C_INFO) )
 
 # define E4C_THROW(_exception_type_, _message_) \
-	e4c_throw_exception( (_exception_type_).type, _message_, _E4C_INFO )
+	e4c_throw_exception( (_exception_type_).type, _E4C_INFO, \
+	e4c_true, _message_ )
 
 # define E4C_WITH(_resource_, _dispose_) \
 	_E4C_FRAME_LOOP(_e4c_beginning) \
@@ -261,6 +276,14 @@ multi-thread version of exceptions4c.
 		if( _E4C_AUTO(STAGE) == /* e4c_after_payload */ 1){ \
 			goto _E4C_AUTO(CLEANUP); \
 		}else
+
+# ifdef HAVE_C99_VARIADIC_MACROS
+#	define E4C_THROWF(_exception_type_, _format_, ...) \
+		e4c_throw_exception( \
+			(_exception_type_).type, _E4C_INFO, \
+			e4c_false, _format_, __VA_ARGS__ \
+		)
+# endif
 
 # define _E4C_DECLARE_EXCEPTION(_name_) \
 	extern const e4c_exception _name_
@@ -497,10 +520,11 @@ multi-thread version of exceptions4c.
  *        exception will be used
  */
 # ifndef E4C_NOKEYWORDS
-# define throw(_exception_type_, _message_) E4C_THROW(_exception_type_, _message_)
+# define throw(_exception_type_, _message_) \
+	E4C_THROW(_exception_type_, _message_)
 # endif
 
-/*@}*/
+/** @} */
 
 /**
  * @name Dispose pattern keywords
@@ -698,7 +722,7 @@ multi-thread version of exceptions4c.
 # define using(_type_, _resource_, _args_) E4C_USING(_type_, _resource_, _args_)
 # endif
 
-/*@}*/
+/** @} */
 
 /*
  * Binds the acquisition of memory to the standard function <code>malloc</code>
@@ -860,7 +884,7 @@ multi-thread version of exceptions4c.
 	e4c_using_if(_type_, _resource_, _args_, _resource_ != NULL, \
 		_exception_, _msg_)
 
-/*@}*/
+/** @} */
 
 /**
  * @name Integration macros
@@ -1239,7 +1263,7 @@ multi-thread version of exceptions4c.
 # define e4c_reusing_context(_thrown_exception_) \
 	E4C_REUSING_CONTEXT(_thrown_exception_)
 
-/*@}*/
+/** @} */
 
 /**
  * @name Other convenience macros
@@ -1304,6 +1328,65 @@ multi-thread version of exceptions4c.
  */
 # define e4c_using_context(_handle_signals_, _uncaught_handler_) \
 	E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
+
+/**
+ * Throws an exception with a formatted message
+ *
+ * <p>
+ * This is a handy way to compose a formatted message and throw an exception on
+ * the fly:
+ * </p>
+ *
+ * <pre class="fragment">
+ * int bytes = 1024;
+ * void * buffer = malloc(bytes);
+ * if(buffer == NULL){
+ *     throwf(NotEnoughMemoryException, "Could not allocate %d bytes.", bytes);
+ * }
+ * </pre>
+ *
+ * <p>
+ * This macro relies on two features that were introduced in the
+ * <strong>ISO/IEC 9899:1999</strong> (also known as <em>C99</em>) revision of
+ * the C programming language standard in 1999:
+ * </p>
+ *
+ * <ul>
+ * <li>Variadic macros</li>
+ * <li>Buffer-safe function <code>vsnprintf</code></li>
+ * </ul>
+ *
+ * <p>
+ * In order not to create compatibility issues, this macro will only be defined
+ * when the <code>__STDC_VERSION__</code> <em>compile-time</em> parameter is
+ * defined with a value <em>greater than or equal to</em> <code>199901L</code>,
+ * or <code>HAVE_C99_VARIADIC_MACROS</code> is defined.
+ * </p>
+ *
+ * <p>
+ * The semantics of this macro are the same as for the <code>throw</code> macro.
+ * </p>
+ *
+ * <p>
+ * At least one argument must be passed right after the format string. The
+ * message will be composed through the function <code>vsnprintf</code> with the
+ * specified format and variadic arguments. For further information on the
+ * formatting rules, you may look up the specifications for the function
+ * <code>vsnprintf</code>.
+ * </p>
+ *
+ * @see throw
+ *
+ * @param _exception_type_ The type of exception to be thrown
+ * @param _format_ The string containing the specifications that determine the
+ *       output format for the variadic arguments.
+ * @param ... The variadic arguments that will be formatted according to the
+ *        format control.
+ */
+# if !defined(E4C_NOKEYWORDS) && defined(HAVE_C99_VARIADIC_MACROS)
+#	define throwf(_exception_type_, _format_, ...) \
+		E4C_THROWF( (_exception_type_), (_format_), __VA_ARGS__ )
+# endif
 
 /**
  * Expresses a program assertion
@@ -1430,7 +1513,7 @@ multi-thread version of exceptions4c.
 	\
 	_E4C_NULL_SIGNAL_MAPPING
 
-/*@}*/
+/** @} */
 
 
 /**
@@ -1753,7 +1836,7 @@ enum _e4c_frame_stage{
  */
 extern const e4c_signal_mapping * e4c_default_signal_mappings;
 
-/*@}*/
+/** @} */
 
 /**
  * @name Predefined exceptions
@@ -2181,7 +2264,7 @@ E4C_DECLARE_EXCEPTION(ProgramSignal1Exception);
  */
 E4C_DECLARE_EXCEPTION(ProgramSignal2Exception);
 
-/*@}*/
+/** @} */
 
 /**
  * @name Exception context handling Functions
@@ -2442,7 +2525,7 @@ extern e4c_status e4c_get_status(void);
  */
 extern const e4c_exception * e4c_get_exception(void);
 
-/*@}*/
+/** @} */
 
 /**
  * @name Other integration and convenience functions
@@ -2539,12 +2622,13 @@ extern e4c_bool e4c_is_instance_of(const e4c_exception * instance,
  */
 extern void e4c_print_exception(const e4c_exception * exception);
 
-/*@}*/
+/** @} */
 
 /*
  * Next functions are undocumented on purpose, because they shouldn't be used
  * directly (but through the 'keyword' macros).
  */
+
 extern _E4C_JMP_BUF * e4c_frame_init(enum _e4c_frame_stage stage,
 	const char * file, int line, const char * function);
 
@@ -2555,7 +2639,8 @@ extern e4c_bool e4c_frame_hook(enum _e4c_frame_stage stage,
 	const char * function);
 
 extern void e4c_throw_exception(const e4c_exception * exception,
-	const char * message, const char * file, int line, const char * function)
+	const char * file, int line, const char * function,
+	e4c_bool verbatim, const char * message, ...)
 #ifdef	__GNUC__
 	__attribute__ ((noreturn))
 #endif
