@@ -79,6 +79,7 @@
 	int test_##CODE##_function()
 
 extern e4c_bool NDEBUG_is_defined;
+extern long STDC_VERSION;
 
 E4C_DECLARE_EXCEPTION(WildException);
 E4C_DECLARE_EXCEPTION(TamedException);

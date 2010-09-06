@@ -132,6 +132,7 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 							"%%0A"
 							"%%20Library%%20version:%%20%ld%%0A"
 							"%%20%%20NDEBUG%%20defined:%%20%s%%0A"
+							"__STDC_VERSION__:%%20%ld%%0A"
 							"%%20%%20%%20%%20Architecture:%%20...%%0A"
 							"Operating%%20system:%%20...%%0A"
 							"%%20%%20%%20%%20IDE/Compiler:%%20...%%0A"
@@ -148,7 +149,7 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 				"</div>",
 		test->code,
 		test->code, E4C_VERSION_NUMBER,
-		(NDEBUG_is_defined ? "YES" : "NO"),
+		(NDEBUG_is_defined ? "YES" : "NO"), STDC_VERSION,
 		(test->unexpectedExitCode	? "NOK" : "OK"), found,
 		(test->unexpectedOutput		? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK"),
 		(test->unexpectedError		? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK")
@@ -395,14 +396,17 @@ static void overallStatistics(Statistics stats, FILE * report){
 			"</div>"
 			"<div class=\"paragraph\">"
 				"<div class=\"bug image icon24\"></div>"
-				"<code>NDEBUG</code> %s."
+				"<code>NDEBUG</code> %s; "
+				"<code>__STDC_VERSION__=%ld</code>%s."
 			"</div>"
 			"<div class=\"paragraph\">"
 				"<div class=\"datetime image icon24\"></div>"
 				"%s"
 			"</div>"
 		"</div>",
-	status, overall, E4C_VERSION_STRING, (NDEBUG_is_defined ? "defined" : "undefined"), date);
+	status, overall, E4C_VERSION_STRING,
+	(NDEBUG_is_defined ? "defined" : "undefined"), STDC_VERSION, (STDC_VERSION == -1 ? " (undefined)" : ""),
+	date);
 }
 
 static void testSuiteStatistics(Statistics stats, TestSuiteCollection * suites, FILE * report){

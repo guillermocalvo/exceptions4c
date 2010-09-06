@@ -14,7 +14,12 @@
 #	define IS_NDEBUG_DEFINED e4c_false
 # endif
 
-e4c_bool NDEBUG_is_defined = IS_NDEBUG_DEFINED;
+# ifndef __STDC_VERSION__
+#	define __STDC_VERSION__ -1L
+# endif
+
+e4c_bool	NDEBUG_is_defined	= IS_NDEBUG_DEFINED;
+long		STDC_VERSION        = __STDC_VERSION__;
 
 E4C_DEFINE_EXCEPTION(WildException, "This is a wild exception.", RuntimeException);
 E4C_DEFINE_EXCEPTION(TamedException, "This is a tamed exception.", RuntimeException);
