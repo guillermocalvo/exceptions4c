@@ -17,7 +17,7 @@ DEFINE_TEST(
 
 	printf("before_THROW\n");
 
-	throw(WildException, "Nobody will catch me.");
+	E4C_THROW(WildException, "Nobody will catch me.");
 
 	printf("after_THROW\n");
 

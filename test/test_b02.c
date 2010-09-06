@@ -21,7 +21,7 @@ DEFINE_TEST(
 
 	printf("before_THROW\n");
 
-	throw(WildException, "Actually, I can't throw an exception anymore.");
+	E4C_THROW(WildException, "Actually, I can't throw an exception anymore.");
 
 	printf("after_THROW\n");
 

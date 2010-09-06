@@ -71,12 +71,12 @@ extern TestSuiteCollection
 # endif
 
 
-int usage(){
+static int usage(){
 	printf("Error: please run this program without arguments.\n");
 	return(EXIT_FAILURE);
 }
 
-int wrongVersion(long version){
+static int wrongVersion(long version){
 	printf(
 		"Error: the library and header version numbers don't match.\n"
 		"\n"

@@ -25,27 +25,27 @@ DEFINE_TEST(
 
 	printf("before_TRY_CATCH_FINALLY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("inside_TRY_block\n");
 
 		printf("before_THROW\n");
 
-		throw(WildException, "I'm going to be caught.");
+		E4C_THROW(WildException, "I'm going to be caught.");
 
 		printf("after_THROW\n");
 
-	}catch(WildException){
+	}E4C_CATCH(WildException){
 
 		printf("inside_CATCH_block\n");
 
 		printf("before_RETHROW\n");
 
-		throw(*e4c_get_exception(), "Nobody will catch me this time.");
+		E4C_THROW(*e4c_get_exception(), "Nobody will catch me this time.");
 
 		printf("after_RETHROW\n");
 
-	}finally{
+	}E4C_FINALLY{
 
 		printf("inside_FINALLY_block\n");
 

@@ -78,6 +78,8 @@
 	}; \
 	int test_##CODE##_function()
 
+extern e4c_bool NDEBUG_is_defined;
+
 E4C_DECLARE_EXCEPTION(WildException);
 E4C_DECLARE_EXCEPTION(TamedException);
 
@@ -223,9 +225,6 @@ struct TestRunnerStruct{
 		Statistics				suites;
 	}						stats;
 };
-
-
-
 
 extern TestRunner newTestRunner(
 	const char *			filePath,

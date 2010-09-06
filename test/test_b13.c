@@ -25,5 +25,5 @@ DEFINE_TEST(
 
 	printf("after_REUSING_CONTEXT_block\n");
 
-	return(EXIT_SUCCESS);
+	return(exceptionThrown == NULL ? 123 : -123);
 }

@@ -5,7 +5,7 @@
 static void aux(void * pointer){
 	if(pointer == NULL){
 		printf("____aux_before_THROW\n");
-		throw(WildException, "The client of the external function will catch me.");
+		E4C_THROW(WildException, "The client of the external function will catch me.");
 	}else{
 		printf("____aux_no_exception_was_thrown\n");
 	}
@@ -29,7 +29,7 @@ static int ext(){
 
 			printf("__ext_before_TRY_block\n");
 
-			try{
+			E4C_TRY{
 
 				printf("__ext_before_CALL_FUNCTION_aux\n");
 
@@ -85,7 +85,7 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("before_CALL_FUNCTION_ext\n");
 
@@ -93,7 +93,7 @@ DEFINE_TEST(
 
 		printf("after_CALL_FUNCTION_ext\n");
 
-	}catch(WildException){
+	}E4C_CATCH(WildException){
 
 		printf("inside_catch_block\n");
 

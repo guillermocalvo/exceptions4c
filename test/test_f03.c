@@ -17,13 +17,13 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("before_THROW\n");
 
-		throw(ParentException, "You cannot catch me by catching one of my subtypes.");
+		E4C_THROW(ParentException, "You cannot catch me by catching one of my subtypes.");
 
-	}catch(ChildException){
+	}E4C_CATCH(ChildException){
 
 		printf("inside_CATCH_block\n");
 

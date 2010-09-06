@@ -5,7 +5,7 @@
 static void aux(void * pointer){
 	if(pointer == NULL){
 		printf("____aux_before_THROW\n");
-		throw(TamedException, "The external function will catch me.");
+		E4C_THROW(TamedException, "The external function will catch me.");
 	}else{
 		printf("____aux_no_exception_was_thrown\n");
 	}
@@ -30,7 +30,7 @@ static int ext(){
 
 			printf("__ext_before_TRY_block\n");
 
-			try{
+			E4C_TRY{
 
 				printf("__ext_before_CALL_FUNCTION_aux\n");
 
@@ -40,7 +40,7 @@ static int ext(){
 
 				status_code = -123;
 
-			}catch(TamedException){
+			}E4C_CATCH(TamedException){
 
 				printf("__ext_inside_CATCH_block\n");
 

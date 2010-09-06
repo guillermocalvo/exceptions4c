@@ -12,8 +12,6 @@ DEFINE_TEST(
 ){
 
 	e4c_bool	caught		= e4c_false;
-	int *		nullPointer = NULL;
-	int			integer;
 
 	printf("before_CONTEXT_BEGIN\n");
 
@@ -21,7 +19,9 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
+		int *		nullPointer = NULL;
+		int			integer;
 
 		printf("before_NULL_POINTER\n");
 		fflush(stdout);
@@ -34,7 +34,9 @@ DEFINE_TEST(
 		printf("after_NULL_POINTER\n");
 		fflush(stdout);
 
-	}catch(BadPointerException){
+		if(integer) integer = 0;
+
+	}E4C_CATCH(BadPointerException){
 
 		printf("inside_CATCH_block\n");
 

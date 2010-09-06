@@ -5,7 +5,7 @@
 static void aux(void * pointer){
 	if(pointer == NULL){
 		printf("______aux_before_THROW\n");
-		throw(WildException, "Nobody will catch me.");
+		E4C_THROW(WildException, "Nobody will catch me.");
 	}else{
 		printf("______aux_no_exception_was_thrown\n");
 	}
@@ -27,7 +27,7 @@ static int ext2(void * pointer){
 	{
 		e4c_reusing_context(error){
 
-			try{
+			E4C_TRY{
 
 				printf("before_CALL_FUNCTION_aux\n");
 
@@ -35,7 +35,7 @@ static int ext2(void * pointer){
 
 				printf("after_CALL_FUNCTION_aux\n");
 
-			}finally{
+			}E4C_FINALLY{
 
 				printf("____ext2_inside_FINALLY_block\n");
 
@@ -52,6 +52,8 @@ static int ext2(void * pointer){
 	else			printf("____ext2_the_context_IS_NOT_ready\n");
 
 	if(is_ready1 != is_ready2) return(112233);
+
+	if(error != NULL) return(332211);
 
 	return(EXIT_SUCCESS);
 }
@@ -74,7 +76,7 @@ static int ext1(){
 
 			printf("__ext1_before_TRY_block\n");
 
-			try{
+			E4C_TRY{
 
 				printf("__ext1_before_CALL_FUNCTION_ext2\n");
 
@@ -82,7 +84,7 @@ static int ext1(){
 
 				printf("__ext1_after_CALL_FUNCTION_ext2\n");
 
-			}finally{
+			}E4C_FINALLY{
 
 				printf("__ext1_inside_FINALLY_block\n");
 
@@ -135,7 +137,7 @@ DEFINE_TEST(
 
 			printf("before_TRY_block\n");
 
-			try{
+			E4C_TRY{
 
 				printf("before_CALL_FUNCTION_ext1\n");
 
@@ -143,13 +145,13 @@ DEFINE_TEST(
 
 				printf("after_CALL_FUNCTION_ext1\n");
 
-			}catch(NullPointerException){
+			}E4C_CATCH(NullPointerException){
 
 				printf("inside_catch_block\n");
 
 				result = 456;
 
-			}finally{
+			}E4C_FINALLY{
 
 				printf("inside_FINALLY_block\n");
 

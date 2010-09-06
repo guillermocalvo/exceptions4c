@@ -13,7 +13,7 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 		printf("inside_TRY_block\n");
 	}
 

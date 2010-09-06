@@ -25,13 +25,13 @@ DEFINE_TEST(
 
 	printf("before_WITH_block\n");
 
-	with(buffer, deallocate_buffer){
+	E4C_WITH(buffer, deallocate_buffer){
 
         buffer = malloc(256);
 
 		printf("inside_WITH_block\n");
 
-	}use{
+	}E4C_USE{
 
 		printf("inside_USE_block\n");
 

@@ -13,7 +13,7 @@ DEFINE_TEST(
 
 	printf("before_THROW\n");
 
-	throw(NullPointerException, "Actually, I can't throw an exception yet.");
+	E4C_THROW(NullPointerException, "Actually, I can't throw an exception yet.");
 
 	printf("after_THROW\n");
 

@@ -20,19 +20,19 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("before_THROW\n");
 
-		throw(TamedException, "I can only be caught once for each try block.");
+		E4C_THROW(TamedException, "I can only be caught once for each try block.");
 
-	}catch(TamedException){
+	}E4C_CATCH(TamedException){
 
 		caught1 = e4c_true;
 
 		printf("inside_FIRST_CATCH_block\n");
 
-	}catch(TamedException){
+	}E4C_CATCH(TamedException){
 
 		caught2 = e4c_true;
 

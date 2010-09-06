@@ -22,20 +22,13 @@
 # define HUMAN_EXIT_CODE(v)	\
 	( v == EXIT_WHATEVER ? "(any value)" : (v == EXIT_SUCCESS ? "EXIT_SUCCESS" : ( v == EXIT_FAILURE ? "EXIT_FAILURE" : "(a specific value)") ) )
 
-# ifdef NDEBUG
-#	define IS_NDEBUG_DEFINED e4c_true
-# else
-#	define IS_NDEBUG_DEFINED e4c_false
-# endif
 
-
-e4c_bool NDEBUG_is_defined = IS_NDEBUG_DEFINED;
 
 
 static void printPercentage(char * buffer, int fraction, int total){
 
 	char *	dotPos	= NULL;
-	float	value	= 100 * fraction / total;
+	float	value	= (float)100 * fraction / total;
 
 	sprintf(buffer, "%.2f", value);
 
