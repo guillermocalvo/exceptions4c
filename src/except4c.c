@@ -401,7 +401,6 @@ e4c_bool e4c_context_is_ready(void){
 e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception * type){
 
 	if(instance == NULL || type == NULL){
-		if(!CONTEXT_IS_READY) return(e4c_false);
 		if(instance != type){
 			if(instance == NULL){
 				/* the instance is NULL: maybe no exception was thrown */
@@ -603,8 +602,7 @@ void e4c_print_exception(const e4c_exception * exception){
 # endif
 
 	if(exception == NULL){
-		if(CONTEXT_IS_READY) throw(NullPointerException, "Null exception");
-		return;
+		e4c_throw_exception(NullPointerException.type, "Null exception.", _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_print_exception");
 	}
 
 # ifndef NDEBUG
