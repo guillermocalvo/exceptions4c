@@ -20,13 +20,13 @@ DEFINE_TEST(
 
 			printf("before_TRY_block\n");
 
-			try{
+			E4C_TRY{
 
 				printf("before_THROW\n");
 
-				throw(ChildException, "I'm going to be caught.");
+				E4C_THROW(ChildException, "I'm going to be caught.");
 
-			}catch(GrandparentException){
+			}E4C_CATCH(GrandparentException){
 
 	            caught = e4c_true;
 

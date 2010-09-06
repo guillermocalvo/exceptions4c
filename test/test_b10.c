@@ -6,9 +6,9 @@ static void aux(){
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 		printf("inside_TRY_block\n");
-	}finally{
+	}E4C_FINALLY{
 		printf("inside_FINALLY_block\n");
 		goto out_of_try_block;
 	}

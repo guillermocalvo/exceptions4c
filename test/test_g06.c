@@ -21,7 +21,7 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("before_DIVISION_BY_ZERO\n");
 		fflush(stdout);
@@ -34,7 +34,7 @@ DEFINE_TEST(
 		printf("after_DIVISION_BY_ZERO\n");
 		fflush(stdout);
 
-	}catch(SignalException){
+	}E4C_CATCH(SignalException){
 
 		printf("inside_CATCH_block\n");
 

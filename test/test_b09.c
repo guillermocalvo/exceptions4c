@@ -6,10 +6,10 @@ static void aux(){
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 		printf("inside_TRY_block\n");
-		throw(TamedException, "Hey! you cannot return in the middle of a catch block.");
-	}catch(TamedException){
+		E4C_THROW(TamedException, "Hey! you cannot return in the middle of a catch block.");
+	}E4C_CATCH(TamedException){
 		printf("inside_CATCH_block\n");
 		return;
 	}

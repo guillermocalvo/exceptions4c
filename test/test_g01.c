@@ -35,6 +35,8 @@ DEFINE_TEST(
 	printf("after_NULL_POINTER\n");
 	fflush(stdout);
 
+	if(integer) integer = 0;
+
 	printf("before_CONTEXT_END\n");
 	fflush(stdout);
 

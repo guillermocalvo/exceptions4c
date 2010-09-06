@@ -6,7 +6,7 @@ static void aux(){
 
 	printf("before_THROW\n");
 
-	throw(WildException, "Nobody will catch me.");
+	E4C_THROW(WildException, "Nobody will catch me.");
 
 	printf("after_THROW\n");
 }
@@ -27,7 +27,7 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("before_CALL_FUNCTION_aux\n");
 

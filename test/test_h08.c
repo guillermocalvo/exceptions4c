@@ -5,7 +5,7 @@
 static void aux(void * pointer){
 	if(pointer == NULL){
 		printf("______aux_before_THROW\n");
-		throw(WildException, "I'm not going to be thrown.");
+		E4C_THROW(WildException, "I'm not going to be thrown.");
 	}else{
 		printf("______aux_no_exception_was_thrown\n");
 	}
@@ -27,7 +27,7 @@ static int ext2(void * pointer){
 	{
 		e4c_reusing_context(error){
 
-			try{
+			E4C_TRY{
 
 				printf("before_CALL_FUNCTION_aux\n");
 
@@ -83,7 +83,7 @@ static int ext1(){
 
 			printf("__ext1_before_TRY_block\n");
 
-			try{
+			E4C_TRY{
 
 				int number;
 
@@ -93,7 +93,7 @@ static int ext1(){
 
 				printf("__ext1_after_CALL_FUNCTION_ext2\n");
 
-			}finally{
+			}E4C_FINALLY{
 
 				printf("__ext1_inside_FINALLY_block\n");
 

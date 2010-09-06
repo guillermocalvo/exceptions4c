@@ -8,8 +8,13 @@
 # include "testing.h"
 # include "html.h"
 
+# ifdef NDEBUG
+#	define IS_NDEBUG_DEFINED e4c_true
+# else
+#	define IS_NDEBUG_DEFINED e4c_false
+# endif
 
-
+e4c_bool NDEBUG_is_defined = IS_NDEBUG_DEFINED;
 
 E4C_DEFINE_EXCEPTION(WildException, "This is a wild exception.", RuntimeException);
 E4C_DEFINE_EXCEPTION(TamedException, "This is a tamed exception.", RuntimeException);
@@ -18,6 +23,8 @@ E4C_DEFINE_EXCEPTION(GrandparentException, "This is a grandparent exception.", R
 E4C_DEFINE_EXCEPTION(ParentException, "This is a parent exception.", GrandparentException);
 E4C_DEFINE_EXCEPTION(ChildException, "This is a child exception.", ParentException);
 E4C_DEFINE_EXCEPTION(SiblingException, "This is a sibling exception.", ParentException);
+
+
 
 
 static int cannotRead(const char * filePath){
@@ -124,7 +131,7 @@ static const char * getCommandLine(TestRunner * runner){
 	return(runner->buffer);
 }
 
-void runTest(UnitTest * test, TestRunner * runner){
+static void runTest(UnitTest * test, TestRunner * runner){
 
 	const char *	command;
 	const char *	lastOutput;
@@ -148,7 +155,7 @@ void runTest(UnitTest * test, TestRunner * runner){
 	printf("%s\n", test->passed ? "passed" : "FAILED!");
 }
 
-void runTestSuite(TestRunner * runner, TestSuite * testSuite){
+static void runTestSuite(TestRunner * runner, TestSuite * testSuite){
 
 	int tests;
 
@@ -225,7 +232,7 @@ int runAllTestSuites(TestRunner * runner){
 		/* hopefully this will open the report in the default browser */
 		system(runner->report);
 	}
-	
+
 	printf("\tDone.\n");
 
 	return(EXIT_SUCCESS);

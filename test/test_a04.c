@@ -18,7 +18,7 @@ DEFINE_TEST(
 
 	printf("before_USING_block\n");
 
-	using(buffer, tmp, (256) ){
+	E4C_USING(buffer, tmp, (256) ){
 		printf("inside_USING_block\n");
 	}
 

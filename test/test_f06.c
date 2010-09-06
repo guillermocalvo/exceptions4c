@@ -20,19 +20,19 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("before_THROW\n");
 
-		throw(ChildException, "I'm going to be caught by the first (generic) catch block.");
+		E4C_THROW(ChildException, "I'm going to be caught by the first (generic) catch block.");
 
-	}catch(ParentException){
+	}E4C_CATCH(ParentException){
 
 		caught1 = e4c_true;
 
 		printf("inside_GENERIC_CATCH_block\n");
 
-	}catch(ChildException){
+	}E4C_CATCH(ChildException){
 
 		caught2 = e4c_true;
 

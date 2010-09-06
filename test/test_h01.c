@@ -5,7 +5,7 @@
 static void aux(void * pointer){
 	if(pointer == NULL){
 		printf("____aux_before_THROW\n");
-		throw(WildException, "I'm not going to be thrown.");
+		E4C_THROW(WildException, "I'm not going to be thrown.");
 	}else{
 		printf("____aux_no_exception_was_thrown\n");
 	}
@@ -29,7 +29,7 @@ static int ext(){
 
 			printf("__ext_before_TRY_block\n");
 
-			try{
+			E4C_TRY{
 
 				int number;
 

@@ -8,7 +8,7 @@ static void aux5(){
 
 	printf("before_THROW\n");
 
-	throw(TamedException, "I'm going to be caught.");
+	E4C_THROW(TamedException, "I'm going to be caught.");
 
 	printf("before_EXIT_aux5\n");
 }
@@ -17,11 +17,11 @@ static void aux4(){
 
 	printf("inside_aux4\n");
 
-	try{
+	E4C_TRY{
 
 		aux5();
 
-	}catch(ProgramSignalException){
+	}E4C_CATCH(ProgramSignalException){
 
 		printf("inside_AUX4_CATCH_block\n");
 
@@ -43,7 +43,7 @@ static void aux2(){
 
 	printf("inside_aux2\n");
 
-	try{
+	E4C_TRY{
 
 		aux3();
 
@@ -79,7 +79,7 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 
 		printf("before_CALL_FUNCTION_aux1\n");
 
@@ -87,7 +87,7 @@ DEFINE_TEST(
 
 		printf("after_CALL_FUNCTION_aux1\n");
 
-	}catch(TamedException){
+	}E4C_CATCH(TamedException){
 
 		caught = e4c_true;
 

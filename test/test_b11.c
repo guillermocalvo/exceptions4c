@@ -19,9 +19,9 @@ DEFINE_TEST(
 
 	printf("before_TRY_block\n");
 
-	try{
+	E4C_TRY{
 		printf("inside_TRY_block\n");
-	/* } */ use{
+	/* } */ E4C_USE{
 		isExecuted = e4c_true;
 		printf("inside_USE_block\n");
 	}
