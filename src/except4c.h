@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 1, 0)
+# define _E4C_VERSION(version)			version(2, 1, 1)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -1333,8 +1333,8 @@ multi-thread version of exceptions4c.
  * Throws an exception with a formatted message
  *
  * <p>
- * This is a handy way to compose a formatted message and throw an exception on
- * the fly:
+ * This is a handy way to compose a formatted message and throw an exception
+ * <em>on the fly</em>:
  * </p>
  *
  * <pre class="fragment">
