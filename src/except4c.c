@@ -257,10 +257,10 @@ typedef enum _e4c_frame_stage			e4c_stage;
 typedef struct e4c_frame				e4c_frame;
 struct e4c_frame{
 	e4c_frame *							previous;
-	e4c_stage							stage;
-	e4c_bool							thrown;
-	e4c_bool							uncaught;
-	e4c_exception						thrown_exception;
+	volatile e4c_stage					stage;
+	volatile e4c_bool					thrown;
+	volatile e4c_bool					uncaught;
+	volatile e4c_exception				thrown_exception;
 	_E4C_JMP_BUF						address;
 };
 
@@ -309,8 +309,8 @@ static void								e4c_at_exit();
 
 
 
-static e4c_bool fatal_error_flag	= e4c_false;
-static e4c_bool is_initialized		= e4c_false;
+static volatile	e4c_bool	fatal_error_flag	= e4c_false;
+static e4c_bool				is_initialized		= e4c_false;
 
 MUTEX_DEFINE(is_initialized_mutex)
 MUTEX_DEFINE(environment_collection_mutex)
