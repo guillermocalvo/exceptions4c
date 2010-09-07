@@ -550,7 +550,7 @@ e4c_bool e4c_frame_step(void){
 
 	/* if the current frame has an uncaught exception, then we will propagate it */
 	if(tmp.uncaught){
-		_e4c_propagate(context, &tmp.thrown_exception);
+		_e4c_propagate(context, (const e4c_exception *)&tmp.thrown_exception);
 	}
 	/* otherwise, we're free to go */
 
@@ -705,7 +705,7 @@ const e4c_exception * e4c_get_exception(void){
 	/* check if the current frame is NULL (very unlikely) */
 	DEBUG_ASSERT(frame != NULL, "e4c_get_exception", "The exception context has an invalid frame.");
 
-	return(frame->thrown ? &frame->thrown_exception : NULL);
+	return(frame->thrown ? (const e4c_exception *)&frame->thrown_exception : NULL);
 }
 
 void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_handler){
@@ -951,7 +951,7 @@ static void _e4c_at_uncaught_exception(e4c_context * context){
 	handler	= context->uncaught_handler;
 
 	if(handler != NULL){
-		handler(&context->current_frame->thrown_exception);
+		handler( (const e4c_exception *)&context->current_frame->thrown_exception);
 	}
 
 	e4c_context_end();
