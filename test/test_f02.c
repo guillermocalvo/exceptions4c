@@ -15,29 +15,27 @@ DEFINE_TEST(
 
 	printf("before_USING_CONTEXT\n");
 
-	{
-		e4c_using_context(e4c_true, e4c_print_exception){
+	e4c_using_context(e4c_true, e4c_print_exception){
 
-			printf("before_TRY_block\n");
+		printf("before_TRY_block\n");
 
-			E4C_TRY{
+		E4C_TRY{
 
-				printf("before_THROW\n");
+			printf("before_THROW\n");
 
-				E4C_THROW(ChildException, "I'm going to be caught.");
+			E4C_THROW(ChildException, "I'm going to be caught.");
 
-			}E4C_CATCH(GrandparentException){
+		}E4C_CATCH(GrandparentException){
 
-	            caught = e4c_true;
+            caught = e4c_true;
 
-				printf("inside_CATCH_block\n");
+			printf("inside_CATCH_block\n");
 
-				printf("catching__%s\n", e4c_get_exception()->name);
-			}
-
-			printf("after_TRY_block\n");
-
+			printf("catching__%s\n", e4c_get_exception()->name);
 		}
+
+		printf("after_TRY_block\n");
+
 	}
 
 	printf("after_USING_CONTEXT\n");

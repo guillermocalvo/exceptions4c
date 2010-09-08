@@ -141,16 +141,14 @@ DEFINE_TEST(
 
 	printf("before_USING_CONTEXT\n");
 
-	{
-		e4c_using_context(e4c_true, e4c_print_exception){
+	e4c_using_context(e4c_true, e4c_print_exception){
 
-			printf("before_CALL_FUNCTION_ext1\n");
+		printf("before_CALL_FUNCTION_ext1\n");
 
-			result = ext1();
+		result = ext1();
 
-			printf("after_CALL_FUNCTION_ext1\n");
+		printf("after_CALL_FUNCTION_ext1\n");
 
-		}
 	}
 
 	printf("after_usingexctx\n");

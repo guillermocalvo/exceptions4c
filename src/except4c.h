@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 1, 2)
+# define _E4C_VERSION(version)			version(2, 1, 3)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -262,20 +262,11 @@ multi-thread version of exceptions4c.
 
 # define E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_) \
 	\
-	int _E4C_AUTO(STAGE) = /* e4c_before_payload */ 0; \
-	\
-	e4c_context_begin( (_handle_signals_), (_uncaught_handler_) ); \
-	goto _E4C_AUTO(PAYLOAD); \
-	\
-	_E4C_AUTO(CLEANUP): \
-	e4c_context_end(); \
-	_E4C_AUTO(STAGE) = /* e4c_reused */ 2; \
-	\
-	_E4C_AUTO(PAYLOAD): \
-	for(; _E4C_AUTO(STAGE) < /* e4c_reused */ 2; _E4C_AUTO(STAGE)++) \
-		if( _E4C_AUTO(STAGE) == /* e4c_after_payload */ 1){ \
-			goto _E4C_AUTO(CLEANUP); \
-		}else
+	for( \
+		e4c_context_begin( (_handle_signals_), (_uncaught_handler_) ); \
+		e4c_context_is_ready(); \
+		e4c_context_end() \
+	)
 
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_THROWF(_exception_type_, _format_, ...) \
