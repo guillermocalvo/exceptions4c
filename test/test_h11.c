@@ -132,34 +132,32 @@ DEFINE_TEST(
 
 	printf("before_USING_CONTEXT\n");
 
-	{
-		e4c_using_context(e4c_true, e4c_print_exception){
+	e4c_using_context(e4c_true, e4c_print_exception){
 
-			printf("before_TRY_block\n");
+		printf("before_TRY_block\n");
 
-			E4C_TRY{
+		E4C_TRY{
 
-				printf("before_CALL_FUNCTION_ext1\n");
+			printf("before_CALL_FUNCTION_ext1\n");
 
-				result = ext1();
+			result = ext1();
 
-				printf("after_CALL_FUNCTION_ext1\n");
+			printf("after_CALL_FUNCTION_ext1\n");
 
-			}E4C_CATCH(NullPointerException){
+		}E4C_CATCH(NullPointerException){
 
-				printf("inside_catch_block\n");
+			printf("inside_catch_block\n");
 
-				result = 456;
+			result = 456;
 
-			}E4C_FINALLY{
+		}E4C_FINALLY{
 
-				printf("inside_FINALLY_block\n");
-
-			}
-
-			printf("before_endexctx\n");
+			printf("inside_FINALLY_block\n");
 
 		}
+
+		printf("before_endexctx\n");
+
 	}
 
 	printf("after_usingexctx\n");
