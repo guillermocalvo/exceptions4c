@@ -60,7 +60,7 @@
 # ifndef _EXCEPT4C_H_
 # define _EXCEPT4C_H_
 
-# define _E4C_VERSION(version)			version(2, 1, 3)
+# define _E4C_VERSION(version)			version(2, 1, 4)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -223,44 +223,37 @@ multi-thread version of exceptions4c.
 		(_resource_) = e4c_acquire_##_type_ _args_; \
 	}E4C_USE
 
-# define E4C_REUSING_CONTEXT(_thrown_exception_) \
+# define _E4C_REUSING_CONTEXT(_thrown_exception_) \
 	\
-	int				_E4C_AUTO(STAGE)	= /* e4c_before_payload */ 0; \
-	e4c_bool		_E4C_AUTO(READY)	= e4c_context_is_ready(); \
+	e4c_bool		_E4C_AUTO(BEGIN)	= !e4c_context_is_ready(); \
+	e4c_bool		_E4C_AUTO(DONE)		= e4c_false; \
 	e4c_exception	_E4C_AUTO(EXCEPTION); \
 	\
 	(_thrown_exception_) = NULL; \
 	\
-	if( !_E4C_AUTO(READY) ){ \
+	if( _E4C_AUTO(BEGIN) ){ \
 		e4c_context_begin(e4c_false, NULL); \
 		E4C_TRY{ \
 			goto _E4C_AUTO(PAYLOAD); \
-			\
 			_E4C_AUTO(CLEANUP): \
 			( (void)0 ); \
 		}E4C_CATCH(RuntimeException){ \
-			_E4C_AUTO(EXCEPTION) = *e4c_get_exception(); \
-			*( (void * *)&_E4C_AUTO(EXCEPTION).cause ) = NULL; \
-			(_thrown_exception_) = &_E4C_AUTO(EXCEPTION); \
-		}E4C_FINALLY{ \
-			_E4C_AUTO(STAGE) = /* e4c_reused */ 2; \
-			e4c_frame_step(); \
-			e4c_context_end(); \
-			break; \
+			(_thrown_exception_)		= &_E4C_AUTO(EXCEPTION); \
+			_E4C_AUTO(EXCEPTION)		= *e4c_get_exception(); \
+			_E4C_AUTO(EXCEPTION).cause	= NULL; \
 		} \
+		e4c_context_end(); \
+		_E4C_AUTO(DONE)		= e4c_true; \
+		_E4C_AUTO(BEGIN)	= e4c_false; \
 	} \
 	\
 	_E4C_AUTO(PAYLOAD): \
-	for(; _E4C_AUTO(STAGE) < /* e4c_reused */ 2; _E4C_AUTO(STAGE)++) \
-		if( _E4C_AUTO(STAGE) == /* e4c_after_payload */ 1){ \
-			if( !_E4C_AUTO(READY) ){ \
-				goto _E4C_AUTO(CLEANUP); \
-			}else{ \
-				break; \
-			} \
+	for(; !_E4C_AUTO(DONE) || _E4C_AUTO(BEGIN); _E4C_AUTO(DONE) = e4c_true) \
+		if( _E4C_AUTO(DONE) ){ \
+			goto _E4C_AUTO(CLEANUP); \
 		}else
 
-# define E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_) \
+# define _E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_) \
 	\
 	for( \
 		e4c_context_begin( (_handle_signals_), (_uncaught_handler_) ); \
@@ -1252,7 +1245,7 @@ multi-thread version of exceptions4c.
  * @see e4c_exception
  */
 # define e4c_reusing_context(_thrown_exception_) \
-	E4C_REUSING_CONTEXT(_thrown_exception_)
+	_E4C_REUSING_CONTEXT(_thrown_exception_)
 
 /** @} */
 
@@ -1318,7 +1311,7 @@ multi-thread version of exceptions4c.
  * @see e4c_reusing_context
  */
 # define e4c_using_context(_handle_signals_, _uncaught_handler_) \
-	E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
+	_E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
 
 /**
  * Throws an exception with a formatted message

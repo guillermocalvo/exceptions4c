@@ -14,11 +14,13 @@ DEFINE_TEST(
 
 	printf("before_REUSING_CONTEXT_block\n");
 
-	e4c_reusing_context(exceptionThrown){
+	{
+		e4c_reusing_context(exceptionThrown){
 
-		printf("inside_REUSING_CONTEXT_block\n");
+			printf("inside_REUSING_CONTEXT_block\n");
 
-		break;
+			break;
+		}
 	}
 
 	printf("after_REUSING_CONTEXT_block\n");
