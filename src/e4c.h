@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 2, 0)
+# define _E4C_VERSION(version)			version(2, 2, 1)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -266,6 +266,20 @@ multi-thread version of exceptions4c.
 		e4c_throw_exception( \
 			(_exception_type_).type, _E4C_INFO, \
 			e4c_false, _format_, __VA_ARGS__ \
+		)
+# endif
+
+# define E4C_RETHROW(_message_) \
+	e4c_throw_exception( \
+		( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
+		_E4C_INFO, e4c_true, _message_ \
+	)
+
+# ifdef HAVE_C99_VARIADIC_MACROS
+#	define E4C_RETHROWF(_format_, ...) \
+		e4c_throw_exception( \
+			( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
+			_E4C_INFO, e4c_false, _format_, __VA_ARGS__ \
 		)
 # endif
 
@@ -494,6 +508,8 @@ multi-thread version of exceptions4c.
  * an <strong><em>uncaught exception</em></strong>.
  * </p>
  *
+ * @see throwf
+ * @see rethrow
  * @see e4c_exception
  * @see e4c_uncaught_handler
  * @see e4c_get_exception
@@ -506,6 +522,43 @@ multi-thread version of exceptions4c.
 # ifndef E4C_NOKEYWORDS
 # define throw(_exception_type_, _message_) \
 	E4C_THROW(_exception_type_, _message_)
+# endif
+
+/**
+ * Throws again the currently thrown exception, with a new message
+ *
+ * <p>
+ * This macro creates a new instance of the thrown exception, with a more
+ * specific message.
+ * </p>
+ *
+ * <p>
+ * <code>rethrow</code> is intended to be used in a <code>catch</code> block and
+ * the purpose is to refine the message of the currently caught exception. The
+ * previous exception (and its message) will be stored as the <em>cause</em> of
+ * the newly thrown exception.
+ * </p>
+ *
+ * <pre class="fragment">
+ * try{
+ *     image = read_file(file_path);
+ * }catch(FileOpenException){
+ *     rethrow("Image not found.");
+ * }
+ * </pre>
+ *
+ * <p>
+ * The semantics of this macro are the same as for the <code>throw</code> macro.
+ * </p>
+ *
+ * @see throw
+ * @see rethrowf
+ *
+ * @param _message_ The new message describing the exception. It should be more
+ *        specific than the current one
+ */
+# ifndef E4C_NOKEYWORDS
+#	define rethrow(_message_) E4C_RETHROW(_message_)
 # endif
 
 /** @} */
@@ -1360,6 +1413,7 @@ multi-thread version of exceptions4c.
  * </p>
  *
  * @see throw
+ * @see rethrowf
  *
  * @param _exception_type_ The type of exception to be thrown
  * @param _format_ The string containing the specifications that determine the
@@ -1369,6 +1423,7 @@ multi-thread version of exceptions4c.
  */
 # if !defined(E4C_NOKEYWORDS) && defined(HAVE_C99_VARIADIC_MACROS)
 #	define throwf(_exception_type_, _format_, ...) \
+		\
 		E4C_THROWF( (_exception_type_), (_format_), __VA_ARGS__ )
 # endif
 
@@ -1421,6 +1476,71 @@ multi-thread version of exceptions4c.
 # define e4c_assert(_condition_) \
 	\
 	_E4C_ASSERT(_condition_)
+
+/**
+ * Throws again the currently thrown exception, with a new, formatted message
+ *
+ * <p>
+ * This macro creates a new instance of the thrown exception, with a more
+ * specific message.
+ * </p>
+ *
+ * <p>
+ * This is a handy way to create a new instance of the thrown exception, with a
+ * more specific, formatted message.
+ * </p>
+ *
+ * <pre class="fragment">
+ * try{
+ *     image = read_file(file_path);
+ * }catch(FileOpenException){
+ *     rethrowf("Image '%s' not found.", title);
+ * }
+ * </pre>
+ *
+ * <p>
+ * This macro relies on two features that were introduced in the
+ * <strong>ISO/IEC 9899:1999</strong> (also known as <em>C99</em>) revision of
+ * the C programming language standard in 1999:
+ * </p>
+ *
+ * <ul>
+ * <li>Variadic macros</li>
+ * <li>Buffer-safe function <code>vsnprintf</code></li>
+ * </ul>
+ *
+ * <p>
+ * In order not to create compatibility issues, this macro will only be defined
+ * when the <code>__STDC_VERSION__</code> <em>compile-time</em> parameter is
+ * defined with a value <em>greater than or equal to</em> <code>199901L</code>,
+ * or <code>HAVE_C99_VARIADIC_MACROS</code> is defined.
+ * </p>
+ *
+ * <p>
+ * The semantics of this macro are the same as for the <code>throw</code> macro.
+ * </p>
+ *
+ * <p>
+ * At least one argument must be passed right after the format string. The
+ * message will be composed through the function <code>vsnprintf</code> with the
+ * specified format and variadic arguments. For further information on the
+ * formatting rules, you may look up the specifications for the function
+ * <code>vsnprintf</code>.
+ * </p>
+ *
+ * @see rethrow
+ * @see throwf
+ *
+ * @param _format_ The string containing the specifications that determine the
+ *       output format for the variadic arguments.
+ * @param ... The variadic arguments that will be formatted according to the
+ *        format control.
+ */
+# if !defined(E4C_NOKEYWORDS) && defined(HAVE_C99_VARIADIC_MACROS)
+#	define rethrowf(_format_, ...) \
+		\
+		E4C_RETHROWF( (_format_), __VA_ARGS__ )
+# endif
 
 /**
  * Declares an exception
@@ -2554,7 +2674,7 @@ extern long e4c_library_version(void);
  * </p>
  *
  * <p>
- * This clause is intended to be used in a <code>catch</code> block, or in a
+ * This macro is intended to be used in a <code>catch</code> block, or in a
  * <code>finally</code> block provided that some exception was actually thrown
  * (i.e. <code>e4c_get_status</code> returned <code>e4c_failed</code> or
  * <code>e4c_recovered</code>)
