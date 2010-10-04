@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 1)
+# define _E4C_VERSION(version)			version(2, 3, 2)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -897,26 +897,6 @@ multi-thread version of exceptions4c.
  * <p>
  * Once the resource has been acquired, the <code>use</code> block can also be
  * repeated <em>alone</em> through the <code>retry</code> macro.
- * </p>
- *
- * <pre class="fragment">
- * int dividend = 100;
- * int divisor = 0;
- * int result = 0;
- * try{
- *     result = dividend / divisor;
- *     do_something(result);
- * }catch(RuntimeException){
- *     divisor = 1;
- *     retry(1);
- *     rethrow("Error (not a division by zero).");
- * }
- * </pre>
- *
- * <p>
- * At a <code>finally</code> block, the current exception (if any) will be
- * propagated if the <code>retry</code> does not take place, so you don't need
- * to throw it again.
  * </p>
  *
  * <pre class="fragment">
