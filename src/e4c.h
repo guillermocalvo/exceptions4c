@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 3)
+# define _E4C_VERSION(version)			version(2, 3, 4)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -1539,6 +1539,56 @@ multi-thread version of exceptions4c.
 	_E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
 
 /**
+ * Expresses a program assertion
+ *
+ * <p>
+ * An assertion is a mechanism to express that the developer <em>thinks</em>
+ * that a specific condition is always met at some point of the program.
+ * </p>
+ *
+ * <p>
+ * <code>e4c_assert</code> is a convenient way to insert debugging assertions
+ * into a program. The <code>NDEBUG</code> <em>compile-time</em> parameter
+ * determines whether the assumptions will be actually verified by the program
+ * at <em>run-time</em>.
+ * </p>
+ *
+ * <p>
+ * In absence of <code>NDEBUG</code>, the assertion statements will be ignored
+ * and therefore will have no effect on the program, not even evaluating the
+ * condition. Therefore expressions passed to <code>e4c_assert</code> must not
+ * contain side-effects, since they will not happen when debugging is disabled.
+ * </p>
+ *
+ * <p>
+ * In presence of <code>NDEBUG</code>, the assertion statements will verify that
+ * the condition is met every time the program reaches that point of the
+ * program.
+ * </p>
+ *
+ * <p>
+ * If the assertion does not hold at any time, then an
+ * <code>AssertionException</code> will be thrown to indicate the programming
+ * error. This exception cannot be caught whatsoever. The program (or current
+ * thread) will be terminated.
+ * </p>
+ *
+ * <p>
+ * The main advantage of using this assertion mechanism (as opposed to the
+ * macros provided by the standard header file <code>assert.h</code>) is that
+ * before actually exiting the program or thread, all of the pending
+ * <code>finally</code> blocks will be executed.
+ * </p>
+ *
+ * @param _condition_ A predicate that must evaluate to <code>true</code>
+ *
+ * @see AssertionException
+ */
+# define e4c_assert(_condition_) \
+	\
+	_E4C_ASSERT(_condition_)
+
+/**
  * Throws an exception with a formatted message
  *
  * <p>
@@ -1598,56 +1648,6 @@ multi-thread version of exceptions4c.
 		\
 		E4C_THROWF( (_exception_type_), (_format_), __VA_ARGS__ )
 # endif
-
-/**
- * Expresses a program assertion
- *
- * <p>
- * An assertion is a mechanism to express that the developer <em>thinks</em>
- * that a specific condition is always met at some point of the program.
- * </p>
- *
- * <p>
- * <code>e4c_assert</code> is a convenient way to insert debugging assertions
- * into a program. The <code>NDEBUG</code> <em>compile-time</em> parameter
- * determines whether the assumptions will be actually verified by the program
- * at <em>run-time</em>.
- * </p>
- *
- * <p>
- * In absence of <code>NDEBUG</code>, the assertion statements will be ignored
- * and therefore will have no effect on the program, not even evaluating the
- * condition. Therefore expressions passed to <code>e4c_assert</code> must not
- * contain side-effects, since they will not happen when debugging is disabled.
- * </p>
- *
- * <p>
- * In presence of <code>NDEBUG</code>, the assertion statements will verify that
- * the condition is met every time the program reaches that point of the
- * program.
- * </p>
- *
- * <p>
- * If the assertion does not hold at any time, then an
- * <code>AssertionException</code> will be thrown to indicate the programming
- * error. This exception cannot be caught whatsoever. The program (or current
- * thread) will be terminated.
- * </p>
- *
- * <p>
- * The main advantage of using this assertion mechanism (as opposed to the
- * macros provided by the standard header file <code>assert.h</code>) is that
- * before actually exiting the program or thread, all of the pending
- * <code>finally</code> blocks will be executed.
- * </p>
- *
- * @param _condition_ A predicate that must evaluate to <code>true</code>
- *
- * @see AssertionException
- */
-# define e4c_assert(_condition_) \
-	\
-	_E4C_ASSERT(_condition_)
 
 /**
  * Throws again the currently thrown exception, with a new, formatted message
@@ -1713,6 +1713,7 @@ multi-thread version of exceptions4c.
 		\
 		E4C_RETHROWF( (_format_), __VA_ARGS__ )
 # endif
+
 
 /**
  * Declares an exception
