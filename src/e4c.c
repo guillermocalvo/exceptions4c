@@ -1,10 +1,10 @@
 /*
  *
- * @file except4c.c
+ * @file e4c.c
  *
  * exceptions4c source code file
  *
- * @version 2.1
+ * @version 2.2
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@
  */
 
 /*
- * except4c.c is undocumented on purpose (everything is documented in except4c.h)
+ * e4c.c is undocumented on purpose (everything is documented in e4c.h)
  */
 
 
@@ -32,7 +32,7 @@
 # include <signal.h>
 # include <errno.h>
 # include <stdarg.h>
-# include "except4c.h"
+# include "e4c.h"
 
 
 
