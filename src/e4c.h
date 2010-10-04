@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 2)
+# define _E4C_VERSION(version)			version(2, 3, 3)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -324,6 +324,10 @@ multi-thread version of exceptions4c.
 
 /**
  * Introduces a block of code aware of exceptions
+ *
+ * @see catch
+ * @see finally
+ */
  */
 # ifndef E4C_NOKEYWORDS
 # define try E4C_TRY
@@ -532,7 +536,7 @@ multi-thread version of exceptions4c.
  * At a <code>catch</code> block, the current exception is considered caught,
  * whether the <code>retry</code> takes place or not. If you want the exception
  * to be propagated when the maximum number of attempts has been reached, then
- * you must throw it again.
+ * you must (re)throw it again.
  * </p>
  *
  * <pre class="fragment">
@@ -552,7 +556,7 @@ multi-thread version of exceptions4c.
  * <p>
  * At a <code>finally</code> block, the current exception (if any) will be
  * propagated if the <code>retry</code> does not take place, so you don't need
- * to throw it again.
+ * to (re)throw it again.
  * </p>
  *
  * <pre class="fragment">
