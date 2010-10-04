@@ -11,7 +11,7 @@
  *
  * @section e4c exceptions4c
  *
- * @version 2.1
+ * @version 2.2
  * @author Copyright (c) 2010 Guillermo Calvo
  * @see http://code.google.com/p/exceptions4c/
  *
@@ -183,7 +183,7 @@
  * <p>
  * This library should compile in any ANSI C compiler. It uses nothing but
  * standard C functions. In order to use <code>exceptions4c</code> you have to
- * drop the two files (<code>except4c.h</code> and <code>except4c.c</code>) in
+ * drop the two files (<code>e4c.h</code> and <code>e4c.c</code>) in
  * your project and remember to include the header file from your code.
  * <p>
  *
