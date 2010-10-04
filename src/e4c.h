@@ -1,10 +1,10 @@
 /**
  *
- * @file except4c.h
+ * @file e4c.h
  *
  * exceptions4c header file
  *
- * @version 2.1
+ * @version 2.2
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -57,10 +57,10 @@
  */
 
 
-# ifndef _EXCEPT4C_H_
-# define _EXCEPT4C_H_
+# ifndef _E4C_H_
+# define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 1, 5)
+# define _E4C_VERSION(version)			version(2, 2, 0)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
