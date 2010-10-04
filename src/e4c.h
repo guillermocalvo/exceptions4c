@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version 2.2
+ * @version 2.3
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 2, 1)
+# define _E4C_VERSION(version)			version(2, 3, 0)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -283,6 +283,12 @@ multi-thread version of exceptions4c.
 		)
 # endif
 
+# define E4C_RETRY(_max_retry_attempts_) \
+	e4c_frame_repeat(_max_retry_attempts_, _e4c_acquiring, _E4C_INFO)
+
+# define E4C_REACQUIRE(_max_acquire_attempts_) \
+	e4c_frame_repeat(_max_acquire_attempts_, _e4c_beginning, _E4C_INFO)
+
 # define _E4C_DECLARE_EXCEPTION(_name_) \
 	extern const e4c_exception _name_
 
@@ -483,6 +489,94 @@ multi-thread version of exceptions4c.
  */
 # ifndef E4C_NOKEYWORDS
 # define finally E4C_FINALLY
+# endif
+
+/**
+ * Repeats the previous E4C_TRY (or E4C_USE) block entirely
+ *
+ * <p>
+ * This macro discards any thrown exception (if any) and repeats the previous
+ * <code>try</code> block, up to a specified maximum number of attempts.
+ * </p>
+ *
+ * <p>
+ * This macro is intended to be used in <code>catch</code> or
+ * <code>finally</code> blocks as a quick way to fix an error condition and try
+ * again.
+ * </p>
+ *
+ * <pre class="fragment">
+ * const char * file_path = config_get_user_defined_file_path();
+ * try{
+ *     config = read_config(file_path);
+ * }catch(ConfigException){
+ *     file_path = config_get_default_file_path();
+ *     retry(1);
+ *     rethrow("Wrong defaults.");
+ * }
+ * </pre>
+ *
+ * <p>
+ * If the specified maximum number of attempts is zero, then the
+ * <code>try</code> block can eventually be attempted an unlimited number of
+ * times. Care must be taken in order not to create an <em>infinite loop</em>.
+ * </p>
+ *
+ * <p>
+ * This macro won't return control unless the <code>try</code> block has already
+ * been attempted, at least, the specified maximum number of times.
+ * </p>
+ *
+ * <p>
+ * At a <code>catch</code> block, the current exception is considered caught,
+ * whether the <code>retry</code> takes place or not. If you want the exception
+ * to be propagated when the maximum number of attempts has been reached, then
+ * you must throw it again.
+ * </p>
+ *
+ * <pre class="fragment">
+ * int dividend = 100;
+ * int divisor = 0;
+ * int result = 0;
+ * try{
+ *     result = dividend / divisor;
+ *     do_something(result);
+ * }catch(RuntimeException){
+ *     divisor = 1;
+ *     retry(1);
+ *     rethrow("Error (not a division by zero).");
+ * }
+ * </pre>
+ *
+ * <p>
+ * At a <code>finally</code> block, the current exception (if any) will be
+ * propagated if the <code>retry</code> does not take place, so you don't need
+ * to throw it again.
+ * </p>
+ *
+ * <pre class="fragment">
+ * int dividend = 100;
+ * int divisor = 0;
+ * int result = 0;
+ * try{
+ *     result = dividend / divisor;
+ *     do_something(result);
+ * }finally{
+ *     if( e4c_get_status() = e4c_failed ){
+ *         divisor = 1;
+ *         retry(1);
+ *         /<span>* when we get here, the exception will be propagated *</span>/
+ *     }
+ * }
+ * </pre>
+ *
+ * @see reacquire
+ * @see try
+ *
+ * @param _max_retry_attempts_ The maximum number of attempts to retry
+ */
+# ifndef E4C_NOKEYWORDS
+#	define retry(_max_retry_attempts_) E4C_RETRY(_max_retry_attempts_)
 # endif
 
 /**
@@ -757,6 +851,99 @@ multi-thread version of exceptions4c.
  */
 # ifndef E4C_NOKEYWORDS
 # define using(_type_, _resource_, _args_) E4C_USING(_type_, _resource_, _args_)
+# endif
+
+/**
+ * Repeats the previous E4C_WITH block entirely
+ *
+ * <p>
+ * This macro discards any thrown exception (if any) and repeats the previous
+ * <code>with</code> block, up to a specified maximum number of attempts. If the
+ * acquisition completes, then the <code>use</code> block will be executed.
+ * </p>
+ *
+ * <p>
+ * This macro is intended to be used in <code>catch</code> or
+ * <code>finally</code> blocks, next to a <code>with... use</code> or
+ * <code>using</code> block when the resource acquisition failed, as a quick way
+ * to fix an error condition and try to acquire the resource again.
+ * </p>
+ *
+ * <pre class="fragment">
+ * image_type * image;
+ * const char * image_path = image_get_user_avatar();
+ * with(image, e4c_image_dispose){
+ *     image = e4c_image_acquire(image_path);
+ * }use{
+ *     image_show(image);
+ * }catch(ImageNotFoundException){
+ *     image_path = image_get_default_avatar();
+ *     reacquire(1);
+ * }
+ * </pre>
+ *
+ * <p>
+ * If the specified maximum number of attempts is zero, then the
+ * <code>with</code> block can eventually be attempted an unlimited number of
+ * times. Care must be taken in order not to create an <em>infinite loop</em>.
+ * </p>
+ *
+ * <p>
+ * This macro won't return control unless the <code>with</code> block has
+ * already been attempted, at least, the specified maximum number of times.
+ * </p>
+ *
+ * <p>
+ * Once the resource has been acquired, the <code>use</code> block can also be
+ * repeated <em>alone</em> through the <code>retry</code> macro.
+ * </p>
+ *
+ * <pre class="fragment">
+ * int dividend = 100;
+ * int divisor = 0;
+ * int result = 0;
+ * try{
+ *     result = dividend / divisor;
+ *     do_something(result);
+ * }catch(RuntimeException){
+ *     divisor = 1;
+ *     retry(1);
+ *     rethrow("Error (not a division by zero).");
+ * }
+ * </pre>
+ *
+ * <p>
+ * At a <code>finally</code> block, the current exception (if any) will be
+ * propagated if the <code>retry</code> does not take place, so you don't need
+ * to throw it again.
+ * </p>
+ *
+ * <pre class="fragment">
+ * image_type * image;
+ * const char * image_path = image_get_user_avatar();
+ * display_type * display = display_get_user_screen();
+ * with(image, e4c_image_dispose){
+ *     image = e4c_image_acquire(image_path);
+ * }use{
+ *     image_show(image, display);
+ * }catch(ImageNotFoundException){
+ *     image_path = image_get_default_avatar();
+ *     reacquire(1);
+ * }catch(DisplayException){
+ *     display = display_get_default_screen();
+ *     retry(1);
+ * }
+ * </pre>
+ *
+ * @see retry
+ * @see with
+ * @see use
+ *
+ * @param _max_acquire_attempts_ The maximum number of attempts to reacquire
+ */
+# ifndef E4C_NOKEYWORDS
+#	define reacquire(_max_acquire_attempts_) \
+		E4C_REACQUIRE(_max_acquire_attempts_)
 # endif
 
 /** @} */
@@ -2741,6 +2928,10 @@ extern e4c_bool e4c_frame_step(void);
 extern e4c_bool e4c_frame_hook(enum _e4c_frame_stage stage,
 	const e4c_exception * exception, const char * file, int line,
 	const char * function);
+
+extern void e4c_frame_repeat(
+	int max_repeat_attempts, enum _e4c_frame_stage stage,
+	const char * file, int line, const char * function);
 
 extern void e4c_throw_exception(const e4c_exception * exception,
 	const char * file, int line, const char * function,
