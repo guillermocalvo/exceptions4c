@@ -969,7 +969,7 @@ static void _e4c_propagate(e4c_context * context, const e4c_exception * exceptio
 
 	frame = context->current_frame;
 
-	/* Update the frame with the exception information */
+	/* update the frame with the exception information */
 	frame->thrown			= e4c_true;
 	frame->uncaught			= e4c_true;
 	frame->thrown_exception	= *exception;
