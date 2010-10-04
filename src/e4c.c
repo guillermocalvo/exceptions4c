@@ -4,7 +4,7 @@
  *
  * exceptions4c source code file
  *
- * @version 2.2
+ * @version 2.3
  * @author Copyright (c) 2010 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -261,6 +261,8 @@ struct e4c_frame{
 	volatile e4c_bool					thrown;
 	volatile e4c_bool					uncaught;
 	volatile e4c_exception				thrown_exception;
+	volatile int						retry_attempts;
+	volatile int						reacquire_attempts;
 	_E4C_JMP_BUF						address;
 };
 
@@ -556,6 +558,64 @@ e4c_bool e4c_frame_step(void){
 
 	/* get out of the exception loop */
 	return(e4c_false);
+}
+
+void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, const char * file, int line, const char * function){
+
+	e4c_context *		context;
+	e4c_frame *			frame;
+	e4c_exception		null_exception = NULL_EXCEPTION_LITERAL;
+
+	/* get the current context */
+	context = E4C_CONTEXT;
+
+	/* check if 'e4c_frame_repeat' was used before calling e4c_context_begin */
+	if(context == NULL) CLIENT_ERROR(ContextHasNotBegunYet, "e4c_frame_repeat: " DESC_NOT_BEGUN_YET, file, line, function);
+
+	/* get the current frame */
+	frame = context->current_frame;
+
+	/* check if the current frame is NULL (unlikely) */
+	DEBUG_ASSERT(frame != NULL, "e4c_frame_repeat", "The exception context has an invalid frame.");
+
+	/* check if 'e4c_frame_repeat' was used before 'try' or 'use' */
+	if( IS_TOP_FRAME(frame) ){
+		CLIENT_ERROR(ExceptionSystemFatalError, ( stage == _e4c_beginning
+				? "e4c_frame_repeat: There is no E4C_WITH block to reacquire."
+				: "e4c_frame_repeat: There is no E4C_TRY block to retry."
+			), file, line, function);
+	}
+
+	/* check if "uncatchable" exception */
+	if(frame->uncaught && frame->thrown_exception.super == NULL){
+		return;
+	}
+
+	/* check if maximum number of attempts reached and update the number of attempts */
+	if(stage == _e4c_acquiring){
+		/* retry */
+		if(frame->retry_attempts >= max_repeat_attempts){
+			return;
+		}
+		frame->retry_attempts++;
+	}else if(stage == _e4c_beginning){
+		/* reacquire */
+		if(frame->reacquire_attempts >= max_repeat_attempts){
+			return;
+		}
+		frame->reacquire_attempts++;
+	}else{
+		CLIENT_ERROR(ExceptionSystemFatalError, "e4c_frame_repeat: Can't repeat the specified stage.", file, line, function);
+	}
+
+	/* reset the exception information */
+	frame->thrown			= e4c_false;
+	frame->uncaught			= e4c_false;
+	frame->thrown_exception	= null_exception;
+	frame->stage			= stage;
+
+	/* keep looping */
+	_E4C_LONGJMP(frame->address);
 }
 
 void e4c_throw_exception(const e4c_exception * exception, const char * file, int line, const char * function, e4c_bool verbatim, const char * message, ...){
@@ -895,11 +955,13 @@ static E4C_INLINE e4c_frame _e4c_new_frame(e4c_frame * previous, e4c_stage stage
 	e4c_frame				frame;
 	const e4c_exception		null_exception = NULL_EXCEPTION_LITERAL;
 
-	frame.previous			= previous;
-	frame.stage				= stage;
-	frame.thrown			= e4c_false;
-	frame.uncaught			= e4c_false;
-	frame.thrown_exception	= null_exception;
+	frame.previous				= previous;
+	frame.stage					= stage;
+	frame.thrown				= e4c_false;
+	frame.uncaught				= e4c_false;
+	frame.reacquire_attempts	= 0;
+	frame.retry_attempts		= 0;
+	frame.thrown_exception		= null_exception;
 
 	/* frame.address is an implementation-defined type */
 
