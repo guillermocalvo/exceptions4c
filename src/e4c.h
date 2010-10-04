@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 0)
+# define _E4C_VERSION(version)			version(2, 3, 1)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -496,7 +496,8 @@ multi-thread version of exceptions4c.
  *
  * <p>
  * This macro discards any thrown exception (if any) and repeats the previous
- * <code>try</code> block, up to a specified maximum number of attempts.
+ * <code>try</code> or <code>use</code> block, up to a specified maximum number
+ * of attempts.
  * </p>
  *
  * <p>
@@ -518,13 +519,13 @@ multi-thread version of exceptions4c.
  *
  * <p>
  * If the specified maximum number of attempts is zero, then the
- * <code>try</code> block can eventually be attempted an unlimited number of
- * times. Care must be taken in order not to create an <em>infinite loop</em>.
+ * block can eventually be attempted an unlimited number of times. Care must be
+ * taken in order not to create an <em>infinite loop</em>.
  * </p>
  *
  * <p>
- * This macro won't return control unless the <code>try</code> block has already
- * been attempted, at least, the specified maximum number of times.
+ * This macro won't return control unless the block has already been attempted,
+ * at least, the specified maximum number of times.
  * </p>
  *
  * <p>
@@ -562,7 +563,7 @@ multi-thread version of exceptions4c.
  *     result = dividend / divisor;
  *     do_something(result);
  * }finally{
- *     if( e4c_get_status() = e4c_failed ){
+ *     if( e4c_get_status() == e4c_failed ){
  *         divisor = 1;
  *         retry(1);
  *         /<span>* when we get here, the exception will be propagated *</span>/
