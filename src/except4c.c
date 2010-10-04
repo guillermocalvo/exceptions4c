@@ -86,7 +86,7 @@
 	EXCEPTION_LITERAL(NULL, { '\0' }, NULL, NULL, 0, NULL, 0, NULL, NULL)
 
 # define EXCEPTION_TYPE_LITERAL(_name_, _message_, _super_) \
-	EXCEPTION_LITERAL(#_name_, _message_, _super_, _E4C_FILE_INFO, _E4C_LINE_INFO, NULL, 0, NULL, NULL)
+	EXCEPTION_LITERAL(#_name_, _message_, _super_, _E4C_FILE_INFO, _E4C_LINE_INFO, NULL, 0, &_name_, NULL)
 
 # define DEFINE_RAW_EXCEPTION(_name_, _message_, _super_) \
 	const e4c_exception _name_ = EXCEPTION_TYPE_LITERAL(_name_, _message_, _super_)
