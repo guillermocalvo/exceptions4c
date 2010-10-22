@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 4)
+# define _E4C_VERSION(version)			version(2, 3, 5)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -327,7 +327,6 @@ multi-thread version of exceptions4c.
  *
  * @see catch
  * @see finally
- */
  */
 # ifndef E4C_NOKEYWORDS
 # define try E4C_TRY
