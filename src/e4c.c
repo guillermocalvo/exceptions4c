@@ -991,7 +991,7 @@ static E4C_INLINE e4c_exception _e4c_new_exception(const e4c_exception * prototy
 
 	exception.name			= prototype->name;
 
-	(void)sprintf(exception.message, "%.*s", sizeof(exception.message) - 1, message != NULL ? message : prototype->message);
+	(void)sprintf(exception.message, "%.*s", (int)sizeof(exception.message) - 1, message != NULL ? message : prototype->message);
 
 	exception.super			= prototype->super;
 	exception.file			= file;
