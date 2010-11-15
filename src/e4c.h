@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 6)
+# define _E4C_VERSION(version)			version(2, 3, 7)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(HAVE_PTHREAD_H) \
@@ -166,10 +166,10 @@ multi-thread version of exceptions4c.
 
 # ifdef E4C_THREADSAFE
 #	define _E4C_V_THREADSAFE			( (int) 1 )
-#	define _E4C_V_THREADSAFE_STRING		" (single-thread)"
+#	define _E4C_V_THREADSAFE_STRING		" (multi-thread)"
 # else
 #	define _E4C_V_THREADSAFE			( (int) 0 )
-#	define _E4C_V_THREADSAFE_STRING		" (multi-thread)"
+#	define _E4C_V_THREADSAFE_STRING		" (single-thread)"
 # endif
 
 
