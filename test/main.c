@@ -22,7 +22,7 @@ Unit testing parameters:
 
 	RUN
 		Can be defined with the name of the suite collection to run.
-		Default value: allSuites
+		Default value: ALL_SUITES
 
 	REPORT_FILE
 		Can be defined with the name of the file to be created.
@@ -42,20 +42,21 @@ Unit testing parameters:
 */
 
 
-extern TestSuiteCollection
-	allSuites,
-	beginningSuite,
-	consistencySuite,
-	endingSuite,
-	uncaughtSuite,
-	finallySuite,
-	caughtSuite,
-	signalsSuite,
-	integrationSuite;
+extern test_suite_collection
+	ALL_SUITES,
+	SUITE_BEGINNING,
+	SUITE_CONSISTENCY,
+	SUITE_ENDING,
+	SUITE_UNCAUGHT,
+	SUITE_FINALLY,
+	SUITE_CAUGHT,
+	SUITE_SIGNALS,
+	SUITE_INTEGRATION,
+	PLATFORM_REQUIREMENTS;
 
 
 # ifndef RUN
-#	define RUN				allSuites
+#	define RUN				ALL_SUITES
 # endif
 
 # ifndef REPORT_FILE
@@ -71,65 +72,7 @@ extern TestSuiteCollection
 # endif
 
 
-static int usage(){
-	printf("Error: please run this program without arguments.\n");
-	return(EXIT_FAILURE);
-}
-
-static int wrongVersion(long version){
-	printf(
-		"Error: the library and header version numbers don't match.\n"
-		"\n"
-		" * run-time version number:	 %ld\n"
-		" * compile-time version number: %ld\n"
-		"\n"
-		"Please compile the library again with its corresponding header file.\n",
-		version, E4C_VERSION_NUMBER
-	);
-	return(EXIT_FAILURE);
-}
-
 int main(int argc, char * argv[]){
 
-	long		version;
-	int			suiteNumber;
-	int			testNumber;
-	UnitTest *	test;
-	TestSuite *	suite;
-
-	TestSuiteCollection
-				suiteCollection = RUN;
-
-	/* check library version numbers */
-	version = e4c_library_version();
-	if(version != E4C_VERSION_NUMBER) return( wrongVersion(version) );
-
-	/* run all the tests */
-	if(argc == 1){
-		TestRunner runner;
-		int result;
-
-		runner = newTestRunner(argv[0], TMP_OUT_FILE, TMP_ERR_FILE, REPORT_FILE, &suiteCollection);
-
-		result = runAllTestSuites(&runner);
-
-		return(result);
-	}
-
-	/* wrong number of arguments */
-	if(argc != 3) return( usage() );
-
-	/* run a specific test */
-	suiteNumber = atoi(argv[1]);
-	testNumber	= atoi(argv[2]);
-
-	if(suiteNumber < 0 || suiteNumber >= suiteCollection.count)		return( usage() );
-
-	suite	= suiteCollection.suite[suiteNumber];
-
-	if(testNumber < 0 || testNumber >= suite->tests->count)			return( usage() );
-
-	test	= suite->tests->test[testNumber];
-
-	return( test->function() );
+	return( parse_command_line(argc, argv, &RUN, REPORT_FILE, TMP_OUT_FILE, TMP_ERR_FILE) );
 }

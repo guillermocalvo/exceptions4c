@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE_COLLECTION(consistencySuite)
-# define COLLECTION(RUN_SUITE) RUN_SUITE(a)
+# define NEW SUITE_COLLECTION(SUITE_CONSISTENCY)
+# define COLLECTION(RUN_SUITE) RUN_SUITE(b)
 
 END_SUITE_COLLECTION

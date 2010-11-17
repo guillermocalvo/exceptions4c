@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE(g, "Signals", "\
+# define NEW TEST_SUITE(g, "Signals", "\
 \
 This suite of tests checks the behavior of the library when the program \
 receives a signal from the operating system. If no signal mapping is provided, \
@@ -19,5 +19,8 @@ others won't.\
 			TEST(g04) \
 			TEST(g05) \
 			TEST(g06) \
+			TEST(g07) \
+			TEST(g08) \
+			TEST(g09) \
 
 END_SUITE

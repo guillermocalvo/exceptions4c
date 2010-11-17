@@ -6,12 +6,13 @@ DEFINE_TEST(
 	b11,
 	"use{...} right next to a try{...} block",
 	"This test uses the library in an inconsistent way, by attempting to <strong>place a <code>use</code> block right next to a <code>try</code> block</strong>. This is plain wrong, because a <code>use</code> block must be preceded by a <code>with</code> block, so the library must ignore the <code>use</code> block.",
+	NULL,
 	EXIT_SUCCESS,
 	"USE_block_was_ignored",
 	NULL
 ){
 
-	int isExecuted = e4c_false;
+	int is_executed = e4c_false;
 
 	printf("before_CONTEXT_BEGIN\n");
 
@@ -22,7 +23,7 @@ DEFINE_TEST(
 	E4C_TRY{
 		printf("inside_TRY_block\n");
 	/* } */ E4C_USE{
-		isExecuted = e4c_true;
+		is_executed = e4c_true;
 		printf("inside_USE_block\n");
 	}
 
@@ -43,10 +44,10 @@ DEFINE_TEST(
 
 	printf("after_CONTEXT_END\n");
 
-	if(isExecuted == e4c_true){
-        printf("USE_block_was_NOT_ignored\n");
+	if(is_executed == e4c_true){
+		printf("USE_block_was_NOT_ignored\n");
 	}else{
-        printf("USE_block_was_ignored\n");
+		printf("USE_block_was_ignored\n");
 	}
 
 	return(EXIT_SUCCESS);

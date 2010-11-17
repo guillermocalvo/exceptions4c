@@ -38,6 +38,7 @@ DEFINE_TEST(
 		"<li>The <code>finally</code> block (of the test) is executed.</li>"
 		"<li>The program is terminated.</li>"
 		"</ol>",
+	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"inside_SECOND_FINALLY_block____and_then____FIRST_FINALLY_block",
 	"WildException"

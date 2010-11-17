@@ -6,6 +6,7 @@ DEFINE_TEST(
 	f04,
 	"A child exception cannot be caught by catching a sibling exception",
 	"This test starts a <code>try</code> block, throws <code>ChildException</code> and attempts to catch it with a <code>catch(SiblingException)</code> block. This, obviously, won't work, so the exception will be left uncaught.",
+	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"before_THROW",
 	"ChildException"
@@ -32,9 +33,9 @@ DEFINE_TEST(
 
 	printf("before_CONTEXT_END\n");
 
-   	e4c_context_end();
+	e4c_context_end();
 
-   	printf("after_CONTEXT_END\n");
+	printf("after_CONTEXT_END\n");
 
 	return(EXIT_SUCCESS);
 }

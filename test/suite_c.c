@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE(c, "Ending", "\
+# define NEW TEST_SUITE(c, "Ending", "\
 \
 This suite of tests checks the behavior of the library when it is used \
 improperly. The tests try to exit the program without having ended the \

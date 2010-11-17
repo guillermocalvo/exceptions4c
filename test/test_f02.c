@@ -6,6 +6,7 @@ DEFINE_TEST(
 	f02,
 	"A child exception can be caught by catching a parent exception",
 	"This test starts a <code>try</code> block, throws <code>ChildException</code> and catches it with a <code>catch(GrandparentException)</code> block.",
+	NULL,
 	EXIT_SUCCESS,
 	"exception_WAS_caught",
 	NULL
@@ -27,7 +28,7 @@ DEFINE_TEST(
 
 		}E4C_CATCH(GrandparentException){
 
-            caught = e4c_true;
+			caught = e4c_true;
 
 			printf("inside_CATCH_block\n");
 

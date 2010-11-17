@@ -6,6 +6,7 @@ DEFINE_TEST(
 	b02,
 	"throw(...) after having ended",
 	"This test uses the library in an inconsistent way, by attempting to <strong>throw an exception</strong>, after having called <code>e4c_context_end()</code>. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
+	NULL,
 	EXIT_FAILURE,
 	"before_THROW",
 	"ContextHasNotBegunYet"

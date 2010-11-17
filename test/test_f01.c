@@ -6,6 +6,7 @@ DEFINE_TEST(
 	f01,
 	"Catching a specific exception",
 	"This test starts a <code>try</code> block, throws <code>ChildException</code> and catches it with a <code>catch(ChildException)</code> block.",
+	NULL,
 	EXIT_SUCCESS,
 	"exception_WAS_caught",
 	NULL

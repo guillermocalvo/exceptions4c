@@ -1,10 +1,10 @@
 
 # ifndef HTML_H
 
-# define HTML_H
-
 # include "testing.h"
 
-extern void html(TestRunner * runner, FILE * report);
+# define HTML_H
+
+extern void print_html(test_runner * runner, FILE * report);
 
 # endif

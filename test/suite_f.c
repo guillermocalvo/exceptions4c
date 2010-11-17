@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE(f, "Caught", "\
+# define NEW TEST_SUITE(f, "Caught", "\
 \
 This suite of tests checks the behavior of the library when an exception is \
 thrown and there is some <code>catch</code> block capable of handling it. The \

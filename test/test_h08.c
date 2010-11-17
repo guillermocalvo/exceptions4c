@@ -13,9 +13,9 @@ static void aux(void * pointer){
 
 static int ext2(void * pointer){
 
-	const e4c_exception * error;
-	e4c_bool is_ready1;
-	e4c_bool is_ready2;
+	const		e4c_exception * error;
+	e4c_bool	is_ready1;
+	e4c_bool	is_ready2;
 
 	is_ready1 = e4c_context_is_ready();
 
@@ -66,10 +66,10 @@ static int ext2(void * pointer){
 
 static int ext1(){
 
-	const e4c_exception * error;
-	e4c_bool is_ready1;
-	e4c_bool is_ready2;
-	int status_code;
+	const		e4c_exception * error;
+	e4c_bool	is_ready1;
+	e4c_bool	is_ready2;
+	int			status_code = -1;
 
 	is_ready1 = e4c_context_is_ready();
 
@@ -132,6 +132,7 @@ DEFINE_TEST(
 	h08,
 	"A library (exception-unaware client) calls another library",
 	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-unaware</em>, but the external function uses the exception framework. So the external function opens a <code>e4c_reusing_context</code> and then a new exception context is created. Then the external function calls some function from another library, which opens another <code>e4c_reusing_context</code>. The exception context is now <em>reused</em>. By the time the original caller continues, the exception context has been ended.",
+	NULL,
 	EXIT_SUCCESS,
 	"result_was_0",
 	NULL
@@ -147,7 +148,7 @@ DEFINE_TEST(
 
 	is_ready = e4c_context_is_ready();
 	if(is_ready)	printf("oops_the_exception_context_is_ready_now\n");
-	else	        printf("result_was_%d\n", result);
+	else			printf("result_was_%d\n", result);
 
 	return(EXIT_SUCCESS);
 }

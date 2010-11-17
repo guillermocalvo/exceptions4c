@@ -6,6 +6,7 @@ DEFINE_TEST(
 	d03,
 	"Uncaught exception thrown from a try{...} block",
 	"This test <strong>starts a <code>try</code> block and then throws an exception</strong>; there is no <code>catch</code> block to handle it.",
+	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"before_THROW",
 	"WildException"
@@ -24,7 +25,7 @@ DEFINE_TEST(
 		E4C_THROW(WildException, "Nobody will catch me.");
 
 		printf("after_THROW\n");
-		
+
 	}
 
 	printf("after_TRY_block\n");

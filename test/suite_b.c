@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE(b, "Consistency", "\
+# define NEW TEST_SUITE(b, "Consistency", "\
 \
 This suite of tests checks the behavior of the library when it is used in an \
 inconsistent way. For example, the tests try to: \

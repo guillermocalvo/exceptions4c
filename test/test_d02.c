@@ -16,6 +16,7 @@ DEFINE_TEST(
 	d02,
 	"Uncaught exception thrown from another function",
 	"This test <strong>calls a function which throws an exception</strong>; there is no <code>catch</code> block to handle it.",
+	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"before_THROW",
 	"WildException"

@@ -13,9 +13,9 @@ static void aux(void * pointer){
 
 static int ext(){
 
-	const e4c_exception * error;
-	e4c_bool is_ready1;
-	e4c_bool is_ready2;
+	const		e4c_exception * error;
+	e4c_bool	is_ready1;
+	e4c_bool	is_ready2;
 
 	is_ready1 = e4c_context_is_ready();
 
@@ -72,6 +72,7 @@ DEFINE_TEST(
 	h07,
 	"A library lets its client catch an exception",
 	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-aware</em>, but the external function cannot simply rely on that. So the external function opens a <code>e4c_reusing_context</code> and then the existing exception context is <em>reused</em>. The external function does not catch an exception so it is propagated to the caller. The caller catches it and then continues.",
+	NULL,
 	EXIT_SUCCESS,
 	"result_was_456",
 	NULL
