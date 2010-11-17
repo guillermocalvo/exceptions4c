@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE(a, "Beginning", "\
+# define NEW TEST_SUITE(a, "Beginning", "\
 \
 This suite of tests checks the behavior of the library when it is used \
 improperly. The tests try to interact with the exception handling system \

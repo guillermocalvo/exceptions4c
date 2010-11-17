@@ -6,7 +6,17 @@
 # include <stdio.h>
 # include "e4c.h"
 
-# define EXIT_WHATEVER		76543210
+# define EXIT_WHATEVER			76543210
+
+# define SEVERITY_CRITICAL		e4c_true
+# define SEVERITY_NOT_CRITICAL	e4c_false
+
+# define TYPE_REQUIREMENT		e4c_true
+# define TYPE_UNIT_TEST			e4c_false
+
+# define STATUS_PASSED			0
+# define STATUS_WARNING			1
+# define STATUS_FAILED			2
 
 /*
 
@@ -35,8 +45,8 @@
 		So, in the event of an uncaught exception, the program SHOULD be
 		returning:
 
-			* EXIT_FAILURE	  if the library is in single-thread mode.
-			* EXIT_SUCCESS	  if the library is in multi-thread mode.
+			* EXIT_FAILURE		if the library is in single-thread mode.
+			* EXIT_SUCCESS		if the library is in multi-thread mode.
 
 		But:
 
@@ -51,35 +61,69 @@
 
 */
 
+# define ERROR_WHATEVER		(void *)87654321
+
+/*
+
+	WHAT IS "ERROR_WHATEVER" USED FOR?
+
+	1. When an unhandled signal is received, all bets are off
+
+		Some platforms make the program dump information regarding the crash.
+
+		For example, when a program compiled by OpenWatcom atempts to dereference
+		a null pointer, the following is printed to the error output:
+
+			The instruction at 0x???????? referenced memory at 0x00000000.
+			The memory could not be read.
+			Exception fielded by 0x????????
+			EAX=0x???????? EBX=0x???????? ECX=0x???????? EDX=0x????????
+			ESI=0x???????? EDI=0x???????? EBP=0x???????? ESP=0x????????
+			EIP=0x???????? EFL=0x???????? CS =0x???????? SS =0x????????
+			DS =0x???????? ES =0x???????? FS =0x???????? GS =0x????????
+			Stack dump (SS:ESP)
+			0x???????? 0x???????? 0x???????? 0x???????? 0x???????? 0x????????
+			0x???????? 0x???????? 0x???????? 0x???????? 0x???????? 0x????????
+			...
+
+*/
+
 
 /*
 	TESTS
 	________________________________________________________________
 */
 
-# define DEFINE_TEST(CODE, TITLE, DESCRIPTION, EXIT_CODE, OUT, ERR) \
+# define DEFINE_UNIT_TEST(IS_REQUIREMENT, CODE, TITLE, DESCRIPTION, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
 	int test_##CODE##_function(); \
 	\
-	UnitTest test_##CODE = { \
+	unit_test test_##CODE = { \
+		/* is_requirement */		IS_REQUIREMENT, \
 		/* code */					#CODE, \
 		/* title */					TITLE, \
 		/* description */			DESCRIPTION, \
+		/* is_critical */			IS_CRITICAL, \
+		/* at_failure */			AT_FAILURE, \
 		/* function */				test_##CODE##_function, \
-		/* expectedExitCode */		EXIT_CODE, \
-		/* expectedOutput */		OUT, \
-		/* expectedError */			ERR, \
-		/* foundExitCode */			0, \
-		/* foundOutput */			{ 0 }, \
-		/* foundError */			{ 0 }, \
-		/* unexpectedExitCode */	0, \
-		/* unexpectedOutput */		0, \
-		/* unexpectedError */		0, \
-		/* passed */				0 \
+		/* expected_exit_code */	EXIT_CODE, \
+		/* expected_output */		OUT, \
+		/* expected_error */		ERR, \
+		/* found_exit_code */		0, \
+		/* found_output */			{ 0 }, \
+		/* found_error */			{ 0 }, \
+		/* unexpected_exit_code */	0, \
+		/* unexpected_output */		0, \
+		/* unexpected_error */		0, \
+		/* status */				0 \
 	}; \
 	int test_##CODE##_function()
 
-extern e4c_bool NDEBUG_is_defined;
-extern long STDC_VERSION;
+# define DEFINE_TEST(CODE, TITLE, DESCRIPTION, AT_FAILURE, EXIT_CODE, OUT, ERR) \
+	DEFINE_UNIT_TEST(TYPE_UNIT_TEST, CODE, TITLE, DESCRIPTION, SEVERITY_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
+
+# define DEFINE_REQUIREMENT(CODE, TITLE, DESCRIPTION, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
+	DEFINE_UNIT_TEST(TYPE_REQUIREMENT, CODE, TITLE, DESCRIPTION, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
+
 
 E4C_DECLARE_EXCEPTION(WildException);
 E4C_DECLARE_EXCEPTION(TamedException);
@@ -95,56 +139,63 @@ E4C_DECLARE_EXCEPTION(GrandparentException);
 	________________________________________________________________
 */
 
-# define TEST_DECLARATION(ID) extern UnitTest test_##ID;
+# define TEST_DECLARATION(ID) extern unit_test test_##ID;
 # define TEST_ENUMERATION(ID) &test_##ID,
 
-# define SUITE(SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION) \
+# define SUITE(IS_REQUIREMENT, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION) \
 	\
 	COLLECTION(TEST_DECLARATION) \
 	\
-	static UnitTest * testArray_##SUITE_CODE[] = { \
+	static unit_test * test_array_##SUITE_CODE[] = { \
 		COLLECTION(TEST_ENUMERATION) \
 	\
 	}; \
 	\
-	static TestCollection testCollection_##SUITE_CODE = { \
-		/* test */	testArray_##SUITE_CODE, \
-		/* count*/	sizeof(testArray_##SUITE_CODE) / sizeof(testArray_##SUITE_CODE[0]) \
+	static test_collection test_collection_##SUITE_CODE = { \
+		/* test */	test_array_##SUITE_CODE, \
+		/* count*/	sizeof(test_array_##SUITE_CODE) / sizeof(test_array_##SUITE_CODE[0]) \
 	}; \
 	\
-	TestSuite suite_##SUITE_CODE = { \
-		/* title */			SUITE_TITLE, \
-		/* description*/	SUITE_DESCRIPTION, \
-		/* tests */			&testCollection_##SUITE_CODE, \
-		/* stats */			{ \
-			/* total */			0, \
-			/* passed */		0, \
-			/* failed */		0 \
-							}, \
-		/* passed */		0 \
+	test_suite suite_##SUITE_CODE = { \
+		/* is_requirement */	IS_REQUIREMENT, \
+		/* title */				SUITE_TITLE, \
+		/* description*/		SUITE_DESCRIPTION, \
+		/* tests */				&test_collection_##SUITE_CODE, \
+		/* stats */				{ \
+			/* total */				0, \
+			/* passed */			0, \
+			/* warnings */			0, \
+			/* failed */			0 \
+								}, \
+		/* status */			0 \
 	};
 
 
 # define END_SUITE NEW
 
+# define TEST_SUITE(SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION) \
+	SUITE(TYPE_UNIT_TEST, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION)
+
+# define REQUIREMENT_SUITE(SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION) \
+	SUITE(TYPE_REQUIREMENT, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION)
 
 /*
 	RUNNERS
 	________________________________________________________________
 */
 
-# define SUITE_DECLARATION(ID) extern TestSuite suite_##ID;
+# define SUITE_DECLARATION(ID) extern test_suite suite_##ID;
 # define SUITE_ENUMERATION(ID) &suite_##ID,
 
 # define SUITE_COLLECTION(COLLECTION_NAME) \
 	\
 	COLLECTION(SUITE_DECLARATION) \
 	\
-	static TestSuite * COLLECTION_NAME##_suites[] = { \
+	static test_suite * COLLECTION_NAME##_suites[] = { \
 		COLLECTION(SUITE_ENUMERATION) \
 	}; \
 	\
-	TestSuiteCollection COLLECTION_NAME = { \
+	test_suite_collection COLLECTION_NAME = { \
 		/* suite */ COLLECTION_NAME##_suites, \
 		/* count */ sizeof(COLLECTION_NAME##_suites) / sizeof(COLLECTION_NAME##_suites[0]) \
 	};
@@ -152,90 +203,94 @@ E4C_DECLARE_EXCEPTION(GrandparentException);
 # define END_SUITE_COLLECTION NEW
 
 
-typedef int (*TestFunction)();
+typedef int (*test_function)();
 
-typedef struct UnitTestStruct				UnitTest;
-typedef struct TestSuiteStruct				TestSuite;
+typedef struct unit_test_struct				unit_test;
+typedef struct test_suite_struct			test_suite;
 
-typedef struct TestCollectionStruct			TestCollection;
-typedef struct TestSuiteCollectionStruct	TestSuiteCollection;
+typedef struct test_collection_struct		test_collection;
+typedef struct test_suite_collection_struct	test_suite_collection;
 
-typedef struct TestRunnerStruct				TestRunner;
-typedef struct StatisticsStruts				Statistics;
+typedef struct test_runner_struct			test_runner;
+typedef struct statistics_struts			statistics;
 
-struct StatisticsStruts{
+struct statistics_struts{
 
 	int						total;
 	int						passed;
+	int						warnings;
 	int						failed;
 };
 
-struct UnitTestStruct{
+struct unit_test_struct{
 
+	e4c_bool				is_requirement;
 	const char *			code;
 	const char *			title;
 	const char *			description;
-	TestFunction			function;
-	int						expectedExitCode;
-	const char *			expectedOutput;
-	const char *			expectedError;
-	int						foundExitCode;
-	char					foundOutput[640];
-	char					foundError[1024];
-	e4c_bool				unexpectedExitCode;
-	e4c_bool				unexpectedOutput;
-	e4c_bool				unexpectedError;
-	e4c_bool				passed;
+	e4c_bool				is_critical;
+	const char *			at_failure;
+	test_function			function;
+	int						expected_exit_code;
+	const char *			expected_output;
+	const char *			expected_error;
+	int						found_exit_code;
+	char					found_output[640];
+	char					found_error[1024 * 2];
+	e4c_bool				unexpected_exit_code;
+	e4c_bool				unexpected_output;
+	e4c_bool				unexpected_error;
+	int						status;
 };
 
-struct TestSuiteStruct{
+struct test_suite_struct{
 
+	e4c_bool				is_requirement;
 	const char *			title;
 	const char *			description;
-	TestCollection *		tests;
-	Statistics				stats;
-	e4c_bool				passed;
+	test_collection *		tests;
+	statistics				stats;
+	int						status;
 };
 
-struct TestCollectionStruct{
-	UnitTest * *			test;
+struct test_collection_struct{
+	unit_test * *			test;
 	int						count;
 };
 
-struct TestSuiteCollectionStruct{
+struct test_suite_collection_struct{
 
-	TestSuite * *			suite;
+	test_suite * *			suite;
 	int						count;
 };
 
-struct TestRunnerStruct{
+struct test_runner_struct{
 
-	const char *			filePath;
-	int						suiteNumber;
-	int						testNumber;
+	const char *			file_path;
+	int						suite_number;
+	int						test_number;
 	char					buffer[1024];
 
 	const char *			out;
 	const char *			err;
 	const char *			report;
 
-	TestSuiteCollection *	suites;
+	test_suite_collection *	suites;
 
 	struct{
-		Statistics				tests;
-		Statistics				suites;
+		statistics			tests;
+		statistics			suites;
+		statistics			requirements;
 	}						stats;
 };
 
-extern TestRunner newTestRunner(
-	const char *			filePath,
-	const char *			out,
-	const char *			err,
+extern int parse_command_line(
+	int						argc,
+	char *					argv[],
+	test_suite_collection *	suite_collection,
 	const char *			report,
-	TestSuiteCollection *	suiteCollection
+	const char *			out,
+	const char *			err
 );
-
-extern int runAllTestSuites(TestRunner * runner);
-
 
 # endif

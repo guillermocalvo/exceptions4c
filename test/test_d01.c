@@ -6,6 +6,7 @@ DEFINE_TEST(
 	d01,
 	"Uncaught exception",
 	"This test <strong>throws an exception</strong>; there is no <code>catch</code> block to handle it.",
+	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"before_THROW",
 	"WildException"

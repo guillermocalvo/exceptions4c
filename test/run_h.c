@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE_COLLECTION(integrationSuite)
+# define NEW SUITE_COLLECTION(SUITE_INTEGRATION)
 # define COLLECTION(RUN_SUITE) RUN_SUITE(h)
 
 END_SUITE_COLLECTION

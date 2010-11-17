@@ -6,6 +6,7 @@ DEFINE_TEST(
 	f05,
 	"An exception can only be caught once for each try{...} block",
 	"This test starts a <code>try</code> block, throws <code>TamedException</code> and attempts to catch it twice with two <code>catch(TamedException)</code> blocks. The exception will only be caught by the first one.",
+	NULL,
 	EXIT_SUCCESS,
 	"caught_by_FIRST_block_only",
 	NULL
@@ -42,17 +43,17 @@ DEFINE_TEST(
 
 	printf("before_CONTEXT_END\n");
 
-   	e4c_context_end();
+	e4c_context_end();
 
 	if(caught1 && caught2){
 
 		printf("caught_by_BOTH\n");
 
-    }else if(caught1){
+	}else if(caught1){
 
 		printf("caught_by_FIRST_block_only\n");
 
-    }else if(caught2){
+	}else if(caught2){
 
 		printf("caught_by_SECOND_block_only\n");
 

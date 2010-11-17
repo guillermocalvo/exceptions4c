@@ -27,6 +27,7 @@ DEFINE_TEST(
 	b04,
 	"using{...} after having ended",
 	"This test uses the library in an inconsistent way, by attempting to <strong>start a <code>using</code> block</strong>, after having called <code>e4c_context_end()</code>. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
+	NULL,
 	EXIT_FAILURE,
 	"before_USING_block",
 	"ContextHasNotBegunYet"

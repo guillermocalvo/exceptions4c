@@ -2,24 +2,18 @@
 # include <stdio.h>
 # include <string.h>
 # include <time.h>
-
 # include <signal.h>
+
+# ifdef _POSIX_SOURCE
+#	include <sys/wait.h>
+#	define GET_EXIT_CODE(status) WEXITSTATUS(status)
+# else
+#	define GET_EXIT_CODE(status) (status)
+# endif
 
 # include "testing.h"
 # include "html.h"
 
-# ifdef NDEBUG
-#	define IS_NDEBUG_DEFINED e4c_true
-# else
-#	define IS_NDEBUG_DEFINED e4c_false
-# endif
-
-# ifndef __STDC_VERSION__
-#	define __STDC_VERSION__ -1L
-# endif
-
-e4c_bool	NDEBUG_is_defined	= IS_NDEBUG_DEFINED;
-long		STDC_VERSION        = __STDC_VERSION__;
 
 E4C_DEFINE_EXCEPTION(WildException, "This is a wild exception.", RuntimeException);
 E4C_DEFINE_EXCEPTION(TamedException, "This is a tamed exception.", RuntimeException);
@@ -30,35 +24,38 @@ E4C_DEFINE_EXCEPTION(ChildException, "This is a child exception.", ParentExcepti
 E4C_DEFINE_EXCEPTION(SiblingException, "This is a sibling exception.", ParentException);
 
 
+static void calculate_total(statistics * stats){
 
+	stats->total = stats->passed + stats->warnings + stats->failed;
+}
 
-static int cannotRead(const char * filePath){
+static int cannot_read(const char * file_path){
 
-	printf("Error: Cannot read file: %s\nPlease check the file system.\n", filePath);
+	printf("Error: Cannot read file: %s\nPlease check the file system.\n", file_path);
 	return(EXIT_FAILURE);
 }
 
-static int cannotWrite(const char * filePath){
+static int cannot_write(const char * file_path){
 
-	printf("Error: Cannot write file: %s\nPlease check the file system.\n", filePath);
+	printf("Error: Cannot write file: %s\nPlease check the file system.\n", file_path);
 	return(EXIT_FAILURE);
 }
 
-static const char * loadFile(const char * filePath, char * store, int bytes){
+static const char * load_file(const char * file_path, char * store, int bytes){
 
 	FILE *			file;
 	int				tmp				= ' ';
 	int				read			= 0;
-	const char *	lastToken		= NULL;
-	e4c_bool		newToken		= e4c_true;
-	e4c_bool		lookingForToken = e4c_true;
+	const char *	last_token		= NULL;
+	e4c_bool		new_token		= e4c_true;
+	e4c_bool		looking_for_token = e4c_true;
 # ifdef NDEBUG
-	e4c_bool		readyForToken	= e4c_false;
+	e4c_bool		ready_for_token	= e4c_false;
 # endif
 
-	file = fopen(filePath, "r");
+	file = fopen(file_path, "r");
 
-	if(file == NULL) exit( cannotRead(filePath) );
+	if(file == NULL) exit( cannot_read(file_path) );
 
 	for(read = 0; read < bytes; read++){
 
@@ -70,20 +67,20 @@ static const char * loadFile(const char * filePath, char * store, int bytes){
 		else if(tmp == '>')		store[read] = '}';
 		else					store[read] = tmp;
 
-		if(lookingForToken){
+		if(looking_for_token){
 			if(tmp == ':'){
 # ifdef NDEBUG
-				readyForToken	= e4c_true;
+				ready_for_token	= e4c_true;
 # else
-				lookingForToken = e4c_false;
+				looking_for_token = e4c_false;
 # endif
 			}else if(tmp <= ' '){
-				newToken = e4c_true;
-			}else if(newToken){
-				newToken = e4c_false;
-				lastToken = store + read;
+				new_token = e4c_true;
+			}else if(new_token){
+				new_token = e4c_false;
+				last_token = store + read;
 # ifdef NDEBUG
-				if(readyForToken) lookingForToken = e4c_false;
+				if(ready_for_token) looking_for_token = e4c_false;
 # endif
 			}
 		}
@@ -100,35 +97,35 @@ static const char * loadFile(const char * filePath, char * store, int bytes){
 		store[read - 4] = '.';
 	}
 
-	return(lastToken);
+	return(last_token);
 }
 
-static e4c_bool isUnexpectedToken(const char * expectedToken, const char * token){
+static e4c_bool is_unexpected_token(const char * expected_token, const char * token){
 
 	int index;
 
-	if(expectedToken == NULL){
+	if(expected_token == NULL){
 		return(token != NULL);
 	}
 
 	if(token == NULL) return(e4c_true);
 
-	for(index = 0; expectedToken[index] != '\0'; index++){
-		if( token[index] != expectedToken[index] ){
+	for(index = 0; expected_token[index] != '\0'; index++){
+		if( token[index] != expected_token[index] ){
 			return(e4c_true);
 		}
 	}
 	return(e4c_false);
 }
 
-static const char * getCommandLine(TestRunner * runner){
+static const char * make_command_line(test_runner * runner){
 
 	sprintf(
 		runner->buffer,
 		"%s %d %d > %s 2> %s",
-		runner->filePath,
-		runner->suiteNumber,
-		runner->testNumber,
+		runner->file_path,
+		runner->suite_number,
+		runner->test_number,
 		runner->out,
 		runner->err
 	);
@@ -136,93 +133,172 @@ static const char * getCommandLine(TestRunner * runner){
 	return(runner->buffer);
 }
 
-static void runTest(UnitTest * test, TestRunner * runner){
+static void run_test(test_runner * runner, unit_test * test){
 
 	const char *	command;
-	const char *	lastOutput;
-	const char *	lastError;
+	const char *	last_output;
+	const char *	last_error;
 
-	command = getCommandLine(runner);
+	command = make_command_line(runner);
 
-	printf("	Test %s: ", test->code);
+	printf("	%s_%s: ", (test->is_requirement ? "requirement" : "unit_test"), test->code);
 
-	test->foundExitCode = system(command);
+	test->found_exit_code = GET_EXIT_CODE( system(command) );
 
-	lastOutput	= loadFile( runner->out, test->foundOutput, sizeof(test->foundOutput) );
-	lastError	= loadFile( runner->err, test->foundError, sizeof(test->foundError) );
+	last_output	= load_file( runner->out, test->found_output, sizeof(test->found_output) );
+	last_error	= load_file( runner->err, test->found_error, sizeof(test->found_error) );
 
-	test->unexpectedExitCode	= ( test->expectedExitCode != EXIT_WHATEVER && test->foundExitCode != test->expectedExitCode );
-	test->unexpectedOutput		= ( test->expectedOutput != NULL			&& isUnexpectedToken(test->expectedOutput, lastOutput) );
-	test->unexpectedError		= ( isUnexpectedToken(test->expectedError, lastError) );
+	test->unexpected_exit_code	= ( test->expected_exit_code	!= EXIT_WHATEVER	&& test->found_exit_code != test->expected_exit_code );
+	test->unexpected_error		= ( test->expected_error		!= ERROR_WHATEVER	&& is_unexpected_token(test->expected_error, last_error) );
+	test->unexpected_output		= ( test->expected_output		!= NULL				&& is_unexpected_token(test->expected_output, last_output) );
 
-	test->passed = (!test->unexpectedExitCode && !test->unexpectedOutput && !test->unexpectedError);
+	if(!test->unexpected_exit_code && !test->unexpected_output && !test->unexpected_error){
+		test->status = STATUS_PASSED;
+	}else if(!test->is_critical){
+		test->status = STATUS_WARNING;
+	}else{
+		test->status = STATUS_FAILED;
+	}
 
-	printf("%s\n", test->passed ? "passed" : "FAILED!");
+	if(test->status == STATUS_PASSED){
+		printf("%s\n",
+			(test->is_requirement ? "fulfilled" : "passed")
+		);
+	}else{
+		printf("%s [%c%c%c]\n",
+			(test->is_requirement
+				? (test->is_critical ? "NOT FULFILLED!"	: "not fulfilled")
+				: (test->is_critical ? "FAILED!"		: "failed!")
+			),
+			(test->unexpected_exit_code	? 'X' : '1'),
+			(test->unexpected_output	? 'O' : '2'),
+			(test->unexpected_error		? 'E' : '3')
+		);
+	}
 }
 
-static void runTestSuite(TestRunner * runner, TestSuite * testSuite){
+static void run_test_suite(test_runner * runner, test_suite * suite){
 
-	int tests;
+	int				tests;
 
-	printf("Running test suite %s...\n", testSuite->title);
+	printf("%s %s...\n", (suite->is_requirement ? "Checking" : "Running test suite"), suite->title);
 
-	tests = testSuite->tests->count;
+	tests = suite->tests->count;
 
-	testSuite->stats.passed	= 0;
-	testSuite->stats.failed	= 0;
+	suite->stats.passed		= 0;
+	suite->stats.warnings	= 0;
+	suite->stats.failed		= 0;
 
-	for(runner->testNumber = 0; runner->testNumber < tests; runner->testNumber++){
+	for(runner->test_number = 0; runner->test_number < tests; runner->test_number++){
 
-		UnitTest * test = testSuite->tests->test[runner->testNumber];
+		unit_test * test = suite->tests->test[runner->test_number];
 
-		runTest(test, runner);
+		run_test(runner, test);
 
-		if(test->passed){
-			testSuite->stats.passed++;
-		}else{
-			testSuite->stats.failed++;
+		{
+
+			switch(test->status){
+
+				case STATUS_PASSED:
+					if(test->is_requirement){
+						runner->stats.requirements.passed++;
+					}
+					if(!test->is_requirement || suite->is_requirement){
+						suite->stats.passed++;
+					}
+					break;
+
+				case STATUS_WARNING:
+					if(test->is_requirement){
+						runner->stats.requirements.warnings++;
+					}
+					if(!test->is_requirement || suite->is_requirement){
+						suite->stats.warnings++;
+					}
+					break;
+
+				default: /* STATUS_FAILED */
+					if(test->is_requirement){
+						runner->stats.requirements.failed++;
+					}
+					if(!test->is_requirement || suite->is_requirement){
+						suite->stats.failed++;
+					}
+			}
 		}
 	}
 
-	testSuite->stats.total		= testSuite->stats.passed + testSuite->stats.failed;
-	testSuite->passed			= ( testSuite->stats.failed == 0 );
+	calculate_total(&suite->stats);
+
+	suite->status = (suite->stats.failed > 0 ? STATUS_FAILED : (suite->stats.warnings > 0 ? STATUS_WARNING : STATUS_PASSED) );
 }
 
-static void generateReport(TestRunner * runner){
+static void generate_report(test_runner * runner){
 
-	FILE *		report;
+	FILE * report;
 
 	report = fopen(runner->report, "w");
 
-	if(report == NULL) exit( cannotWrite(runner->report) );
+	if(report == NULL) exit( cannot_write(runner->report) );
 
-	html(runner, report);
+	print_html(runner, report);
 
 	fclose(report);
 }
 
-int runAllTestSuites(TestRunner * runner){
+test_runner new_test_runner(const char * file_path, const char * out, const char * err, const char * report, test_suite_collection * suites){
+
+	test_runner runner;
+	statistics empty_stats = {0, 0, 0, 0};
+
+	runner.file_path			= file_path;
+	runner.out					= out;
+	runner.err					= err;
+	runner.report				= report;
+	runner.suites				= suites;
+
+	runner.stats.suites			= empty_stats;
+	runner.stats.requirements	= empty_stats;
+	runner.stats.tests			= empty_stats;
+
+	return(runner);
+}
+
+int run_all_test_suites(test_runner * runner){
 
 	printf("Running all the tests...\n\n");
 
-	for(runner->suiteNumber = 0; runner->suiteNumber < runner->suites->count; runner->suiteNumber++){
+	for(runner->suite_number = 0; runner->suite_number < runner->suites->count; runner->suite_number++){
 
-		TestSuite * suite = runner->suites->suite[runner->suiteNumber];
+		test_suite * suite = runner->suites->suite[runner->suite_number];
 
-		runTestSuite(runner, suite);
+		run_test_suite(runner, suite);
 
-		if(suite->passed){
-			runner->stats.suites.passed++;
-		}else{
-			runner->stats.suites.failed++;
+		if(!suite->is_requirement){
+
+			switch(suite->status){
+
+				case STATUS_PASSED:
+					runner->stats.suites.passed++;
+					break;
+
+				case STATUS_WARNING:
+					runner->stats.suites.warnings++;
+					break;
+
+				default: /* STATUS_FAILED */
+					runner->stats.suites.failed++;
+			}
+
+			runner->stats.tests.passed		+= suite->stats.passed;
+			runner->stats.tests.warnings	+= suite->stats.warnings;
+			runner->stats.tests.failed		+= suite->stats.failed;
 		}
-
-		runner->stats.tests.passed += suite->stats.passed;
-		runner->stats.tests.failed += suite->stats.failed;
 	}
 
-	runner->stats.tests.total	= runner->stats.tests.passed	+ runner->stats.tests.failed;
-	runner->stats.suites.total	= runner->stats.suites.passed	+ runner->stats.suites.failed;
+	calculate_total(&runner->stats.requirements);
+	calculate_total(&runner->stats.tests);
+	calculate_total(&runner->stats.suites);
 
 	/* delete temporary files */
 	remove(runner->out);
@@ -232,7 +308,7 @@ int runAllTestSuites(TestRunner * runner){
 
 		printf("\n\nGenerating report....\n");
 
-		generateReport(runner);
+		generate_report(runner);
 
 		/* hopefully this will open the report in the default browser */
 		system(runner->report);
@@ -243,23 +319,64 @@ int runAllTestSuites(TestRunner * runner){
 	return(EXIT_SUCCESS);
 }
 
-TestRunner newTestRunner(const char * filePath, const char * out, const char * err, const char * report, TestSuiteCollection * suites){
+int parse_command_line(int argc, char * argv[], test_suite_collection * suite_collection, const char * report, const char * out, const char * err){
 
-	TestRunner runner;
+	long			version;
+	int				suite_number;
+	int				test_number;
+	test_suite *	suite;
+	unit_test *		test;
 
-	runner.filePath = filePath;
-	runner.out		= out;
-	runner.err		= err;
-	runner.report	= report;
-	runner.suites	= suites;
+	/* check library version numbers */
+	version = e4c_library_version();
+	if(version != E4C_VERSION_NUMBER){
+		printf(
+			"Error: the library and header version numbers don't match.\n"
+			"\n"
+			" * run-time version number:     %ld\n"
+			" * compile-time version number: %ld\n"
+			"\n"
+			"Please compile the library again with its corresponding header file.\n",
+			version, E4C_VERSION_NUMBER
+		);
+		return(EXIT_FAILURE);
+	}
 
-	runner.stats.suites.total	= 0;
-	runner.stats.suites.passed	= 0;
-	runner.stats.suites.failed	= 0;
+	/* run all the tests */
+	if(argc == 1){
+		test_runner runner;
+		int result;
 
-	runner.stats.tests.total	= 0;
-	runner.stats.tests.passed	= 0;
-	runner.stats.tests.failed	= 0;
+		runner = new_test_runner(argv[0], out, err, report, suite_collection);
 
-	return(runner);
+		result = run_all_test_suites(&runner);
+
+		return(result);
+	}
+
+	/* wrong number of arguments */
+	if(argc != 3){
+		printf("Error: please run this program without arguments.\n");
+		return(EXIT_FAILURE);
+	}
+
+	/* run a specific test */
+
+	suite_number		= atoi(argv[1]);
+	test_number			= atoi(argv[2]);
+
+	if(suite_number < 0 || suite_number >= suite_collection->count){
+		printf("Error: wrong test suite number (%d).\n", suite_number);
+		return(EXIT_FAILURE);
+	}
+	suite = suite_collection->suite[suite_number];
+
+	if(test_number < 0 || test_number >= suite->tests->count){
+		printf("Error: wrong unit test number (%d).\n", test_number);
+		return(EXIT_FAILURE);
+	}
+
+	test = suite->tests->test[test_number];
+
+	return( test->function() );
 }

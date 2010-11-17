@@ -4,38 +4,40 @@
 
 DEFINE_TEST(
 	g03,
-	"Bad pointer exception",
-	"This test attempts to dereference a null pointer; the library signal handling is enabled; there is no <code>catch</code> block. The behavior of the program will no longer be undefined: it will terminate because of the uncaught exception.",
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
-	"before_NULL_POINTER",
-	"BadPointerException"
+	"Signal SIGABR",
+	"This test calls <code>abort</code>; the library signal handling is disabled, so the behavior of the program will be implementation-defined (typically the program will terminate abruptly).",
+	"This functionality relies on the <a href=\"#requirement_z06\"><strong>platform's behavior when aborting program</strong></a>.",
+	EXIT_WHATEVER,
+	"before_ABORT",
+	ERROR_WHATEVER
 ){
 
-	int * nullPointer = NULL;
-	int integer;
+	/*
+		Note:
+		We'll be using fflush because when the signal is received, all bets are
+		off; the buffered output of the program goes into the bit bucket.
+	*/
 
 	printf("before_CONTEXT_BEGIN\n");
-
-	e4c_context_begin(e4c_true, e4c_print_exception);
-
-	printf("before_NULL_POINTER\n");
 	fflush(stdout);
 
-	/* some smartypants compilers might need to be fooled */
-	/* if(nullPointer != &integer) nullPointer = NULL; */
+	e4c_context_begin(e4c_false, e4c_print_exception);
 
-	integer = *nullPointer;
-
-	printf("after_NULL_POINTER\n");
+	printf("before_ABORT\n");
 	fflush(stdout);
 
-	if(integer) integer = 0;
+	abort();
+
+	printf("after_ABORT\n");
+	fflush(stdout);
 
 	printf("before_CONTEXT_END\n");
+	fflush(stdout);
 
 	e4c_context_end();
 
 	printf("after_CONTEXT_END\n");
+	fflush(stdout);
 
 	return(EXIT_SUCCESS);
 }

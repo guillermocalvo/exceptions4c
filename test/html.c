@@ -4,6 +4,158 @@
 # include <time.h>
 
 # include "html.h"
+# include "testing.h"
+
+
+/* TODO: architecture detection */
+
+/* TODO: enhance operating system detection */
+
+# if	defined(__FreeBSD) \
+	||	defined(__FreeBSD__)
+#	define PLATFORM_OS "FreeBSD"
+# elif	defined(__NetBSD) \
+	||	defined(__NetBSD__)
+#	define PLATFORM_OS "NetBSD"
+# elif	defined(__OpenBSD__)
+#	define PLATFORM_OS "OpenBSD"
+# elif	defined(__CYGWIN__)
+#	define PLATFORM_OS "Cygwin"
+# elif	defined(LINUX) \
+	||	defined(_LINUX) \
+	||	defined(__LINUX) \
+	||	defined(__LINUX__) \
+	||	defined(linux) \
+	||	defined(_linux) \
+	||	defined(__linux) \
+	||	defined(__linux__) \
+	||	defined(gnu_linux) \
+	||	defined(_gnu_linux) \
+	||	defined(__gnu_linux) \
+	||	defined(__gnu_linux__)
+#	define PLATFORM_OS "GNU/Linux"
+# elif	defined(WINNT) \
+	||	defined(_WINNT) \
+	||	defined(__WINNT) \
+	||	defined(__WINNT__)
+#	define PLATFORM_OS "Microsoft Windows NT"
+# elif	defined(WIN64) \
+	||	defined(_WIN64) \
+	||	defined(__WIN64) \
+	||	defined(__WIN64__)
+#	define PLATFORM_OS "Microsoft Windows 64-bit"
+# elif	defined(WIN32) \
+	||	defined(_WIN32) \
+	||	defined(__WIN32) \
+	||	defined(__WIN32__)
+#	define PLATFORM_OS "Microsoft Windows 32-bit"
+# elif	defined(WINDOWS) \
+	||	defined(_WINDOWS) \
+	||	defined(__WINDOWS) \
+	||	defined(__WINDOWS__)
+#	define PLATFORM_OS "Microsoft Windows"
+# elif	defined(MSDOS) \
+	||	defined(_MSDOS) \
+	||	defined(__MSDOS) \
+	||	defined(__MSDOS__)
+#	define PLATFORM_OS "Microsoft MS-DOS"
+# else
+#	define PLATFORM_OS "Unknown operating system"
+# endif
+
+/* TODO: enhance compiler detection */
+
+# if defined(__TURBOC__)
+#	ifdef __BORLANDC__
+#		define PLATFORM_COMPILER					"Borland C++"
+#		if (__BORLANDC__ < 0x0200)
+#			define PLATFORM_COMPILER_VERSION			"1.0",
+#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
+#		elif (__BORLANDC__ == 0x0200)
+#			define PLATFORM_COMPILER_VERSION			"2.0",
+#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
+#		elif (__BORLANDC__ == 0x0400)
+#			define PLATFORM_COMPILER_VERSION			"3.0",
+#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
+#		elif (__BORLANDC__ == 0x0410)
+#			define PLATFORM_COMPILER_VERSION			"3.1",
+#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
+#		elif (__BORLANDC__ == 0x0452)
+#			define PLATFORM_COMPILER_VERSION			"4.0",
+#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
+#		elif (__BORLANDC__ == 0x0460)
+#			define PLATFORM_COMPILER_VERSION			"4.5",
+#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
+#		else
+#			define PLATFORM_COMPILER_VERSION			""
+#			define PLATFORM_COMPILER_VERSION_NUMBER		__BORLANDC__;
+#		endif
+#	else
+#		define PLATFORM_COMPILER					"Turbo C"
+#		define PLATFORM_COMPILER_VERSION			""
+#		define PLATFORM_COMPILER_VERSION_NUMBER		__TURBOC__;
+#	endif
+# elif defined(__WATCOMC__)
+#	define PLATFORM_COMPILER						"Open Watcom"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			__WATCOMC__
+# elif defined(MSC)
+#	define PLATFORM_COMPILER						"Microsoft Visual C"
+#	define PLATFORM_COMPILER_VERSION				""
+#	ifdef _MSC_VER
+#		define PLATFORM_COMPILER_VERSION_NUMBER		_MSC_VER
+#	else
+#		define PLATFORM_COMPILER_VERSION_NUMBER		-1L
+#	endif
+# elif defined(__TINYC__)
+#	define PLATFORM_COMPILER						"Tiny C Compiler"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# elif defined(__LCC__)
+#	define PLATFORM_COMPILER						"Lcc-Win32"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# elif defined(__GNUC__)
+#	define PLATFORM_COMPILER						"GCC"
+#	define PLATFORM_COMPILER_VERSION				__VERSION__
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# else
+#	define PLATFORM_COMPILER						"Unknown compiler"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# endif
+
+# ifndef __STDC__
+#	define __STDC__ -1L
+# endif
+
+# ifndef __STDC_VERSION__
+#	define __STDC_VERSION__ -1L
+# endif
+
+# ifdef NDEBUG
+#	define IS_NDEBUG_DEFINED e4c_true
+# else
+#	define IS_NDEBUG_DEFINED e4c_false
+# endif
+
+# ifdef E4C_NOKEYWORDS
+#	define IS_E4C_NOKEYWORDS_DEFINED e4c_true
+# else
+#	define IS_E4C_NOKEYWORDS_DEFINED e4c_false
+# endif
+
+# ifdef E4C_THREADSAFE
+#	define IS_E4C_THREADSAFE_DEFINED e4c_true
+# else
+#	define IS_E4C_THREADSAFE_DEFINED e4c_false
+# endif
+
+# ifdef _POSIX_SOURCE
+#	define IS_POSIX_SOURCE_DEFINED e4c_true
+# else
+#	define IS_POSIX_SOURCE_DEFINED e4c_false
+# endif
 
 # define SUMMARY_MAX_ITEMS 6
 
@@ -12,7 +164,7 @@
 
 # define AFTER_SUMMARY_ITEM(index, total) \
 	( \
-		index + 1 < MIN(SUMMARY_MAX_ITEMS, total)  \
+		index + 1 < MIN(SUMMARY_MAX_ITEMS, total) \
 		? \
 		( ELIDED(total) || index + 2 < MIN(SUMMARY_MAX_ITEMS, total) ? ", " : " and " ) \
 		: \
@@ -22,21 +174,58 @@
 # define HUMAN_EXIT_CODE(v)	\
 	( v == EXIT_WHATEVER ? "(any value)" : (v == EXIT_SUCCESS ? "EXIT_SUCCESS" : ( v == EXIT_FAILURE ? "EXIT_FAILURE" : "(a specific value)") ) )
 
+# define HUMAN_STATUS(status) \
+	( (status) == STATUS_PASSED ? "passed" : ((status) == STATUS_WARNING ? "warning" : "failed") )
+
+# define HUMAN_TYPE(is_requirement, otherwise) \
+	(is_requirement ? "requirement" : otherwise)
 
 
+long	STDC_VERSION	= __STDC_VERSION__;
+long	STDC			= __STDC__;
 
-static void printPercentage(char * buffer, int fraction, int total){
 
-	char *	dotPos	= NULL;
-	float	value	= (float)100 * fraction / total;
+static void print_numerical_macro(const char * name, long value, FILE * report){
+
+	if(value == -1L){
+		fprintf(report,
+			"<div>"
+				"<div class=\"info image icon24\"></div>"
+				"<code>%s</code> is not defined"
+			"</div>",
+		name);
+	}else{
+		fprintf(report,
+			"<div>"
+				"<div class=\"info image icon24\"></div>"
+				"<code>%s</code> is defined as <code>%ld</code>"
+			"</div>",
+		name, value);
+	}
+}
+
+static void print_symbolical_macro(const char * name, e4c_bool defined, FILE * report){
+
+	fprintf(report,
+		"<div>"
+			"<div class=\"info image icon24\"></div>"
+			"<code>%s</code> is%s defined"
+		"</div>",
+	name, (defined ? "" : " not"));
+}
+
+static void print_percentage(char * buffer, int fraction, int total){
+
+	char *	dot_position	= NULL;
+	float	value			= (float)100 * fraction / total;
 
 	sprintf(buffer, "%.2f", value);
 
 	while(*buffer != '\0'){
-		if(dotPos == NULL && *buffer == '.'){
-			dotPos = buffer;
-		}else if(dotPos != NULL && *buffer == '0'){
-			if(dotPos + 1 == buffer) buffer = dotPos;
+		if(dot_position == NULL && *buffer == '.'){
+			dot_position = buffer;
+		}else if(dot_position != NULL && *buffer == '0'){
+			if(dot_position + 1 == buffer) buffer = dot_position;
 			break;
 		}
 		buffer++;
@@ -46,55 +235,61 @@ static void printPercentage(char * buffer, int fraction, int total){
 	buffer[1] = '\0';
 }
 
-static int printExitCode(char * buffer, int exitCode){
+static int print_exit_code(char * buffer, int exit_code){
 
-	if(exitCode == EXIT_SUCCESS){
+	if(exit_code == EXIT_SUCCESS){
 		return( sprintf(buffer, "EXIT_SUCCESS") );
 	}
 
-	if(exitCode == EXIT_FAILURE){
+	if(exit_code == EXIT_FAILURE){
 		return( sprintf(buffer, "EXIT_FAILURE") );
 	}
 
-	return( sprintf(buffer, "%d", exitCode) );
+	return( sprintf(buffer, "%d", exit_code) );
 }
 
-static void htmlGraph(FILE * report, Statistics stats, const char * what){
+static void print_graph(FILE * report, statistics stats, const char * what){
 
-	char		percentPassed[8];
-	char		percentFailed[8];
+	char		percent_passed[8];
+	char		percent_failed[8];
+	int			passed	= stats.passed;
+	int			total	= stats.total;
+	int			failed	= stats.failed + stats.warnings;
 
-	printPercentage(percentPassed, stats.passed, stats.total);
-	printPercentage(percentFailed, stats.failed, stats.total);
+	if(total > 0){
 
-	fprintf(report,
-		"<div class=\"paragraph\">"
-			"<div title=\"%d %s failed (%s)\" class=\"shadowed graph percent_failed\">"
-				"<div title=\"%d %s passed (%s)\" class=\"graph percent_passed\" style=\"width: %s;\"></div>"
-			"</div>"
-			"%s passed"
-		"</div>",
-		stats.failed,		what,		percentFailed,
-		stats.passed,		what,		percentPassed,		percentPassed,
-		percentPassed
-	);
+		print_percentage(percent_passed, passed, total);
+		print_percentage(percent_failed, failed, total);
+
+		fprintf(report,
+			"<div class=\"paragraph\">"
+				"<div title=\"%d %s failed (%s)\" class=\"shadowed graph percent_failed\">"
+					"<div title=\"%d %s passed (%s)\" class=\"graph percent_passed\" style=\"width: %s;\"></div>"
+				"</div>"
+				"%s passed"
+			"</div>",
+			failed,			what,		percent_failed,
+			passed,			what,		percent_passed,		percent_passed,
+			percent_passed
+		);
+	}
 }
 
-static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
+static void print_unit_test(test_suite * suite, unit_test * test, FILE * report){
 
-	char exitCode[128];
-	char found[64];
-	char expected[64];
-	char etc[64];
+	char	exit_code[128];
+	char	found[64];
+	char	expected[64];
+	char	etc[64];
 
-	printExitCode(found, test->foundExitCode);
+	print_exit_code(found, test->found_exit_code);
 
-	if(test->unexpectedExitCode){
+	if(test->unexpected_exit_code){
 
-		printExitCode(expected, test->expectedExitCode);
+		print_exit_code(expected, test->expected_exit_code);
 
 		sprintf(etc, " (expecting: <span class=\"console\">%s</span>)", expected);
-	}else if(test->expectedExitCode == EXIT_WHATEVER){
+	}else if(test->expected_exit_code == EXIT_WHATEVER){
 
 		sprintf(etc, " (any value is OK)");
 	}else{
@@ -102,13 +297,13 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 		*etc = '\0';
 	}
 
-	sprintf(exitCode, "<span class=\"console\">%s</span>%s", found, etc);
+	sprintf(exit_code, "<span class=\"console\">%s</span>%s", found, etc);
 
 	fprintf(report,
 		"<div>"
-			"<div class=\"unit_test_%s image icon24\"></div>"
+			"<div class=\"%s_%s image icon24\"></div>"
 			"<h3>"
-				"<a name=\"test_%s\">test_%s: %s</a>"
+				"<a name=\"%s_%s\">%s_%s: %s</a>"
 			"</h3>"
 		"</div>"
 		"<div class=\"test_section\">"
@@ -118,24 +313,46 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 				"<div class=\"description paragraph\">"
 					"%s"
 				"</div>",
-	(test->passed ? "passed" : "failed"), test->code, test->code, test->title, test->description);
+	HUMAN_TYPE(test->is_requirement, "unit_test"),
+	HUMAN_STATUS(test->status),
+	HUMAN_TYPE(test->is_requirement, "unit_test"),
+	test->code,
+	HUMAN_TYPE(test->is_requirement, "unit_test"),
+	test->code,
+	test->title,
+	test->description);
 
-	if(!test->passed){
+	if(test->status != STATUS_PASSED){
+
+		if(test->at_failure != NULL){
+			fprintf(report,
+					"<div class=\"paragraph\">"
+						"<div class=\"%s image icon24\"></div>"
+						"%s"
+					"</div>",
+			( test->status == STATUS_WARNING ? "warning" : "failed" ),
+			test->at_failure);
+		}
+
 		fprintf(report,
 				"<div class=\"paragraph\">"
 					"<div class=\"bug image icon24\"></div>"
 					"<a href=\"http://code.google.com/p/exceptions4c/issues/entry?"
 						"template=Defect%%20report%%20from%%20testing&amp;"
-						"summary=test_%s%%20failed&amp;"
+						"summary=%s_%s%%20failed&amp;"
 						"comment="
-							"test_%s%%20failed.%%0A"
+							"%s_%s%%20failed.%%0A"
 							"%%0A"
 							"%%20Library%%20version:%%20%ld%%0A"
-							"%%20%%20NDEBUG%%20defined:%%20%s%%0A"
-							"__STDC_VERSION__:%%20%ld%%0A"
 							"%%20%%20%%20%%20Architecture:%%20...%%0A"
-							"Operating%%20system:%%20...%%0A"
-							"%%20%%20%%20%%20IDE/Compiler:%%20...%%0A"
+							"Operating%%20system:%%20%s%%0A"
+							"%%20%%20%%20%%20IDE/Compiler:%%20%s%%20%s(%ld)...%%0A"
+							"%%20%%20%%20%%20%%20%%20%%20%%20__STDC__:%%20%ld%%0A"
+							"__STDC_VERSION__:%%20%ld%%0A"
+							"%%20%%20%%20%%20%%20%%20%%20%%20%%20%%20NDEBUG:%%20%s%%0A"
+							"%%20%%20E4C_THREADSAFE:%%20%s%%0A"
+							"%%20%%20E4C_NOKEYWORDS:%%20%s%%0A"
+							"%%20%%20%%20_POSIX_SOURCE:%%20%ld%%0A"
 							"%%0A"
 							"Exit%%20code:%%20%s%%20(%s)%%0A"
 							"%%20%%20%%20Output:%%20%s%%0A"
@@ -147,12 +364,20 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 						"Create a new issue"
 					"</a>"
 				"</div>",
-		test->code,
-		test->code, E4C_VERSION_NUMBER,
-		(NDEBUG_is_defined ? "YES" : "NO"), STDC_VERSION,
-		(test->unexpectedExitCode	? "NOK" : "OK"), found,
-		(test->unexpectedOutput		? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK"),
-		(test->unexpectedError		? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK")
+		HUMAN_TYPE(test->is_requirement, "unit_test"), test->code,
+		HUMAN_TYPE(test->is_requirement, "unit_test"), test->code,
+		E4C_VERSION_NUMBER,
+		PLATFORM_OS,
+		PLATFORM_COMPILER, PLATFORM_COMPILER_VERSION, (long)PLATFORM_COMPILER_VERSION_NUMBER,
+		STDC,
+		STDC_VERSION,
+		(IS_NDEBUG_DEFINED			? "defined" : "not%20defined"),
+		(IS_E4C_THREADSAFE_DEFINED	? "defined" : "not%20defined"),
+		(IS_E4C_NOKEYWORDS_DEFINED	? "defined" : "not%20defined"),
+		(IS_POSIX_SOURCE_DEFINED	? "defined" : "not%20defined"),
+		(test->unexpected_exit_code	? "NOK" : "OK"), found,
+		(test->unexpected_output	? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK"),
+		(test->unexpected_error		? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK")
 		);
 	}
 
@@ -172,8 +397,8 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 						"<tr>"
 							"<td>Suite</td>"
 							"<td>"
-								"<div class=\"test_suite_%s image icon24\"></div>"
-								"<a href=\"#%s\">%s</a>"
+								"<div class=\"%s_%s image icon24\"></div>"
+								"<a href=\"#test_suite_%s\">%s</a>"
 							"</td>"
 						"</tr>"
 						"<tr>"
@@ -192,7 +417,7 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 									"%s"
 								"</span>"
 								"<br/>"
-								"<textarea cols=\"80\" rows=\"8\" class=\"console\">%s</textarea>"
+								"<textarea cols=\"80\" rows=\"8\" class=\"%s\">%s</textarea>"
 							"</td>"
 						"</tr>"
 						"<tr>"
@@ -217,39 +442,42 @@ static void unitTest(TestSuite * suite, UnitTest * test, FILE * report){
 					"</table>"
 				"</div>"
 				"<div class=\"paragraph\">"
-					"<div class=\"overall image icon24\"></div>"
+					"<div class=\"return image icon24\"></div>"
 					"<a href=\"#top\">"
 						"Return to top"
 					"</a>"
 				"</div>"
 			"</div>"
 		"</div>",
-	test->code, test->code, test->code, (test->passed ? "Passed" : "Failed"), test->code,
-	(suite->passed ? "passed" : "failed"), suite->title, suite->title,
-	(test->unexpectedExitCode ? "failed" : "passed"),
-	exitCode,
-	(test->unexpectedOutput ? "failed" : "passed"),
-	test->expectedOutput,
-	test->foundOutput,
-	(test->unexpectedError ? "failed" : "passed"),
-	(test->expectedError	!= NULL ? test->expectedError	: " (no error)"),
-	(*test->foundError ? "console" : "hidden"), test->foundError,
-	(test->passed ? "passed" : "failed"),
-	(test->passed ? "Passed" : "Failed")
+	test->code, test->code, test->code,
+	HUMAN_STATUS(test->status),
+	test->code,
+	HUMAN_TYPE(suite->is_requirement, "test_suite"),
+	HUMAN_STATUS(suite->status), suite->title, suite->title,
+	(test->unexpected_exit_code ? "failed" : "passed"),
+	exit_code,
+	(test->unexpected_output ? "failed" : "passed"),
+	(test->expected_output	!= NULL ? test->expected_output : "(no output)"),
+	(*test->found_output ? "console" : "hidden"), test->found_output,
+	(test->unexpected_error ? "failed" : "passed"),
+	(test->expected_error	!= NULL ? ( test->expected_error != ERROR_WHATEVER ? test->expected_error : "(platform-defined)"	) : " (no error)"),
+	(*test->found_error ? "console" : "hidden"), test->found_error,
+	HUMAN_STATUS(test->status),
+	HUMAN_STATUS(test->status)
 	);
 
 }
 
-static void testSuite(TestSuite * suite, FILE * report){
+static void print_test_suite(test_suite * suite, FILE * report){
 
 	int tests;
-	int testIndex;
+	int test_index;
 
 	fprintf(report,
 		"<div>"
-			"<div class=\"test_suite_%s image icon24\"></div>"
+			"<div class=\"%s_%s image icon24\"></div>"
 			"<h3>"
-				"<a name=\"%s\">%s</a>"
+				"<a name=\"test_suite_%s\">%s</a>"
 			"</h3>"
 		"</div>"
 		"<div class=\"suite_section\">"
@@ -259,13 +487,19 @@ static void testSuite(TestSuite * suite, FILE * report){
 			"</div>"
 
 			"<div class=\"paragraph\">"
-				"<strong>%d</strong> unit tests; <strong>%d</strong> passed; <strong>%d</strong> failed."
+				"<div class=\"stats image icon24\"></div>"
+				"<strong>%d</strong> %s; <strong>%d</strong> passed; <strong>%d</strong> failed."
 			"</div>",
-	( suite->passed ? "passed" : "failed" ), suite->title, suite->title,
+	HUMAN_TYPE(suite->is_requirement, "test_suite"),
+	HUMAN_STATUS(suite->status),
+	suite->title, suite->title,
 	suite->description,
-	suite->stats.total, suite->stats.passed, suite->stats.failed);
+	suite->stats.total,
+	(suite->is_requirement ? "requirements" : "unit test"),
+	suite->stats.passed,
+	suite->stats.warnings +	suite->stats.failed);
 
-	htmlGraph(report, suite->stats, "unit test(s)");
+	print_graph( report, suite->stats, (suite->is_requirement ? "requirement(s)" : "unit test(s)") );
 
 	fprintf(report,
 		"<div class=\"shadowed details_box\">"
@@ -278,16 +512,21 @@ static void testSuite(TestSuite * suite, FILE * report){
 	suite->title, suite->title, suite->title);
 
 	tests = suite->tests->count;
-	for(testIndex = 0; testIndex < tests && testIndex < SUMMARY_MAX_ITEMS; testIndex++){
+	for(test_index = 0; test_index < tests && test_index < SUMMARY_MAX_ITEMS; test_index++){
 
-		UnitTest * test = suite->tests->test[testIndex];
+		unit_test * test = suite->tests->test[test_index];
 
 		fprintf(report,
-						"<div class=\"unit_test_%s image icon24\"></div>"
-						"<a href=\"#test_%s\" title=\"%s\">"
-							"test_%s"
+						"<div class=\"%s_%s image icon24\"></div>"
+						"<a href=\"#%s_%s\" title=\"%s\">"
+							"%s_%s"
 						"</a>%s",
-		(test->passed ? "passed" : "failed"), test->code, test->title, test->code, AFTER_SUMMARY_ITEM(testIndex, tests) );
+		HUMAN_TYPE(test->is_requirement, "unit_test"),
+		HUMAN_STATUS(test->status),
+		HUMAN_TYPE(test->is_requirement, "unit_test"),
+		test->code, test->title,
+		HUMAN_TYPE(test->is_requirement, "unit_test"), test->code,
+		AFTER_SUMMARY_ITEM(test_index, tests) );
 	}
 
 	fprintf(report,
@@ -297,21 +536,26 @@ static void testSuite(TestSuite * suite, FILE * report){
 
 	fprintf(report,
 		"<div id=\"div_%s_detailed\" class=\"%shidden details\">",
-	suite->title, tests > 32 ? "_8_columns " : ( tests > 16 ? "_4_columns " : ( tests > 8 ? "_2_columns " : "" ) ) );
+	suite->title, tests >= 32 ? "_8_columns " : ( tests >= 16 ? "_4_columns " : ( tests >= 8 ? "_2_columns " : "" ) ) );
 
-	for(testIndex = 0; testIndex < tests; testIndex++){
+	for(test_index = 0; test_index < tests; test_index++){
 
-		UnitTest * test = suite->tests->test[testIndex];
+		unit_test * test = suite->tests->test[test_index];
 
 		fprintf(report,
 
 					"<div title=\"%s\">"
-						"<div class=\"unit_test_%s image icon24\"></div>"
-						"<a href=\"#test_%s\">"
-							"test_%s"
+						"<div class=\"%s_%s image icon24\"></div>"
+						"<a href=\"#%s_%s\">"
+							"%s_%s"
 						"</a>"
 					"</div>",
-		test->title, (test->passed ? "passed" : "failed"), test->code, test->code);
+		test->title,
+		HUMAN_TYPE(test->is_requirement, "unit_test"),
+		HUMAN_STATUS(test->status),
+		HUMAN_TYPE(test->is_requirement, "unit_test"),
+		test->code,
+		HUMAN_TYPE(test->is_requirement, "unit_test"), test->code);
 	}
 
 	fprintf(report,
@@ -321,7 +565,7 @@ static void testSuite(TestSuite * suite, FILE * report){
 	);
 }
 
-static void testSuites(TestSuiteCollection * suites, FILE * report){
+static void print_test_suites(test_suite_collection * suites, FILE * report){
 
 	int index;
 
@@ -331,7 +575,7 @@ static void testSuites(TestSuiteCollection * suites, FILE * report){
 	);
 
 	for(index = 0; index < suites->count; index++){
-		testSuite(suites->suite[index], report);
+		print_test_suite(suites->suite[index], report);
 	}
 
 	fprintf(report,
@@ -339,25 +583,25 @@ static void testSuites(TestSuiteCollection * suites, FILE * report){
 	);
 }
 
-static void unitTests(TestSuiteCollection * suites, FILE * report){
+static void print_unit_tests(test_suite_collection * suites, FILE * report){
 
-	int suiteIndex;
-	int testIndex;
+	int suite_index;
+	int test_index;
 
 	fprintf(report,
 		"<h2 class=\"shadowed\">Unit Tests</h2>"
 		"<div id=\"test_stats\" class=\"shadowed\">"
 	);
 
-	for(suiteIndex = 0; suiteIndex < suites->count; suiteIndex++){
+	for(suite_index = 0; suite_index < suites->count; suite_index++){
 
-		TestSuite * suite = suites->suite[suiteIndex];
+		test_suite * suite = suites->suite[suite_index];
 
-		for(testIndex = 0; testIndex < suite->tests->count; testIndex++){
+		for(test_index = 0; test_index < suite->tests->count; test_index++){
 
-			UnitTest * test = suite->tests->test[testIndex];
+			unit_test * test = suite->tests->test[test_index];
 
-			unitTest(suite, test, report);
+			print_unit_test(suite, test, report);
 		}
 	}
 
@@ -366,17 +610,10 @@ static void unitTests(TestSuiteCollection * suites, FILE * report){
 	);
 }
 
-static void overallStatistics(Statistics stats, FILE * report){
+static void print_overall_statistics(statistics requirement_stats, statistics suite_stats, FILE * report){
 
-	time_t			now		= time(NULL);
-	const char *	date	= ctime(&now);
-	const char *	overall	= "All tests passed successfully";
-	const char *	status	= "passed";
-
-	if(stats.failed != 0){
-		overall = "Some of the tests failed";
-		status	= "failed";
-	}
+	time_t			now				= time(NULL);
+	const char *	date			= ctime(&now);
 
 	fprintf(report,
 		"<div>"
@@ -386,30 +623,207 @@ static void overallStatistics(Statistics stats, FILE * report){
 			"</h3>"
 		"</div>"
 		"<div class=\"global_section\">"
+	);
+
+	if(suite_stats.total > 0){
+
+		const char * summary1;
+		const char * summary2;
+
+		if(suite_stats.failed > 0){
+			summary1 = "Some of the tests failed.";
+		}else if(suite_stats.warnings > 0){
+			summary1 = "Some <em>non-critical</em> test didn't pass.";
+		}else{
+			summary1 = "All tests passed successfully.";
+		}
+
+		if(suite_stats.failed == 0 && suite_stats.warnings == 0){
+			summary2 = "";
+		}else if(requirement_stats.total == 0){
+			summary2 = " Please verify platform requirements.";
+		}else if(requirement_stats.failed > 0 || requirement_stats.warnings > 0){
+			summary2 = " It could be related to some error on <strong>platform requirements</strong>.";
+		}else{
+			summary2 = " Please report it by clicking on the links (<em>\"create a new issue\"</em>).";
+		}
+
+		fprintf(report,
 			"<div class=\"paragraph\">"
 				"<div class=\"%s image icon24\"></div>"
-				"%s."
+				"%s%s"
+			"</div>",
+		( suite_stats.failed > 0 ? "failed" : (suite_stats.warnings > 0 ? "warning" : "passed") ),
+		summary1, summary2);
+	}
+
+	if(requirement_stats.total > 0){
+
+		const char * summary;
+
+		if(requirement_stats.failed > 0){
+			summary = "Some of the library's functionality is broken on this platform.";
+		}else if(requirement_stats.warnings > 0){
+			summary = "This platform shows some unexpected behavior. Please check platform requirements.";
+		}else{
+			summary = "All platform requirements are fulfilled.";
+		}
+
+		fprintf(report,
+				"<div class=\"paragraph\">"
+					"<div class=\"%s image icon24\"></div>"
+					"%s"
+				"</div>",
+		( requirement_stats.failed > 0 ? "failed" : (requirement_stats.warnings > 0 ? "warning" : "passed") ),
+		summary);
+	}
+
+	fprintf(report,
+			"<div class=\"shadowed details_box\">"
+				"<div onclick=\"toggleDetails('overall');\">"
+					"<div id=\"overall_button\" class=\"unfold image icon24\"></div>"
+					"<div class=\"details_heading\">"
+						"Additional information:"
+					"</div>"
+					"<div id=\"overall_summary\" class=\"summary\">"
+						"exceptions4c version %s"
+					"</div>"
+				"</div>",
+	E4C_VERSION_STRING);
+
+	fprintf(report,
+				"<div id=\"overall_detailed\" class=\"hidden details\">"
+					"<div>"
+						"<div class=\"book image icon24\"></div>"
+						"exceptions4c version %s"
+					"</div>"
+					"<div>"
+						"<div class=\"datetime image icon24\"></div>"
+						"%s"
+					"</div>",
+	E4C_VERSION_STRING, date);
+
+# if (PLATFORM_COMPILER_VERSION_NUMBER == -1L)
+		fprintf(report,
+					"<div>"
+						"<div class=\"platform image icon24\"></div>"
+						"Compiler: %s %s"
+					"</div>",
+		PLATFORM_COMPILER, PLATFORM_COMPILER_VERSION);
+# else
+		fprintf(report,
+					"<div>"
+						"<div class=\"platform image icon24\"></div>"
+						"Compiler: %s (%ld)"
+					"</div>",
+		PLATFORM_COMPILER, (long)PLATFORM_COMPILER_VERSION_NUMBER);
+# endif
+
+	fprintf(report,
+					"<div>"
+						"<div class=\"platform image icon24\"></div>"
+						"Operating system: %s"
+					"</div>",
+	PLATFORM_OS);
+
+	print_symbolical_macro("__STDC__", STDC > 0, report);
+	print_numerical_macro("__STDC_VERSION__", STDC_VERSION, report);
+	print_symbolical_macro("NDEBUG", IS_NDEBUG_DEFINED, report);
+	print_symbolical_macro("E4C_THREADSAFE", IS_E4C_THREADSAFE_DEFINED, report);
+	print_symbolical_macro("E4C_NOKEYWORDS", IS_E4C_NOKEYWORDS_DEFINED, report);
+	print_symbolical_macro("_POSIX_SOURCE", IS_POSIX_SOURCE_DEFINED, report);
+
+	fprintf(report,
+				"</div>"
 			"</div>"
-			"<div class=\"paragraph\">"
-				"<div class=\"book image icon24\"></div>"
-				"exceptions4c version %s"
-			"</div>"
-			"<div class=\"paragraph\">"
-				"<div class=\"bug image icon24\"></div>"
-				"<code>NDEBUG</code> %s; "
-				"<code>__STDC_VERSION__=%ld</code>%s."
-			"</div>"
-			"<div class=\"paragraph\">"
-				"<div class=\"datetime image icon24\"></div>"
-				"%s"
-			"</div>"
-		"</div>",
-	status, overall, E4C_VERSION_STRING,
-	(NDEBUG_is_defined ? "defined" : "undefined"), STDC_VERSION, (STDC_VERSION == -1 ? " (undefined)" : ""),
-	date);
+		"</div>"
+	);
 }
 
-static void testSuiteStatistics(Statistics stats, TestSuiteCollection * suites, FILE * report){
+static void print_requirement(unit_test * test, FILE * report){
+
+	fprintf(report,
+		"<div>"
+			"<div class=\"requirement_%s image icon24\"></div>"
+			"<a href=\"#requirement_%s\">%s</a>"
+		"</div>",
+	HUMAN_STATUS(test->status),
+	test->code,
+	test->title
+	);
+}
+
+static void print_requirements(statistics stats, test_suite_collection * suites, FILE * report){
+
+	int				suite_index;
+	int				tests;
+	int				test_index;
+	unit_test *		test;
+
+	fprintf(report,
+		"<div>"
+			"<div class=\"requirement image icon24\"></div>"
+			"<h3>"
+				"Platform Requirements"
+			"</h3>"
+		"</div>"
+		"<div class=\"global_section\">"
+			"<div class=\"paragraph\">"
+				"<div class=\"stats image icon24\"></div>"
+				"<strong>%d</strong> requirements; <strong>%d</strong> passed; <strong>%d</strong> failed."
+			"</div>",
+	stats.total, stats.passed, stats.warnings + stats.failed);
+
+			print_graph(report, stats, "requirement(s)");
+
+	fprintf(report,
+			"<div class=\"shadowed details_box\">"
+				"<div onclick=\"toggleDetails('platform_list');\">"
+					"<div id=\"platform_list_button\" class=\"unfold image icon24\"></div>"
+					"<div class=\"details_heading\">"
+						"All requirements:"
+					"</div>"
+					"<div id=\"platform_list_summary\" class=\"summary\">"
+					"The detected platform is <em>%s</em> on <em>%s</em>.",
+		PLATFORM_COMPILER, PLATFORM_OS
+	);
+
+	fprintf(report,
+					"</div>"
+				"</div>"
+				"<div id=\"platform_list_detailed\" class=\"hidden details\">"
+	);
+
+	for(suite_index = 0; suite_index < suites->count; suite_index++){
+
+		test_suite * suite = suites->suite[suite_index];
+
+		tests = suite->tests->count;
+
+		for(test_index = 0; test_index < tests; test_index++){
+
+			test = suite->tests->test[test_index];
+
+			if(test->is_requirement){
+				print_requirement(test, report);
+			}
+		}
+
+	}
+
+	fprintf(report,
+				"</div>"
+			"</div>"
+		"</div>"
+	);
+
+	/*
+	fprintf(report,
+		"</div>");
+	*/
+}
+
+static void print_test_suite_statistics(statistics stats, test_suite_collection * suites, FILE * report){
 
 	int index;
 
@@ -425,9 +839,9 @@ static void testSuiteStatistics(Statistics stats, TestSuiteCollection * suites, 
 				"<div class=\"stats image icon24\"></div>"
 				"<strong>%d</strong> test suites; <strong>%d</strong> passed; <strong>%d</strong> failed."
 			"</div>",
-	stats.total, stats.passed, stats.failed);
+	stats.total, stats.passed, stats.warnings + stats.failed);
 
-			htmlGraph(report, stats, "test suite(s)");
+			print_graph(report, stats, "test suite(s)");
 
 	fprintf(report,
 			"<div class=\"shadowed details_box\">"
@@ -441,36 +855,44 @@ static void testSuiteStatistics(Statistics stats, TestSuiteCollection * suites, 
 
 	for(index = 0; index < suites->count && index < SUMMARY_MAX_ITEMS; index++){
 
-		TestSuite * suite = suites->suite[index];
+		test_suite * suite = suites->suite[index];
 
-		fprintf(report,
-						"<div class=\"test_suite_%s image icon24\"></div>"
-						"<a href=\"#%s\" title=\"%s suite contains %d unit tests\">"
-							"%s"
-						"</a>%s",
-		(suite->passed ? "passed" : "failed"), suite->title, suite->title, suite->tests->count, suite->title,
-		AFTER_SUMMARY_ITEM(index, suites->count)
-		);
+		if(!suite->is_requirement){
+
+			fprintf(report,
+							"<div class=\"test_suite_%s image icon24\"></div>"
+							"<a href=\"#test_suite_%s\" title=\"%s suite contains %d unit tests\">"
+								"%s"
+							"</a>%s",
+			HUMAN_STATUS(suite->status),
+			suite->title, suite->title, suite->tests->count, suite->title,
+			AFTER_SUMMARY_ITEM(index, suites->count)
+			);
+		}
 	};
 
 	fprintf(report,
 					"</div>"
 				"</div>"
-				"<div id=\"suite_list_detailed\" class=\"hidden details\">"
-	);
+				"<div id=\"suite_list_detailed\" class=\"%shidden details\">",
+	suites->count >= 32 ? "_8_columns " : ( suites->count >= 16 ? "_4_columns " : ( suites->count >= 8 ? "_2_columns " : "" ) ) );
 
 	for(index = 0; index < suites->count; index++){
 
-		TestSuite * suite = suites->suite[index];
+		test_suite * suite = suites->suite[index];
 
-		fprintf(report,
-					"<div title=\"%s suite contains %d unit tests\">"
-						"<div class=\"test_suite_%s image icon24\"></div>"
-						"<a href=\"#%s\">"
-							"%s"
-						"</a>"
-					"</div>",
-		suite->title, suite->tests->count, (suite->passed ? "passed" : "failed"), suite->title, suite->title);
+		if(!suite->is_requirement){
+			fprintf(report,
+						"<div title=\"%s suite contains %d unit tests\">"
+							"<div class=\"test_suite_%s image icon24\"></div>"
+							"<a href=\"#test_suite_%s\">"
+								"%s"
+							"</a>"
+						"</div>",
+			suite->title, suite->tests->count,
+			HUMAN_STATUS(suite->status),
+			suite->title, suite->title);
+		}
 	}
 
 	fprintf(report,
@@ -480,10 +902,10 @@ static void testSuiteStatistics(Statistics stats, TestSuiteCollection * suites, 
 	);
 }
 
-static void unitTestStatistics(Statistics testStats, TestSuiteCollection * suites, FILE * report){
+static void print_unit_test_statistics(statistics test_stats, test_suite_collection * suites, FILE * report){
 
-	int suiteIndex;
-	int testIndex;
+	int suite_index;
+	int test_index;
 	int index;
 
 	fprintf(report,
@@ -498,9 +920,9 @@ static void unitTestStatistics(Statistics testStats, TestSuiteCollection * suite
 				"<div class=\"stats image icon24\"></div>"
 				"<strong>%d</strong> unit tests; <strong>%d</strong> passed; <strong>%d</strong> failed."
 			"</div>",
-	testStats.total, testStats.passed, testStats.failed);
+	test_stats.total, test_stats.passed, test_stats.warnings + test_stats.failed);
 
-			htmlGraph(report, testStats, "unit test(s)");
+			print_graph(report, test_stats, "unit test(s)");
 
 	fprintf(report,
 			"<div class=\"shadowed details_box\">"
@@ -512,23 +934,27 @@ static void unitTestStatistics(Statistics testStats, TestSuiteCollection * suite
 					"<div id=\"test_list_summary\" class=\"summary\">"
 	);
 
-	for(index = 0, suiteIndex = 0; index < SUMMARY_MAX_ITEMS && suiteIndex < suites->count; suiteIndex++){
+	for(index = 0, suite_index = 0; index < SUMMARY_MAX_ITEMS && suite_index < suites->count; suite_index++){
 
-		TestSuite *	suite	= suites->suite[suiteIndex];
-		int			tests	= suite->tests->count;
+		test_suite *	suite	= suites->suite[suite_index];
+		int				tests	= suite->tests->count;
 
-		for(testIndex = 0; index < SUMMARY_MAX_ITEMS && testIndex < tests; testIndex++, index++){
+		for(test_index = 0; index < SUMMARY_MAX_ITEMS && test_index < tests; test_index++, index++){
 
-			UnitTest * test = suite->tests->test[testIndex];
+			unit_test * test = suite->tests->test[test_index];
 
-			fprintf(report,
-						"<div class=\"unit_test_%s image icon24\"></div>"
-						"<a href=\"#test_%s\" title=\"%s (%s suite)\">"
-							"test_%s"
-						"</a>%s",
-			(test->passed ? "passed" : "failed"), test->code, test->title, suite->title, test->code,
-			AFTER_SUMMARY_ITEM(index, testStats.total)
-			);
+			if(!test->is_requirement){
+
+				fprintf(report,
+							"<div class=\"unit_test_%s image icon24\"></div>"
+							"<a href=\"#unit_test_%s\" title=\"%s (%s suite)\">"
+								"unit_test_%s"
+							"</a>%s",
+				HUMAN_STATUS(test->status),
+				test->code, test->title, suite->title, test->code,
+				AFTER_SUMMARY_ITEM(index, test_stats.total)
+				);
+			}
 		}
 	};
 
@@ -536,25 +962,29 @@ static void unitTestStatistics(Statistics testStats, TestSuiteCollection * suite
 					"</div>"
 				"</div>"
 				"<div id=\"test_list_detailed\" class=\"%shidden details\">",
-	testStats.total > 32 ? "_8_columns " : ( testStats.total > 16 ? "_4_columns " : ( testStats.total > 8 ? "_2_columns " : "" ) )	);
+	test_stats.total >= 32 ? "_8_columns " : ( test_stats.total >= 16 ? "_4_columns " : ( test_stats.total >= 8 ? "_2_columns " : "" ) )	);
 
-	for(suiteIndex = 0; suiteIndex < suites->count; suiteIndex++){
+	for(suite_index = 0; suite_index < suites->count; suite_index++){
 
-		TestSuite *	suite	= suites->suite[suiteIndex];
-		int			tests	= suite->tests->count;
+		test_suite *	suite	= suites->suite[suite_index];
+		int				tests	= suite->tests->count;
 
-		for(testIndex = 0; testIndex < tests; testIndex++, index++){
+		for(test_index = 0; test_index < tests; test_index++, index++){
 
-			UnitTest * test = suite->tests->test[testIndex];
+			unit_test * test = suite->tests->test[test_index];
 
-			fprintf(report,
-					"<div title=\"%s (%s suite)\">"
-						"<div class=\"unit_test_%s image icon24\"></div>"
-						"<a href=\"#test_%s\">"
-							"test_%s"
-						"</a>"
-					"</div>",
-			test->title, suite->title, (test->passed ? "passed" : "failed"), test->code, test->code);
+			if(!test->is_requirement){
+				fprintf(report,
+						"<div title=\"%s (%s suite)\">"
+							"<div class=\"unit_test_%s image icon24\"></div>"
+							"<a href=\"#unit_test_%s\">"
+								"unit_test_%s"
+							"</a>"
+						"</div>",
+				test->title, suite->title,
+				HUMAN_STATUS(test->status),
+				test->code, test->code);
+			}
 		}
 	};
 
@@ -565,34 +995,44 @@ static void unitTestStatistics(Statistics testStats, TestSuiteCollection * suite
 	);
 }
 
-static void statistics(Statistics suiteStats, Statistics testStats, TestSuiteCollection * suites, FILE * report){
+static void print_statistics(statistics requirement_stats, statistics suite_stats, statistics test_stats, test_suite_collection * suites, FILE * report){
 
 	fprintf(report,
 		"<h2 class=\"shadowed\">Global Statistics</h2>"
 		"<div id=\"global_stats\" class=\"shadowed\">"
 	);
 
-			overallStatistics(suiteStats, report);
-			testSuiteStatistics(suiteStats, suites, report);
-			unitTestStatistics(testStats, suites, report);
+			print_overall_statistics(requirement_stats, suite_stats, report);
+
+			if(requirement_stats.total > 0){
+				print_requirements(requirement_stats, suites, report);
+			}
+
+			if(suite_stats.total > 0){
+				print_test_suite_statistics(suite_stats, suites, report);
+			}
+
+			if(test_stats.total > 0){
+				print_unit_test_statistics(test_stats, suites, report);
+			}
 
 	fprintf(report,
 		"</div>"
 	);
 }
 
-static void content(TestRunner * runner, FILE * report){
+static void print_content(test_runner * runner, FILE * report){
 
 	fprintf(report, "<div id=\"content\">");
 
-		statistics(runner->stats.suites, runner->stats.tests, runner->suites, report);
-		testSuites(runner->suites, report);
-		unitTests(runner->suites, report);
+		print_statistics(runner->stats.requirements, runner->stats.suites, runner->stats.tests, runner->suites, report);
+		print_test_suites(runner->suites, report);
+		print_unit_tests(runner->suites, report);
 
 	fprintf(report, "</div>");
 }
 
-static void header(FILE * report){
+static void print_header(FILE * report){
 
 	fprintf(report,
 		"<div id=\"header\">"
@@ -610,7 +1050,7 @@ static void header(FILE * report){
 	);
 }
 
-static void footer(FILE * report){
+static void print_footer(FILE * report){
 
 	fprintf(report,
 		"<div id=\"footer\">"
@@ -621,18 +1061,18 @@ static void footer(FILE * report){
 	);
 }
 
-static void body(TestRunner * runner, FILE * report){
+static void print_body(test_runner * runner, FILE * report){
 
 	fprintf(report, "<body>");
 
-		header(report);
-		content(runner, report);
-		footer(report);
+		print_header(report);
+		print_content(runner, report);
+		print_footer(report);
 
 	fprintf(report, "</body>");
 }
 
-static void stylesheet(FILE * report){
+static void print_stylesheet(FILE * report){
 
 	fprintf(report, "<style type=\"text/css\">");
 
@@ -761,7 +1201,8 @@ static void stylesheet(FILE * report){
 			"cursor:"					"pointer;"
 		"}"
 		".details_box{"
-			"background-color:"			"#FFFFE0;"
+			"background-color:"			"rgb(255, 255, 224);"
+			"background-color:"			"rgba(255, 255, 224, 0.5);"
 			"border:"					"solid 1px #000;"
 			"margin:"					"2px;"
 			"padding:"					"2px;"
@@ -829,7 +1270,13 @@ static void stylesheet(FILE * report){
 			"margin:"					"0;"
 		"}"
 		".image{"
-			"background:"				"url(\"data:image/png;base64,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\") no-repeat;"
+			"background:"				"url(\"data:image/png;base64,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\") no-repeat;"
+		"}"
+		".unfold{"
+			"background-position:"		"0 -48px;"
+		"}"
+		".fold{"
+			"background-position:"		"-24px -48px;"
 		"}"
 		".test_suite{"
 			"background-position:"		"-48px 0;"
@@ -837,11 +1284,17 @@ static void stylesheet(FILE * report){
 		".unit_test{"
 			"background-position:"		"-48px -24px;"
 		"}"
+		".requirement{"
+			"background-position:"		"-48px -48px;"
+		"}"
 		".test_suite_passed{"
 			"background-position:"		"-72px 0;"
 		"}"
 		".unit_test_passed{"
 			"background-position:"		"-72px -24px;"
+		"}"
+		".requirement_passed{"
+			"background-position:"		"-72px -48px;"
 		"}"
 		".test_suite_failed{"
 			"background-position:"		"-96px 0;"
@@ -849,17 +1302,26 @@ static void stylesheet(FILE * report){
 		".unit_test_failed{"
 			"background-position:"		"-96px -24px;"
 		"}"
-		".passed{"
+		".requirement_failed{"
+			"background-position:"		"-96px -48px;"
+		"}"
+		".test_suite_warning{"
 			"background-position:"		"-120px 0;"
 		"}"
-		".failed{"
+		".unit_test_warning{"
 			"background-position:"		"-120px -24px;"
 		"}"
-		".unfold{"
+		".requirement_warning{"
+			"background-position:"		"-120px -48px;"
+		"}"
+		".passed{"
 			"background-position:"		"-144px 0;"
 		"}"
-		".fold{"
+		".failed{"
 			"background-position:"		"-144px -24px;"
+		"}"
+		".warning{"
+			"background-position:"		"-144px -48px;"
 		"}"
 		".overall{"
 			"background-position:"		"-168px 0;"
@@ -867,23 +1329,32 @@ static void stylesheet(FILE * report){
 		".book{"
 			"background-position:"		"-168px -24px;"
 		"}"
+		".info{"
+			"background-position:"		"-168px -48px;"
+		"}"
 		".datetime{"
 			"background-position:"		"-192px 0;"
 		"}"
 		".stats{"
 			"background-position:"		"-192px -24px;"
 		"}"
+		".platform{"
+			"background-position:"		"-192px -48px;"
+		"}"
 		".bug{"
 			"background-position:"		"-216px 0;"
 		"}"
-		".e4c{"
+		".return{"
 			"background-position:"		"-216px -24px;"
+		"}"
+		".e4c{"
+			"background-position:"		"-216px -48px;"
 		"}"
 	"</style>"
 	);
 }
 
-static void javascript(FILE * report){
+static void print_javascript(FILE * report){
 
 	fprintf(report,
 		"<script type=\"text/javascript\">"
@@ -900,7 +1371,7 @@ static void javascript(FILE * report){
 	);
 }
 
-static void head(FILE * report){
+static void print_head(FILE * report){
 
 	fprintf(report, "<head>");
 
@@ -909,21 +1380,21 @@ static void head(FILE * report){
 			"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
 			"<link rel=\"icon\" type=\"image/png\" href=\"data:image/gif;base64,R0lGODlhEAAQALMAAAAAAAgICBwcHDExMUlJSXBwcIyMjKSkpLW1tb29vcbGxtbW1ufn5+/v7/f39////ywAAAAAEAAQAAAEdfDJSetsB1mrRiCIs0mLAJxBcShGaxxHQ5w0TRj1sSgm8cyExAPgI/h+gOEvkUz6BpJCUmKYHIYA6AOHpCmfEsVH4iX+jo/DACUInAYCwXXCIAwSDBaIMWhQGAYFFAYLD4IUCgiHDw6CgBUJGBMLhQgMI5gRAAA7\" />"
 		);
-		stylesheet(report);
-		javascript(report);
+		print_stylesheet(report);
+		print_javascript(report);
 
 	fprintf(report, "</head>");
 }
 
-void html(TestRunner * runner, FILE * report){
+void print_html(test_runner * runner, FILE * report){
 
 	fprintf(report,
 		"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
 		"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
 	);
 
-		head(report);
-		body(runner, report);
+		print_head(report);
+		print_body(runner, report);
 
 	fprintf(report, "</html>");
 }

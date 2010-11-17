@@ -21,6 +21,7 @@ DEFINE_TEST(
 	b09,
 	"return... in the middle of a catch{...} block",
 	"This test uses the library in an inconsistent way, by <strong>returning from a function in the middle of a <code>catch</code> block</strong>. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
+	NULL,
 	EXIT_FAILURE,
 	"before_CONTEXT_END",
 	"ExceptionSystemFatalError"

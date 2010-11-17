@@ -6,6 +6,7 @@ DEFINE_TEST(
 	f06,
 	"An exception will only be caught by the first capable catch{...} block",
 	"This test starts a <code>try</code> block, throws <code>ChildException</code> and attempts to catch it with a <code>catch(ChildException)</code> block, but there is a previous <code>catch(ParentException)</code> block which will eventually handle it.",
+	NULL,
 	EXIT_SUCCESS,
 	"caught_by_GENERIC_block",
 	NULL
@@ -42,17 +43,17 @@ DEFINE_TEST(
 
 	printf("before_CONTEXT_END\n");
 
-   	e4c_context_end();
+	e4c_context_end();
 
 	if(caught1 && caught2){
 
 		printf("caught_by_BOTH\n");
 
-    }else if(caught1){
+	}else if(caught1){
 
 		printf("caught_by_GENERIC_block\n");
 
-    }else if(caught2){
+	}else if(caught2){
 
 		printf("caught_by_SPECIFIC_block\n");
 

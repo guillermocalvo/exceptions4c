@@ -6,11 +6,12 @@ DEFINE_TEST(
 	g01,
 	"Signal SIGSEGV",
 	"This test attempts to dereference a null pointer; the library signal handling is disabled, so the behavior of the program will be implementation-defined (typically the program will terminate abruptly).",
+	"This functionality relies on the <a href=\"#requirement_z04\"><strong>platform's behavior when dereferencing a null pointer</strong></a>.",
 	EXIT_WHATEVER,
 	"before_NULL_POINTER",
-	NULL
+	ERROR_WHATEVER
 ){
-	int * nullPointer = NULL;
+	int * null_pointer = NULL;
 	int integer;
 
 	/*
@@ -28,14 +29,12 @@ DEFINE_TEST(
 	fflush(stdout);
 
 	/* some smartypants compilers might need to be fooled */
-	/* if(nullPointer != &integer) nullPointer = NULL; */
+	/* if(null_pointer != &integer) null_pointer = NULL; */
 
-	integer = *nullPointer;
+	integer = *null_pointer;
 
-	printf("after_NULL_POINTER\n");
+	printf("after_NULL_POINTER_%d\n", integer);
 	fflush(stdout);
-
-	if(integer) integer = 0;
 
 	printf("before_CONTEXT_END\n");
 	fflush(stdout);

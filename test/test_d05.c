@@ -6,6 +6,7 @@ DEFINE_TEST(
 	d05,
 	"Uncaught exception rethrown from a catch{...} block",
 	"This test <strong>starts a <code>try</code> block and then throws an exception</strong>; there is a <code>catch</code> block that handles it and then <em>rethrows</em> it.",
+	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"before_RETHROW",
 	"WildException"

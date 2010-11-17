@@ -6,9 +6,10 @@ DEFINE_TEST(
 	g02,
 	"Signal SIGFPE",
 	"This test attempts to divide by zero; the library signal handling is disabled, so the behavior of the program will be implementation-defined (typically the program will terminate abruptly).",
+	"This functionality relies on the <a href=\"#requirement_z05\"><strong>platform's behavior when dividing by zero</strong></a>.",
 	EXIT_WHATEVER,
 	"before_DIVISION_BY_ZERO",
-	NULL
+	ERROR_WHATEVER
 ){
 	int zero = 0;
 	int integer = 1010;
@@ -32,10 +33,8 @@ DEFINE_TEST(
 
 	integer = 31416 / zero;
 
-	printf("after_DIVISION_BY_ZERO\n");
+	printf("after_DIVISION_BY_ZERO_%d\n", integer);
 	fflush(stdout);
-
-	if(integer) integer = 0;
 
 	printf("before_CONTEXT_END\n");
 	fflush(stdout);

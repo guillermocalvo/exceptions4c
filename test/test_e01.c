@@ -13,6 +13,7 @@ DEFINE_TEST(
 		"<li>The <code>finally</code> block is executed.</li>"
 		"<li>The program is terminated.</li>"
 		"</ol>",
+	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"inside_FINALLY_block",
 	"WildException"

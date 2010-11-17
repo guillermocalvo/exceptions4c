@@ -66,6 +66,7 @@ DEFINE_TEST(
 	f07,
 	"Catching an exception thrown deep down the call stack",
 	"This test starts a <code>try</code> block, and calls a function. That function calls another one, and so on. Eventually, one of those functions will throw an exception that will be caught by a <code>catch(TamedException)</code> right next to the <code>try</code> block.",
+	NULL,
 	EXIT_SUCCESS,
 	"exception_WAS_caught",
 	NULL

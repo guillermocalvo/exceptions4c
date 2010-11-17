@@ -1,7 +1,7 @@
 
 # include "testing.h"
 
-# define NEW SUITE(h, "Integration", "\
+# define NEW TEST_SUITE(h, "Integration", "\
 \
 This suite of tests checks the behavior of the library when the program \
 receives a signal from the operating system. If no signal mapping is provided, \
