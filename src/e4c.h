@@ -60,49 +60,54 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 7)
+# define _E4C_VERSION(version)			version(2, 3, 8)
 
 # if !defined(E4C_THREADSAFE) && ( \
-		defined(HAVE_PTHREAD_H) \
-	||	defined(PTHREAD_H) \
+		defined(PTHREAD_H) \
 	||	defined(PTHREAD_BARRIER_SERIAL_THREAD) \
 	||	defined(PTHREAD_CANCEL_ASYNCHRONOUS) \
 	||	defined(PTHREAD_CANCEL_ENABLE) \
 	||	defined(PTHREAD_CANCEL_DEFERRED) \
 	||	defined(PTHREAD_CANCEL_DISABLE) \
 	||	defined(PTHREAD_CANCELED) \
+	||	defined(PTHREAD_COND_INITIALIZER) \
 	||	defined(PTHREAD_CREATE_DETACHED) \
 	||	defined(PTHREAD_CREATE_JOINABLE) \
+	||	defined(PTHREAD_EXPLICIT_SCHED) \
+	||	defined(PTHREAD_INHERIT_SCHED) \
+	||	defined(PTHREAD_MUTEX_DEFAULT) \
+	||	defined(PTHREAD_MUTEX_ERRORCHECK) \
+	||	defined(PTHREAD_MUTEX_NORMAL) \
+	||	defined(PTHREAD_MUTEX_INITIALIZER) \
+	||	defined(PTHREAD_MUTEX_RECURSIVE) \
+	||	defined(PTHREAD_ONCE_INIT) \
+	||	defined(PTHREAD_PRIO_INHERIT) \
+	||	defined(PTHREAD_PRIO_NONE) \
+	||	defined(PTHREAD_PRIO_PROTECT) \
+	||	defined(PTHREAD_PROCESS_SHARED) \
+	||	defined(PTHREAD_PROCESS_PRIVATE) \
+	||	defined(PTHREAD_RWLOCK_INITIALIZER) \
+	||	defined(PTHREAD_SCOPE_PROCESS) \
+	||	defined(PTHREAD_SCOPE_SYSTEM) \
 	)
-# error Please define E4C_THREADSAFE at compiler level to enable the \
-multi-thread version of exceptions4c.
+# error Please define E4C_THREADSAFE at compiler level \
+to enable the multi-thread version of exceptions4c.
 # endif
 
-/*
-	The _E4C_FUNCTION_NAME compile-time parameter
-	could be defined in order to work with some specific compiler.
-*/
-# ifndef _E4C_FUNCTION_NAME
-#	if __STDC_VERSION__ < 199901L
-#		if __GNUC__ < 2
-#			define _E4C_FUNCTION_NAME	NULL
-#		else
-#			define _E4C_FUNCTION_NAME	__extension__ __FUNCTION__
-#		endif
-#	else
-#		define _E4C_FUNCTION_NAME		__func__
-#	endif
-# endif
 
 /* All of these are C99 standard features */
 # if __STDC_VERSION__ >= 199901L
 
-#	ifndef HAVE_STD_BOOL_H
-#		define HAVE_STD_BOOL_H
+#	ifndef HAVE_STDBOOL_H
+#		define HAVE_STDBOOL_H
 #	endif
 
 #	ifndef HAVE_C99_VARIADIC_MACROS
 #		define HAVE_C99_VARIADIC_MACROS
+#	endif
+
+#	ifndef HAVE_C99_FUNC
+#		define HAVE_C99_FUNC
 #	endif
 
 #	ifndef HAVE_VSNPRINTF
@@ -111,12 +116,14 @@ multi-thread version of exceptions4c.
 
 # endif
 
+
 # include <stdlib.h>
 # include <setjmp.h>
 
-# ifdef HAVE_STD_BOOL_H
+# ifdef HAVE_STDBOOL_H
 #	include <stdbool.h>
 # endif
+
 
 # ifdef __bool_true_false_are_defined
 #	define e4c_bool						bool
@@ -126,6 +133,28 @@ multi-thread version of exceptions4c.
 #	define e4c_bool						int
 #	define e4c_false					0
 #	define e4c_true						1
+# endif
+
+/*
+	The _E4C_FUNCTION_NAME compile-time parameter
+	could be defined in order to work with some specific compiler.
+*/
+# ifndef _E4C_FUNCTION_NAME
+
+#	ifdef HAVE_C99_FUNC
+#		define _E4C_FUNCTION_NAME		__func__
+
+#	elif defined(__GNUC__)
+#		if __GNUC__ >= 2
+#			define _E4C_FUNCTION_NAME	__extension__ __FUNCTION__
+#		else
+#			define _E4C_FUNCTION_NAME	NULL
+#		endif
+
+#	else
+#		define _E4C_FUNCTION_NAME	NULL
+#	endif
+
 # endif
 
 # ifdef _POSIX_C_SOURCE
