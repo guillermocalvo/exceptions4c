@@ -2,10 +2,11 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
+DEFINE_TEST_LONG_DESCRIPTION(
 	e03,
 	"Uncaught exception, rethrown from a catch{...} block, with a finally{...} block",
-	"This test checks the execution of a <code>finally</code> block when an exception is <em>rethrown</em> from a preceding <code>catch</code> block. The expected behavior is:"
+	"This test checks the execution of a <code>finally</code> block when an exception is <em>rethrown</em> from a preceding <code>catch</code> block."
+	"The expected behavior is:",
 		"<ol>"
 		"<li>The test starts a <code>try</code> block with a <code>catch</code> block and a <code>finally</code> block.</li>"
 		"<li>The test throws an exception from inside the <code>try</code> block.</li>"

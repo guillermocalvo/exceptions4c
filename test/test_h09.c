@@ -128,10 +128,11 @@ static int ext1(){
 
 }
 
-DEFINE_TEST(
+DEFINE_TEST_LONG_DESCRIPTION(
 	h09,
 	"A library (exception-aware client) calls another library",
-	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-aware</em>, but the external function cannot simply rely on that. So the external function opens a <code>e4c_reusing_context</code> and then the existing exception context is <em>reused</em>. Then the external function calls some function from another library, which opens another <code>e4c_reusing_context</code>. The exception context is <em>reused</em> again. When the original caller continues, the exception context keeps being ready.",
+	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-aware</em>, but the external function cannot simply rely on that. So the external function opens a <code>e4c_reusing_context</code> and then the existing exception context is <em>reused</em>.",
+		"Then the external function calls some function from another library, which opens another <code>e4c_reusing_context</code>. The exception context is <em>reused</em> again. When the original caller continues, the exception context keeps being ready.",
 	NULL,
 	EXIT_SUCCESS,
 	"the_result_is_0",

@@ -4,7 +4,27 @@
 # include <time.h>
 # include <signal.h>
 
-# ifdef _POSIX_SOURCE
+
+# if !defined(HAVE_POSIX_WEXITSTATUS) && !defined(HAVE_WEXITSTATUS) && ( \
+		defined(LINUX) \
+	||	defined(_LINUX) \
+	||	defined(__LINUX) \
+	||	defined(__LINUX__) \
+	||	defined(linux) \
+	||	defined(_linux) \
+	||	defined(__linux) \
+	||	defined(__linux__) \
+	||	defined(gnu_linux) \
+	||	defined(_gnu_linux) \
+	||	defined(__gnu_linux) \
+	||	defined(__gnu_linux__) \
+)
+# warning "Your platform is GNU/Linux but _POSIX_C_SOURCE is not defined. \
+Please define HAVE_POSIX_WEXITSTATUS at compiler level \
+in order to use POSIX's WEXITSTATUS macro."
+# endif
+
+# if defined(HAVE_POSIX_WEXITSTATUS) || defined(HAVE_WEXITSTATUS)
 #	include <sys/wait.h>
 #	define GET_EXIT_CODE(status) WEXITSTATUS(status)
 # else
