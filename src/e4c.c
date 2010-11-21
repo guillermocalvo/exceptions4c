@@ -27,7 +27,6 @@
  */
 
 
-# include <stdlib.h>
 # include <stdio.h>
 # include <signal.h>
 # include <errno.h>
@@ -35,19 +34,32 @@
 # include "e4c.h"
 
 
-
-# if __STDC_VERSION__ < 199901L
-#	if __GNUC__ < 2
-#		define E4C_INLINE
-#	else
-#		define E4C_INLINE		__extension__ inline
-#	endif
-# else
-#	define E4C_INLINE			inline
+# if !defined(HAVE_POSIX_SIGSETJMP) && !defined(HAVE_SIGSETJMP) && ( \
+		defined(LINUX) \
+	||	defined(_LINUX) \
+	||	defined(__LINUX) \
+	||	defined(__LINUX__) \
+	||	defined(linux) \
+	||	defined(_linux) \
+	||	defined(__linux) \
+	||	defined(__linux__) \
+	||	defined(gnu_linux) \
+	||	defined(_gnu_linux) \
+	||	defined(__gnu_linux) \
+	||	defined(__gnu_linux__) \
+)
+# warning "Your platform is GNU/Linux but _POSIX_C_SOURCE is not defined. \
+If your program employs signal handling you should define HAVE_POSIX_SIGSETJMP \
+at compiler level in order to use POSIX's sigsetjmp/siglongjmp functions."
 # endif
 
 # ifdef __NO_INLINE__
-#	undef E4C_INLINE
+#	define E4C_INLINE
+# elif __STDC_VERSION__ >= 199901L
+#	define E4C_INLINE inline
+# elif __GNUC__ >= 2
+#	define E4C_INLINE __extension__ inline
+# else
 #	define E4C_INLINE
 # endif
 
@@ -620,7 +632,7 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 
 void e4c_throw_exception(const e4c_exception * exception, const char * file, int line, const char * function, e4c_bool verbatim, const char * message, ...){
 
-# ifdef HAVE_VSNPRINTF
+# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
 	/* we will only format the message if we can rely on vsnprintf */
 	char				formatted_message[E4C_EXCEPTION_MESSAGE_SIZE];
 # endif
@@ -661,7 +673,7 @@ void e4c_throw_exception(const e4c_exception * exception, const char * file, int
 	}
 
 	if(verbatim){
-# ifdef HAVE_VSNPRINTF
+# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
 		va_list		arguments_list;
 		int			printed;
 		va_start(arguments_list, message);

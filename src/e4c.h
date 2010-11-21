@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 8)
+# define _E4C_VERSION(version)			version(2, 3, 9)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(PTHREAD_H) \
@@ -89,17 +89,17 @@
 	||	defined(PTHREAD_RWLOCK_INITIALIZER) \
 	||	defined(PTHREAD_SCOPE_PROCESS) \
 	||	defined(PTHREAD_SCOPE_SYSTEM) \
-	)
-# error Please define E4C_THREADSAFE at compiler level \
-to enable the multi-thread version of exceptions4c.
+)
+# error "Please define E4C_THREADSAFE at compiler level \
+in order to enable the multi-thread version of exceptions4c."
 # endif
 
 
-/* All of these are C99 standard features */
+/* C99 features */
 # if __STDC_VERSION__ >= 199901L
 
-#	ifndef HAVE_STDBOOL_H
-#		define HAVE_STDBOOL_H
+#	ifndef HAVE_C99_STDBOOL
+#		define HAVE_C99_STDBOOL
 #	endif
 
 #	ifndef HAVE_C99_VARIADIC_MACROS
@@ -110,8 +110,23 @@ to enable the multi-thread version of exceptions4c.
 #		define HAVE_C99_FUNC
 #	endif
 
-#	ifndef HAVE_VSNPRINTF
-#		define HAVE_VSNPRINTF
+#	ifndef HAVE_C99_VSNPRINTF
+#		define HAVE_C99_VSNPRINTF
+#	endif
+
+# endif
+
+
+/* POSIX features */
+# if defined(_POSIX_C_SOURCE)
+
+/*
+	POSIX.1 does not specify whether setjmp and longjmp save or restore the
+	current set of blocked signals. If a program employs signal handling it
+	should use POSIX's sigsetjmp/siglongjmp.
+*/
+#	ifndef HAVE_POSIX_SIGSETJMP
+#		define HAVE_POSIX_SIGSETJMP
 #	endif
 
 # endif
@@ -120,12 +135,12 @@ to enable the multi-thread version of exceptions4c.
 # include <stdlib.h>
 # include <setjmp.h>
 
-# ifdef HAVE_STDBOOL_H
+
+# if defined(HAVE_C99_STDBOOL) || defined(HAVE_STDBOOL_H)
 #	include <stdbool.h>
 # endif
 
-
-# ifdef __bool_true_false_are_defined
+# if defined(__bool_true_false_are_defined) || defined(bool)
 #	define e4c_bool						bool
 #	define e4c_false					false
 #	define e4c_true						true
@@ -134,6 +149,7 @@ to enable the multi-thread version of exceptions4c.
 #	define e4c_false					0
 #	define e4c_true						1
 # endif
+
 
 /*
 	The _E4C_FUNCTION_NAME compile-time parameter
@@ -157,7 +173,8 @@ to enable the multi-thread version of exceptions4c.
 
 # endif
 
-# ifdef _POSIX_C_SOURCE
+
+# if defined(HAVE_POSIX_SIGSETJMP) || defined(HAVE_SIGSETJMP)
 #	define _E4C_SETJMP(_address_)		sigsetjmp(_address_, e4c_true)
 #	define _E4C_LONGJMP(_address_)		siglongjmp(_address_, 1)
 #	define _E4C_JMP_BUF					sigjmp_buf
@@ -166,6 +183,7 @@ to enable the multi-thread version of exceptions4c.
 #	define _E4C_LONGJMP(_address_)		longjmp(_address_, 1)
 #	define _E4C_JMP_BUF					jmp_buf
 # endif
+
 
 # ifndef NDEBUG
 #	define _E4C_FILE_INFO				__FILE__
@@ -187,6 +205,7 @@ to enable the multi-thread version of exceptions4c.
 			_E4C_FILE_INFO, \
 			_E4C_LINE_INFO, \
 			_E4C_FUNC_INFO
+
 
 # define _E4C_PASTE(_x_, _y_, _z_)		_x_ ## _ ## _y_ ## _ ## _z_
 # define _E4C_MANGLE(_pre_, _id_, _post_) _E4C_PASTE(_pre_, _id_, _post_)
