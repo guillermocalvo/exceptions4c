@@ -5,13 +5,8 @@
 # include <signal.h>
 
 
-# if defined(_POSIX_C_SOURCE) && !defined(HAVE_POSIX_WEXITSTATUS)
-#	define HAVE_POSIX_WEXITSTATUS
-# endif
-
-# if !defined(HAVE_POSIX_WEXITSTATUS) && !defined(HAVE_WEXITSTATUS) && ( \
-		defined(LINUX) \
-	||	defined(_LINUX) \
+# if !defined(LINUX) && ( \
+		defined(_LINUX) \
 	||	defined(__LINUX) \
 	||	defined(__LINUX__) \
 	||	defined(linux) \
@@ -23,6 +18,34 @@
 	||	defined(__gnu_linux) \
 	||	defined(__gnu_linux__) \
 )
+# define LINUX
+# endif
+
+# if !defined(WINDOWS) && ( \
+		defined(_WINDOWS) \
+	||	defined(__WINDOWS) \
+	||	defined(__WINDOWS__) \
+	||	defined(WINNT) \
+	||	defined(_WINNT) \
+	||	defined(__WINNT) \
+	||	defined(__WINNT__) \
+	||	defined(WIN64) \
+	||	defined(_WIN64) \
+	||	defined(__WIN64) \
+	||	defined(__WIN64__) \
+	||	defined(WIN32) \
+	||	defined(_WIN32) \
+	||	defined(__WIN32) \
+	||	defined(__WIN32__) \
+)
+# define WINDOWS
+# endif
+
+# if defined(_POSIX_C_SOURCE) && !defined(HAVE_POSIX_WEXITSTATUS)
+#	define HAVE_POSIX_WEXITSTATUS
+# endif
+
+# if defined(LINUX) && !defined(HAVE_POSIX_WEXITSTATUS) && !defined(HAVE_WEXITSTATUS)
 # warning "Your platform is GNU/Linux but _POSIX_C_SOURCE is not defined. \
 Please define HAVE_POSIX_WEXITSTATUS at compiler level \
 in order to use POSIX's WEXITSTATUS macro."
@@ -47,6 +70,32 @@ E4C_DEFINE_EXCEPTION(ParentException, "This is a parent exception.", Grandparent
 E4C_DEFINE_EXCEPTION(ChildException, "This is a child exception.", ParentException);
 E4C_DEFINE_EXCEPTION(SiblingException, "This is a sibling exception.", ParentException);
 
+# if defined(WINDOWS)
+
+	static void open_report(test_runner * runner){
+
+		sprintf(runner->buffer, "start %s", runner->report);
+
+		system(runner->buffer);
+	}
+
+# elif defined(LINUX)
+
+	static void open_report(test_runner * runner){
+
+		sprintf(runner->buffer, "gnome-open %s", runner->report);
+
+		system(runner->buffer);
+	}
+
+# else
+
+	static void open_report(test_runner * runner){
+
+		printf("\tPlease read \"%s\" for further information.\n", runner->report);
+	}
+
+# endif
 
 static void calculate_total(statistics * stats){
 
@@ -290,6 +339,9 @@ test_runner new_test_runner(const char * file_path, const char * out, const char
 
 int run_all_test_suites(test_runner * runner){
 
+	const char * summary1;
+	const char * summary2;
+
 	printf("Running all the tests...\n\n");
 
 	for(runner->suite_number = 0; runner->suite_number < runner->suites->count; runner->suite_number++){
@@ -330,15 +382,34 @@ int run_all_test_suites(test_runner * runner){
 
 	if(runner->report != NULL){
 
-		printf("\n\nGenerating report....\n");
+		printf("\n\nGenerating report...\n");
 
 		generate_report(runner);
 
-		/* hopefully this will open the report in the default browser */
-		system(runner->report);
+		printf("\tTest report created.\n");
+
+		open_report(runner);
 	}
 
-	printf("\tDone.\n");
+	if(runner->stats.suites.failed > 0){
+		summary1 = "Some of the tests failed.";
+	}else if(runner->stats.suites.warnings > 0){
+		summary1 = "Some *non-critical* test didn't pass.";
+	}else{
+		summary1 = "All tests passed successfully.";
+	}
+
+	if(runner->stats.suites.failed == 0 && runner->stats.suites.warnings == 0){
+		summary2 = "";
+	}else if(runner->stats.requirements.total == 0){
+		summary2 = "\n\tPlease verify platform requirements.";
+	}else if(runner->stats.requirements.failed > 0 || runner->stats.requirements.warnings > 0){
+		summary2 = "\n\tIt could be related to some error on **platform requirements**.";
+	}else{
+		summary2 = "\n\tPlease report it at: http://code.google.com/p/exceptions4c/";
+	}
+
+	printf("\n%s%s\n\n", summary1, summary2);
 
 	return(EXIT_SUCCESS);
 }

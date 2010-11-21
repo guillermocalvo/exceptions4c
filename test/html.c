@@ -355,7 +355,7 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 		PLATFORM_OS,
 		PLATFORM_COMPILER, PLATFORM_COMPILER_VERSION, (long)PLATFORM_COMPILER_VERSION_NUMBER
 		);
-		
+
 		fprintf(report,
 							"%%20%%20%%20%%20%%20%%20%%20%%20__STDC__:%%20%ld%%0A"
 							"__STDC_VERSION__:%%20%ld%%0A"
@@ -421,7 +421,7 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 	(test->unexpected_exit_code ? "failed" : "passed"),
 	exit_code
 	);
-	
+
 	fprintf(report,
 						"<tr>"
 							"<td>Output</td>"
@@ -465,7 +465,7 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 	HUMAN_STATUS(test->status),
 	HUMAN_STATUS(test->status)
    );
-   
+
    fprintf(report,
 				"<div class=\"paragraph\">"
 					"<div class=\"return image icon24\"></div>"
@@ -505,7 +505,7 @@ static void print_test_suite(test_suite * suite, FILE * report){
 	HUMAN_STATUS(suite->status),
 	suite->title, suite->title,
 	suite->description1,
-	(suite->description2 == NULL ? "" : 	suite->description2),
+	(suite->description2 == NULL ? "" : suite->description2),
 	suite->stats.total,
 	(suite->is_requirement ? "requirements" : "unit test"),
 	suite->stats.passed,
@@ -1101,7 +1101,7 @@ static void print_stylesheet(FILE * report){
 			"-webkit-text-shadow:"		"2px 2px 2px #888;"
 		"}"
 	);
-	
+
 	fprintf(report,
 		"h2{"
 			"border:"					"solid 1px #000;"
@@ -1139,7 +1139,7 @@ static void print_stylesheet(FILE * report){
 			"color:"					"#000;"
 		"}"
 	);
-	
+
 	fprintf(report,
 		"#logo{"
 			"display:"					"block;"
@@ -1177,7 +1177,7 @@ static void print_stylesheet(FILE * report){
 		"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 		"AAAAAAAAAAAAAAAAAAAAAAAAAAAAgLp+AB3oqcg6eq4cAAAAAElFTkSuQmCC"
 	);
-	
+
 	fprintf(report,
 		"#footer{"
 			"text-align:"				"center;"
@@ -1212,7 +1212,7 @@ static void print_stylesheet(FILE * report){
 			"border-radius:"			"4px;"
 		"}"
 	);
-	
+
 	fprintf(report,
 		".percent_failed,"
 		".percent_passed{"
@@ -1224,7 +1224,7 @@ static void print_stylesheet(FILE * report){
 			"min-width:"				"160px;"
 		"}"
 	);
-	
+
 	fprintf(report,
 		".percent_passed{"
 			"margin:"					"-1px;"
@@ -1254,7 +1254,7 @@ static void print_stylesheet(FILE * report){
 			"padding-left:"				"2em;"
 		"}"
 	);
-	
+
 	fprintf(report,
 		"._2_columns,"
 		"._4_columns,"
@@ -1286,7 +1286,7 @@ static void print_stylesheet(FILE * report){
 			"font-family:"				"\"Lucida Console\", \"Courier New\", Courier, monospace;"
 		"}"
 	);
-	
+
 	fprintf(report,
 		".test_section_parameters textarea{"
 			"font-size:"				"80%%;"
@@ -1345,7 +1345,7 @@ static void print_stylesheet(FILE * report){
 		"Fp6tlxilxNcrKiqu5ee6KkRe6EVaI1ZlZeVQFYBQ9vPz82+F/ZUyL3SAVuiFohGL6lNjUQeW9iXEoc5f5oWu3a1rxKJtmRd63uz2O8T5dwjgJT1i4kAvDI8EyPrphNHeaKrzpiJsflJ4xl5mJzOo9jE8kuxrf0ReaD8tpxOS/UOpGambrdrXQXxSAqzdK4H0Or+firKDO4JGL2KyfLqApMZiYvQa8b6A83Ub234Aj1mreBx4m1opgFucnXzKFR1VR8fXhLrwsCv6PxON5Ha7p3GI0VX0D11eaHhewPuolloW3het0BbsJ9HDbyXso6vo77q80NgGvL8VqWXp+AvRCq3aFxAHPP/S0qInbSIvNAdYyQuNbZkXul27spfFPOHUEJBliZB1mBgBdZ/QZKE7SUPFMZamEzamfT3E5FlPl+ak1tF9hGitDp5WVRHUJpmJ++isAmxXEqPHW0yMHi+TowfKmNHY9o0g",
 		"JnUTFzWYAG8XM0PgghX0i/ryQk/TQmUO7SKxPs0Hb19Sob4f1YR9X17oqSJUXij0gtgn4L2I1NHqRHycT8eO7Z7jDWZbbHVqXmhsv7Os2+ZzzqlYIB4OJcjJFWrCvahvthXDF9F9c65QZ9EaHNGE/sayr7uHqpV7pbey1KuXvhejtURQxA/gET9CYgDJ1wwnZgcb+2twrIO3+hYWGuaFFmFnHwGvx2g4Ygj7SFwXh0EaRnmhRdh8oYA3zsq5q+f/i1/cOCg7O3NdcnLi17CPZU525qfDhw+5Q4TgpWbO/6eQUke5hxJNKqwJ/q2lkYqZDI8GEGCscCrqiKjnorVWLDuI/W6r8OogBjxtxcNgIOkysewj9nuswquHmJRL6iaihUvE8nxSDikm3PNvLWe2/B9sRBJm5oQIgwAAAABJRU5ErkJggg=="
 	);
-	
+
 	fprintf(report,
 		".unfold{"
 			"background-position:"		"0 -48px;"
