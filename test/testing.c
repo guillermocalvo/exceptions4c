@@ -5,6 +5,10 @@
 # include <signal.h>
 
 
+# if defined(_POSIX_C_SOURCE) && !defined(HAVE_POSIX_WEXITSTATUS)
+#	define HAVE_POSIX_WEXITSTATUS
+# endif
+
 # if !defined(HAVE_POSIX_WEXITSTATUS) && !defined(HAVE_WEXITSTATUS) && ( \
 		defined(LINUX) \
 	||	defined(_LINUX) \
