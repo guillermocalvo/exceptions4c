@@ -119,10 +119,11 @@ static int ext1(){
 
 }
 
-DEFINE_TEST(
+DEFINE_TEST_LONG_DESCRIPTION(
 	h11,
 	"A library calls another library and propagates a received exception",
-	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-aware</em>, but the external function cannot simply rely on that. So the external function opens a <code>e4c_reusing_context</code> and then the existing exception context is <em>reused</em>. Then the external function calls some function from another library, which opens another <code>e4c_reusing_context</code>. The exception context is <em>reused</em> again. Then, an exception is thrown. The second external function does not catch it. The exception is propagated to the first external function, which does not catch it either. Finally, the caller of the first external function catches the exception and then continues.",
+	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-aware</em>, but the external function cannot simply rely on that. So the external function opens a <code>e4c_reusing_context</code> and then the existing exception context is <em>reused</em>.",
+		"Then the external function calls some function from another library, which opens another <code>e4c_reusing_context</code>. The exception context is <em>reused</em> again. Then, an exception is thrown. The second external function does not catch it. The exception is propagated to the first external function, which does not catch it either. Finally, the caller of the first external function catches the exception and then continues.",
 	NULL,
 	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
 	"inside_FINALLY_block",

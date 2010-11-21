@@ -24,7 +24,7 @@ static void aux(){
 
 }
 
-DEFINE_TEST(
+DEFINE_TEST_LONG_DESCRIPTION(
 	e02,
 	"Uncaught exception with a pair of finally{...} blocks",
 	"This test checks the execution of two consecutive <code>finally</code> blocks. The expected behavior is:"
@@ -32,7 +32,7 @@ DEFINE_TEST(
 		"<li>The test starts a <code>try</code> block with a <code>finally</code> block.</li>"
 		"<li>The test calls a function from inside the <code>try</code> block.</li>"
 		"<li>The function starts a <code>try</code> block with a <code>finally</code> block.</li>"
-		"<li>The function throws an exception from inside its <code>try</code> block.</li>"
+		"<li>The function throws an exception from inside its <code>try</code> block.</li>",
 		"<li>There is no <code>catch</code> block to handle it.</li>"
 		"<li>The <code>finally</code> block (of the function) is executed.</li>"
 		"<li>The <code>finally</code> block (of the test) is executed.</li>"

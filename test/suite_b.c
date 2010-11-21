@@ -1,10 +1,10 @@
 
 # include "testing.h"
 
-# define NEW TEST_SUITE(b, "Consistency", "\
+# define NEW TEST_SUITE_LONG_DESCRIPTION(b, "Consistency", "\
 \
 This suite of tests checks the behavior of the library when it is used in an \
-inconsistent way. For example, the tests try to: \
+inconsistent way. For example, the tests try to:", " \
 <ul>\
 	<li>begin twice in a row the exception context</li>\
 	<li>end twice in a row the exception context</li>\
