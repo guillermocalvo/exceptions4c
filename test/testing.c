@@ -442,6 +442,9 @@ int parse_command_line(int argc, char * argv[], test_suite_collection * suite_co
 		test_runner runner;
 		int result;
 
+		printf("\n--------------------------------\n EXCEPTIONS4C TESTING FRAMEWORK \n--------------------------------\n\n");
+		printf("library version: %ld\n\n", version);
+
 		runner = new_test_runner(argv[0], out, err, report, suite_collection);
 
 		result = run_all_test_suites(&runner);
