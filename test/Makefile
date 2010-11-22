@@ -1,6 +1,6 @@
 
 CC                  = gcc
-CFLAGS              = -Wall -ansi -pedantic -g3
+CFLAGS              = -Wall -Wextra
 BIN                 = e4c_test
 RM                  = rm -f
 WGET                = wget
