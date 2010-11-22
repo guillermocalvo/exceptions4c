@@ -60,7 +60,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 9)
+# define _E4C_VERSION(version)			version(2, 3, 10)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(PTHREAD_H) \
@@ -169,6 +169,22 @@ in order to enable the multi-thread version of exceptions4c."
 
 #	else
 #		define _E4C_FUNCTION_NAME	NULL
+#	endif
+
+# endif
+
+
+/*
+	The _E4C_NORETURN compile-time parameter
+	could be defined in order to work with some specific compiler.
+*/
+# ifndef _E4C_NORETURN
+
+#	ifdef	__GNUC__
+#		define _E4C_NORETURN				__attribute__ ((noreturn))
+
+#	else
+#		define _E4C_NORETURN
 #	endif
 
 # endif
@@ -2968,10 +2984,6 @@ extern void e4c_frame_repeat(
 
 extern void e4c_throw_exception(const e4c_exception * exception,
 	const char * file, int line, const char * function,
-	e4c_bool verbatim, const char * message, ...)
-#ifdef	__GNUC__
-	__attribute__ ((noreturn))
-#endif
-;
+	e4c_bool verbatim, const char * message, ...) _E4C_NORETURN;
 
 # endif
