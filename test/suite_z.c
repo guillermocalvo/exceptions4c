@@ -4,8 +4,8 @@
 # define NEW REQUIREMENT_SUITE(z, "PlatformRequirements", "\
 \
 <div class=\"paragraph\"> \
-This suite of tests checks the platform on which the library is to be compiled \
-and executed.\
+This is special test suite to check the platform on which the library is to be \
+compiled and executed.\
 </div> \
 <div class=\"paragraph\"> \
 Any errors in this test suite will affect some of the library's \
