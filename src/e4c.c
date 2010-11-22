@@ -63,12 +63,6 @@ at compiler level in order to use POSIX's sigsetjmp/siglongjmp functions."
 #	define E4C_INLINE
 # endif
 
-# ifdef	__GNUC__
-#	define E4C_NORETURN	__attribute__ ((noreturn))
-# else
-#	define E4C_NORETURN
-# endif
-
 # define IS_TOP_FRAME(frame)			( frame->previous == NULL )
 
 # define CONTEXT_IS_READY				(E4C_CONTEXT != NULL)
@@ -302,7 +296,7 @@ static E4C_INLINE e4c_frame				_e4c_new_frame(e4c_frame * previous, e4c_stage st
 static E4C_INLINE void					_e4c_delete_frame(e4c_frame * frame);
 static E4C_INLINE void					_e4c_fatal_error(const e4c_exception * prototype, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause);
 static E4C_INLINE e4c_bool				_e4c_extends(const e4c_exception * child, const e4c_exception * parent);
-static void								_e4c_propagate(e4c_context * context, const e4c_exception * exception) E4C_NORETURN;
+static void								_e4c_propagate(e4c_context * context, const e4c_exception * exception) _E4C_NORETURN;
 static void								_e4c_at_uncaught_exception(e4c_context * context);
 static void								_e4c_set_signal_handlers(e4c_context * context, const e4c_signal_mapping * mappings);
 static void								_e4c_initialize();
