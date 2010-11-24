@@ -141,8 +141,8 @@ stand for:
     letter.
 
   * `run__all.c`
-    These files stand for a testing configuration which contains all of the
-    test suites to be run.
+    This file stands for a testing configuration which contains all of the test
+    suites to be run.
 
 = How to Compile the Tests =
 
@@ -166,7 +166,7 @@ Please report any errors or warnings, along with your platform details
 == Makefile ==
 
 There is a convenience `Makefile` inside the test directory. It will download
-(through `wget`) any missing file and then compile it altogether.
+(through `wget`) any missing files and then compile them altogether.
 
   * http://exceptions4c.googlecode.com/svn/trunk/test/Makefile
 
