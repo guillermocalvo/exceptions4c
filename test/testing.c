@@ -211,12 +211,14 @@ static void run_test(test_runner * runner, unit_test * test){
 	const char *	command;
 	const char *	last_output;
 	const char *	last_error;
+	int				termination_status;
 
 	command = make_command_line(runner);
 
 	printf("	%s_%s: ", (test->is_requirement ? "requirement" : "unit_test"), test->code);
 
-	test->found_exit_code = GET_EXIT_CODE( system(command) );
+	termination_status			= system(command);
+	test->found_exit_code		= GET_EXIT_CODE(termination_status);
 
 	last_output	= load_file( runner->out, test->found_output, sizeof(test->found_output) );
 	last_error	= load_file( runner->err, test->found_error, sizeof(test->found_error) );
