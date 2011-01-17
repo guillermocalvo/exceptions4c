@@ -111,6 +111,10 @@
 #	define PLATFORM_COMPILER						"Tiny C Compiler"
 #	define PLATFORM_COMPILER_VERSION				""
 #	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# elif defined(__clang__)
+#	define PLATFORM_COMPILER						"Clang"
+#	define PLATFORM_COMPILER_VERSION				__clang_version__
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1
 # elif defined(__LCC__)
 #	define PLATFORM_COMPILER						"Lcc-Win32"
 #	define PLATFORM_COMPILER_VERSION				""
