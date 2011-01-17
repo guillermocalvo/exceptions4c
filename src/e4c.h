@@ -51,7 +51,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 11)
+# define _E4C_VERSION(version)			version(2, 3, 12)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(PTHREAD_H) \
@@ -291,7 +291,7 @@ in order to enable the multi-thread version of exceptions4c."
 		E4C_TRY{ \
 			goto _E4C_AUTO(PAYLOAD); \
 			_E4C_AUTO(CLEANUP): \
-			( (void)0 ); \
+			_E4C_AUTO(DONE) = e4c_true; \
 		}E4C_CATCH(RuntimeException){ \
 			(_thrown_exception_)		= &_E4C_AUTO(EXCEPTION); \
 			_E4C_AUTO(EXCEPTION)		= *e4c_get_exception(); \
