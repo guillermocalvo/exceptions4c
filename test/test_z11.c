@@ -5,11 +5,9 @@
 
 static void handler_z11(int signal_number){
 
-	printf("handler_%d\n", signal_number);
-	fflush(stdout);
+	ECHO(("handler_%d\n", signal_number));
 
-	printf("\nhandler_executed\n");
-	fflush(stdout);
+	ECHO(("\nhandler_executed\n"));
 
 	exit(123);
 }
@@ -27,33 +25,22 @@ DEFINE_REQUIREMENT(
 	int zero = 0;
 	int integer = 1010;
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_SIGNAL\n");
-	fflush(stdout);
+	ECHO(("before_SIGNAL\n"));
 
 	if( signal(SIGFPE, handler_z11) == SIG_ERR ){
-		printf("could_not_set_handler_%d\n", SIGFPE);
-		fflush(stdout);
+		ECHO(("could_not_set_handler_%d\n", SIGFPE));
 	}else{
-		printf("handler_was_set_%d\n", SIGFPE);
-		fflush(stdout);
+		ECHO(("handler_was_set_%d\n", SIGFPE));
 	}
 
-	printf("before_DIVISION_BY_ZERO\n");
-	fflush(stdout);
+	ECHO(("before_DIVISION_BY_ZERO\n"));
 
 	/* some smartypants compilers might need to be fooled */
 	/* if(zero != integer) zero = 0; */
 
 	integer = 31416 / zero;
 
-	printf("after_DIVISION_BY_ZERO_%d\n", integer);
-	fflush(stdout);
+	ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 
 	return(EXIT_SUCCESS);
 }

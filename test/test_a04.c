@@ -17,13 +17,13 @@ DEFINE_TEST(
 
 	char * tmp;
 
-	printf("before_USING_block\n");
+	ECHO(("before_USING_block\n"));
 
 	E4C_USING(buffer, tmp, (256) ){
-		printf("inside_USING_block\n");
+		ECHO(("inside_USING_block\n"));
 	}
 
-	printf("after_USING_block\n");
+	ECHO(("after_USING_block\n"));
 
 	return(EXIT_SUCCESS);
 }

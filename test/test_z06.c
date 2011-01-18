@@ -13,19 +13,11 @@ DEFINE_REQUIREMENT(
 	ERROR_WHATEVER
 ){
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_ABORT\n");
-	fflush(stdout);
+	ECHO(("before_ABORT\n"));
 
 	abort();
 
-	printf("after_ABORT\n");
-	fflush(stdout);
+	ECHO(("after_ABORT\n"));
 
 	return(EXIT_SUCCESS);
 }

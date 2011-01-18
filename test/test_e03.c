@@ -21,45 +21,45 @@ DEFINE_TEST_LONG_DESCRIPTION(
 	"WildException"
 ){
 
-	printf("beforeCONTEXT_BEGIN\n");
+	ECHO(("beforeCONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_TRY_CATCH_FINALLY_block\n");
+	ECHO(("before_TRY_CATCH_FINALLY_block\n"));
 
 	E4C_TRY{
 
-		printf("inside_TRY_block\n");
+		ECHO(("inside_TRY_block\n"));
 
-		printf("before_THROW\n");
+		ECHO(("before_THROW\n"));
 
 		E4C_THROW(WildException, "I'm going to be caught.");
 
-		printf("after_THROW\n");
+		ECHO(("after_THROW\n"));
 
 	}E4C_CATCH(WildException){
 
-		printf("inside_CATCH_block\n");
+		ECHO(("inside_CATCH_block\n"));
 
-		printf("before_RETHROW\n");
+		ECHO(("before_RETHROW\n"));
 
 		E4C_THROW(*e4c_get_exception(), "Nobody will catch me this time.");
 
-		printf("after_RETHROW\n");
+		ECHO(("after_RETHROW\n"));
 
 	}E4C_FINALLY{
 
-		printf("inside_FINALLY_block\n");
+		ECHO(("inside_FINALLY_block\n"));
 
 	}
 
-	printf("after_TRY_CATCH_FINALLY_block\n");
+	ECHO(("after_TRY_CATCH_FINALLY_block\n"));
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
+	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
 }

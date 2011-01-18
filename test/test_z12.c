@@ -5,11 +5,9 @@
 
 static void handler_z12(int signal_number){
 
-	printf("handler_%d\n", signal_number);
-	fflush(stdout);
+	ECHO(("handler_%d\n", signal_number));
 
-	printf("\nhandler_executed\n");
-	fflush(stdout);
+	ECHO(("\nhandler_executed\n"));
 
 	exit(123);
 }
@@ -25,31 +23,19 @@ DEFINE_REQUIREMENT(
 	NULL
 ){
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_SIGNAL\n");
-	fflush(stdout);
+	ECHO(("before_SIGNAL\n"));
 
 	if( signal(SIGABRT, handler_z12) == SIG_ERR ){
-		printf("could_not_set_handler_%d\n", SIGABRT);
-		fflush(stdout);
+		ECHO(("could_not_set_handler_%d\n", SIGABRT));
 	}else{
-		printf("handler_was_set_%d\n", SIGABRT);
-		fflush(stdout);
+		ECHO(("handler_was_set_%d\n", SIGABRT));
 	}
 
-
-	printf("before_ABORT\n");
-	fflush(stdout);
+	ECHO(("before_ABORT\n"));
 
 	abort();
 
-	printf("after_ABORT\n");
-	fflush(stdout);
+	ECHO(("after_ABORT\n"));
 
 	return(EXIT_SUCCESS);
 }

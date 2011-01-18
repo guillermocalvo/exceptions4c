@@ -15,26 +15,24 @@ DEFINE_TEST(
 	int zero = 0;
 	int integer = 100;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_DIVISION_BY_ZERO\n");
-	fflush(stdout);
+	ECHO(("before_DIVISION_BY_ZERO\n"));
 
 	/* some smartypants compilers might need to be fooled */
 	/* if(zero != integer) zero = 0; */
 
 	integer = integer / zero;
 
-	printf("after_DIVISION_BY_ZERO_%d\n", integer);
-	fflush(stdout);
+	ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
+	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
 }

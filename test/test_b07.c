@@ -12,15 +12,15 @@ DEFINE_TEST(
 	"ContextAlreadyBegun"
 ){
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_CONTEXT_BEGIN_again\n");
+	ECHO(("before_CONTEXT_BEGIN_again\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("after_CONTEXT_BEGIN\n");
+	ECHO(("after_CONTEXT_BEGIN\n"));
 
 	return(EXIT_SUCCESS);
 }

@@ -14,13 +14,13 @@ DEFINE_TEST(
 
 	char * buffer;
 
-	printf("before_USING_MEMORY_block\n");
+	ECHO(("before_USING_MEMORY_block\n"));
 
 	e4c_using_memory(buffer, 256){
-		printf("inside_USING_MEMORY_block\n");
+		ECHO(("inside_USING_MEMORY_block\n"));
 	}
 
-	printf("after_USING_MEMORY_block\n");
+	ECHO(("after_USING_MEMORY_block\n"));
 
 	return(EXIT_SUCCESS);
 }
