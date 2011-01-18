@@ -12,11 +12,11 @@ DEFINE_TEST(
 	"ContextHasNotBegunYet"
 ){
 
-	printf("before_THROW\n");
+	ECHO(("before_THROW\n"));
 
 	E4C_THROW(NullPointerException, "Actually, I can't throw an exception yet.");
 
-	printf("after_THROW\n");
+	ECHO(("after_THROW\n"));
 
 	return(EXIT_SUCCESS);
 }

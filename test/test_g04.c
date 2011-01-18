@@ -15,28 +15,26 @@ DEFINE_TEST(
 	int * null_pointer = NULL;
 	int integer;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_NULL_POINTER\n");
-	fflush(stdout);
+	ECHO(("before_NULL_POINTER\n"));
 
 	/* some smartypants compilers might need to be fooled */
 	/* if(null_pointer != &integer) null_pointer = NULL; */
 
 	integer = *null_pointer;
 
-	printf("after_NULL_POINTER_%d\n", integer);
-	fflush(stdout);
+	ECHO(("after_NULL_POINTER_%d\n", integer));
 
 	if(integer) integer = 0;
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
+	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
 }

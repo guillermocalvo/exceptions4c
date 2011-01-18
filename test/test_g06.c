@@ -12,23 +12,21 @@ DEFINE_TEST(
 	"AbortException"
 ){
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_ABORT\n");
-	fflush(stdout);
+	ECHO(("before_ABORT\n"));
 
 	abort();
 
-	printf("after_ABORT\n");
-	fflush(stdout);
+	ECHO(("after_ABORT\n"));
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
+	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
 }

@@ -16,46 +16,46 @@ DEFINE_TEST(
 	int			zero		= 0;
 	int			integer		= 100;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_TRY_block\n");
+	ECHO(("before_TRY_block\n"));
 
 	E4C_TRY{
 
-		printf("before_DIVISION_BY_ZERO\n");
-		fflush(stdout);
+		ECHO(("before_DIVISION_BY_ZERO\n"));
 
 		/* some smartypants compilers might need to be fooled */
 		/* if(zero != integer) zero = 0; */
 
 		integer = integer / zero;
 
-		printf("after_DIVISION_BY_ZERO_%d\n", integer);
-		fflush(stdout);
+		ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 
 	}E4C_CATCH(SignalException){
 
-		printf("inside_CATCH_block\n");
+		ECHO(("inside_CATCH_block\n"));
 
 		caught = e4c_true;
 
-		printf("catching__%s\n", e4c_get_exception()->name);
+		ECHO(("catching__%s\n", e4c_get_exception()->name));
 
 	}
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
+	ECHO(("after_CONTEXT_END\n"));
 
 	if(caught){
 		fprintf(stderr, "\nthe_signal_WAS_CAUGHT\n");
 	}else{
 		fprintf(stderr, "\nthe_signal_WAS_NOT_CAUGHT\n");
 	}
+	
+	fflush(stderr);
 
 	return(EXIT_SUCCESS);
 

@@ -15,22 +15,14 @@ DEFINE_REQUIREMENT(
 	int zero = 0;
 	int integer = 1010;
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_DIVISION_BY_ZERO\n");
-	fflush(stdout);
+	ECHO(("before_DIVISION_BY_ZERO\n"));
 
 	/* some smartypants compilers might need to be fooled */
 	/* if(zero != integer) zero = 0; */
 
 	integer = 31416 / zero;
 
-	printf("after_DIVISION_BY_ZERO_%d\n", integer);
-	fflush(stdout);
+	ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 
 	return(EXIT_SUCCESS);
 }

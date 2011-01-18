@@ -15,15 +15,15 @@ DEFINE_TEST(
 	e4c_bool caught1 = e4c_false;
 	e4c_bool caught2 = e4c_false;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_TRY_block\n");
+	ECHO(("before_TRY_block\n"));
 
 	E4C_TRY{
 
-		printf("before_THROW\n");
+		ECHO(("before_THROW\n"));
 
 		E4C_THROW(TamedException, "I can only be caught once for each try block.");
 
@@ -31,35 +31,35 @@ DEFINE_TEST(
 
 		caught1 = e4c_true;
 
-		printf("inside_FIRST_CATCH_block\n");
+		ECHO(("inside_FIRST_CATCH_block\n"));
 
 	}E4C_CATCH(TamedException){
 
 		caught2 = e4c_true;
 
-		printf("inside_SECOND_CATCH_block\n");
+		ECHO(("inside_SECOND_CATCH_block\n"));
 
 	}
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
 	if(caught1 && caught2){
 
-		printf("caught_by_BOTH\n");
+		ECHO(("caught_by_BOTH\n"));
 
 	}else if(caught1){
 
-		printf("caught_by_FIRST_block_only\n");
+		ECHO(("caught_by_FIRST_block_only\n"));
 
 	}else if(caught2){
 
-		printf("caught_by_SECOND_block_only\n");
+		ECHO(("caught_by_SECOND_block_only\n"));
 
 	}else{
 
-		printf("caught_by_NONE\n");
+		ECHO(("caught_by_NONE\n"));
 
 	}
 

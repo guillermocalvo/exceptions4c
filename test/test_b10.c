@@ -4,18 +4,18 @@
 
 static void aux(){
 
-	printf("before_TRY_block\n");
+	ECHO(("before_TRY_block\n"));
 
 	E4C_TRY{
-		printf("inside_TRY_block\n");
+		ECHO(("inside_TRY_block\n"));
 	}E4C_FINALLY{
-		printf("inside_FINALLY_block\n");
+		ECHO(("inside_FINALLY_block\n"));
 		goto out_of_try_block;
 	}
 
 	out_of_try_block:
 
-	printf("after_TRY_block\n");
+	ECHO(("after_TRY_block\n"));
 }
 
 DEFINE_TEST(
@@ -28,19 +28,19 @@ DEFINE_TEST(
 	"ExceptionSystemFatalError"
 ){
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_CALL_FUNCTION_aux\n");
+	ECHO(("before_CALL_FUNCTION_aux\n"));
 
 	aux();
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
+	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
 }

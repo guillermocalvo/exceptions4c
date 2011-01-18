@@ -14,43 +14,43 @@ DEFINE_TEST(
 
 	e4c_bool	caught		= e4c_false;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_TRY_block\n");
+	ECHO(("before_TRY_block\n"));
 
 	E4C_TRY{
 
-		printf("before_ABORT\n");
-		fflush(stdout);
+		ECHO(("before_ABORT\n"));
 
 		abort();
 
-		printf("after_ABORT\n");
-		fflush(stdout);
+		ECHO(("after_ABORT\n"));
 
 	}E4C_CATCH(AbortException){
 
-		printf("inside_CATCH_block\n");
+		ECHO(("inside_CATCH_block\n"));
 
 		caught = e4c_true;
 
-		printf("catching__%s\n", e4c_get_exception()->name);
+		ECHO(("catching__%s\n", e4c_get_exception()->name));
 
 	}
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
+	ECHO(("after_CONTEXT_END\n"));
 
 	if(caught){
 		fprintf(stderr, "\nthe_signal_WAS_CAUGHT\n");
 	}else{
 		fprintf(stderr, "\nthe_signal_WAS_NOT_CAUGHT\n");
 	}
+	
+	fflush(stderr);
 
 	return(EXIT_SUCCESS);
 

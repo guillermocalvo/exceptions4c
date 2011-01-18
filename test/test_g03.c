@@ -12,32 +12,21 @@ DEFINE_TEST(
 	ERROR_WHATEVER
 ){
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_CONTEXT_BEGIN\n");
-	fflush(stdout);
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_false, e4c_print_exception);
 
-	printf("before_ABORT\n");
-	fflush(stdout);
+	ECHO(("before_ABORT\n"));
 
 	abort();
 
-	printf("after_ABORT\n");
-	fflush(stdout);
+	ECHO(("after_ABORT\n"));
 
-	printf("before_CONTEXT_END\n");
-	fflush(stdout);
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
-	fflush(stdout);
+	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
 }

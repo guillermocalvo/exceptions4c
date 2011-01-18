@@ -140,6 +140,9 @@ E4C_DECLARE_EXCEPTION(SiblingException);
 E4C_DECLARE_EXCEPTION(ParentException);
 E4C_DECLARE_EXCEPTION(GrandparentException);
 
+# define ECHO(args) \
+	printf args; \
+	fflush(stdout);
 
 /*
 	SUITES

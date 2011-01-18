@@ -12,13 +12,13 @@ DEFINE_TEST(
 	"ContextHasNotBegunYet"
 ){
 
-	printf("before_TRY_block\n");
+	ECHO(("before_TRY_block\n"));
 
 	E4C_TRY{
-		printf("inside_TRY_block\n");
+		ECHO(("inside_TRY_block\n"));
 	}
 
-	printf("after_TRY_block\n");
+	ECHO(("after_TRY_block\n"));
 
 	return(EXIT_SUCCESS);
 }

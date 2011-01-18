@@ -16,16 +16,16 @@ DEFINE_TEST(
 
 	char * buffer;
 
-	printf("before_WITH_block\n");
+	ECHO(("before_WITH_block\n"));
 
 	E4C_WITH(buffer, deallocate_buffer){
 		buffer = malloc(256);
-		printf("inside_WITH_block\n");
+		ECHO(("inside_WITH_block\n"));
 	}E4C_USE{
-		printf("inside_USE_block\n");
+		ECHO(("inside_USE_block\n"));
 	}
 
-	printf("after_USE_block\n");
+	ECHO(("after_USE_block\n"));
 
 	return(EXIT_SUCCESS);
 }

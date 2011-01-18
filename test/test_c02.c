@@ -12,19 +12,19 @@ DEFINE_TEST(
 	"ContextNotEnded"
 ){
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("before_CONTEXT_BEGIN_again\n");
+	ECHO(("before_CONTEXT_BEGIN_again\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_EXIT_main\n");
+	ECHO(("before_EXIT_main\n"));
 
 	return(EXIT_SUCCESS);
 }

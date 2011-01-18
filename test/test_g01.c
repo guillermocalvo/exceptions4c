@@ -14,35 +14,24 @@ DEFINE_TEST(
 	int * null_pointer = NULL;
 	int integer;
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_CONTEXT_BEGIN\n");
-	fflush(stdout);
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_false, e4c_print_exception);
 
-	printf("before_NULL_POINTER\n");
-	fflush(stdout);
+	ECHO(("before_NULL_POINTER\n"));
 
 	/* some smartypants compilers might need to be fooled */
 	/* if(null_pointer != &integer) null_pointer = NULL; */
 
 	integer = *null_pointer;
 
-	printf("after_NULL_POINTER_%d\n", integer);
-	fflush(stdout);
+	ECHO(("after_NULL_POINTER_%d\n", integer));
 
-	printf("before_CONTEXT_END\n");
-	fflush(stdout);
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("after_CONTEXT_END\n");
-	fflush(stdout);
+	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
 }

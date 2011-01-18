@@ -16,29 +16,29 @@ DEFINE_TEST(
 
 	char * buffer;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("before_WITH_block\n");
+	ECHO(("before_WITH_block\n"));
 
 	E4C_WITH(buffer, deallocate_buffer){
 
 		buffer = malloc(256);
 
-		printf("inside_WITH_block\n");
+		ECHO(("inside_WITH_block\n"));
 
 	}E4C_USE{
 
-		printf("inside_USE_block\n");
+		ECHO(("inside_USE_block\n"));
 
 	}
 
-	printf("after_USE_block\n");
+	ECHO(("after_USE_block\n"));
 
 	return(EXIT_SUCCESS);
 }

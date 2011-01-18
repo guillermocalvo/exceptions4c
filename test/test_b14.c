@@ -12,18 +12,18 @@ DEFINE_TEST(
 	"ContextAlreadyBegun"
 ){
 
-	printf("before_CONTEXT_BEGIN_block\n");
+	ECHO(("before_CONTEXT_BEGIN_block\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_USING_CONTEXT_block\n");
+	ECHO(("before_USING_CONTEXT_block\n"));
 
 	e4c_using_context(e4c_false, e4c_print_exception){
 
-		printf("inside_USING_CONTEXT_block\n");
+		ECHO(("inside_USING_CONTEXT_block\n"));
 	}
 
-	printf("before_CONTEXT_END_block\n");
+	ECHO(("before_CONTEXT_END_block\n"));
 
 	e4c_context_end();
 

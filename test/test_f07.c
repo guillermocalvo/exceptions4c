@@ -4,18 +4,18 @@
 
 static void aux5(){
 
-	printf("inside_aux5\n");
+	ECHO(("inside_aux5\n"));
 
-	printf("before_THROW\n");
+	ECHO(("before_THROW\n"));
 
 	E4C_THROW(TamedException, "I'm going to be caught.");
 
-	printf("before_EXIT_aux5\n");
+	ECHO(("before_EXIT_aux5\n"));
 }
 
 static void aux4(){
 
-	printf("inside_aux4\n");
+	ECHO(("inside_aux4\n"));
 
 	E4C_TRY{
 
@@ -23,25 +23,25 @@ static void aux4(){
 
 	}E4C_CATCH(ProgramSignalException){
 
-		printf("inside_AUX4_CATCH_block\n");
+		ECHO(("inside_AUX4_CATCH_block\n"));
 
 	}
 
-	printf("before_EXIT_aux4\n");
+	ECHO(("before_EXIT_aux4\n"));
 }
 
 static void aux3(){
 
-	printf("inside_aux3\n");
+	ECHO(("inside_aux3\n"));
 
 	aux4();
 
-	printf("before_EXIT_aux3\n");
+	ECHO(("before_EXIT_aux3\n"));
 }
 
 static void aux2(){
 
-	printf("inside_aux2\n");
+	ECHO(("inside_aux2\n"));
 
 	E4C_TRY{
 
@@ -49,17 +49,17 @@ static void aux2(){
 
 	}
 
-	printf("before_EXIT_aux2\n");
+	ECHO(("before_EXIT_aux2\n"));
 }
 
 
 static void aux1(){
 
-	printf("inside_aux1\n");
+	ECHO(("inside_aux1\n"));
 
 	aux2();
 
-	printf("before_EXIT_aux1\n");
+	ECHO(("before_EXIT_aux1\n"));
 }
 
 DEFINE_TEST(
@@ -74,40 +74,40 @@ DEFINE_TEST(
 
 	e4c_bool caught = e4c_false;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_TRY_block\n");
+	ECHO(("before_TRY_block\n"));
 
 	E4C_TRY{
 
-		printf("before_CALL_FUNCTION_aux1\n");
+		ECHO(("before_CALL_FUNCTION_aux1\n"));
 
 		aux1();
 
-		printf("after_CALL_FUNCTION_aux1\n");
+		ECHO(("after_CALL_FUNCTION_aux1\n"));
 
 	}E4C_CATCH(TamedException){
 
 		caught = e4c_true;
 
-		printf("inside_MAIN_CATCH_block\n");
+		ECHO(("inside_MAIN_CATCH_block\n"));
 
-		printf("catching__%s\n", e4c_get_exception()->name);
+		ECHO(("catching__%s\n", e4c_get_exception()->name));
 	}
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
 	if(caught){
 
-		printf("exception_WAS_caught\n");
+		ECHO(("exception_WAS_caught\n"));
 
 	}else{
 
-		printf("exception_WAS_NOT_caught\n");
+		ECHO(("exception_WAS_NOT_caught\n"));
 
 	}
 

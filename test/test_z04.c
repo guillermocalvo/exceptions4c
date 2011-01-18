@@ -15,22 +15,14 @@ DEFINE_REQUIREMENT(
 	int * null_pointer = NULL;
 	int integer;
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_NULL_POINTER\n");
-	fflush(stdout);
+	ECHO(("before_NULL_POINTER\n"));
 
 	/* some smartypants compilers might need to be fooled */
 	/* if(null_pointer != &integer) null_pointer = NULL; */
 
 	integer = *null_pointer;
 
-	printf("after_NULL_POINTER_%d\n", integer);
-	fflush(stdout);
+	ECHO(("after_NULL_POINTER_%d\n", integer));
 
 	return(EXIT_SUCCESS);
 }

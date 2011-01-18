@@ -4,10 +4,10 @@
 
 static void aux(void * pointer){
 	if(pointer == NULL){
-		printf("____aux_before_THROW\n");
+		ECHO(("____aux_before_THROW\n"));
 		E4C_THROW(TamedException, "The external function will catch me.");
 	}else{
-		printf("____aux_no_exception_was_thrown\n");
+		ECHO(("____aux_no_exception_was_thrown\n"));
 	}
 }
 
@@ -20,57 +20,63 @@ static int ext(){
 
 	is_ready1 = e4c_context_is_ready();
 
-	if(is_ready1)	printf("__ext_the_context_WAS_ready\n");
-	else			printf("__ext_the_context_WAS_NOT_ready\n");
+	if(is_ready1){
+		ECHO(("__ext_the_context_WAS_ready\n"));
+	}else{
+		ECHO(("__ext_the_context_WAS_NOT_ready\n"));
+	}
 
-	printf("__ext_before_REUSING_CONTEXT\n");
+	ECHO(("__ext_before_REUSING_CONTEXT\n"));
 
 	{
 		e4c_reusing_context(error){
 
-			printf("__ext_before_TRY_block\n");
+			ECHO(("__ext_before_TRY_block\n"));
 
 			E4C_TRY{
 
-				printf("__ext_before_CALL_FUNCTION_aux\n");
+				ECHO(("__ext_before_CALL_FUNCTION_aux\n"));
 
 				aux(NULL);
 
-				printf("__ext_after_CALL_FUNCTION_aux\n");
+				ECHO(("__ext_after_CALL_FUNCTION_aux\n"));
 
 				status_code = 123;
 
 			}E4C_CATCH(TamedException){
 
-				printf("__ext_inside_CATCH_block\n");
+				ECHO(("__ext_inside_CATCH_block\n"));
 
 				status_code = 0;
 
 			}
 
-			printf("__ext_after_TRY_block\n");
+			ECHO(("__ext_after_TRY_block\n"));
 
 		}
 	}
 
-	printf("__ext_after_REUSING_CONTEXT\n");
+	ECHO(("__ext_after_REUSING_CONTEXT\n"));
 
 	is_ready2 = e4c_context_is_ready();
 
-	if(is_ready2)	printf("__ext_the_context_IS_ready\n");
-	else			printf("__ext_the_context_IS_NOT_ready\n");
+	if(is_ready2){
+		ECHO(("__ext_the_context_IS_ready\n"));
+	}else{
+		ECHO(("__ext_the_context_IS_NOT_ready\n"));
+	}
 
 	if(is_ready1 != is_ready2) return(112233);
 
 	if(error == NULL){
 
-		printf("__ext_there_was_no_error\n");
+		ECHO(("__ext_there_was_no_error\n"));
 
 		return(status_code);
 
 	}else{
 
-		printf("__ext_there_was_an_error_%s\n", error->name);
+		ECHO(("__ext_there_was_an_error_%s\n", error->name));
 
 		return(status_code);
 	}
@@ -89,13 +95,13 @@ DEFINE_TEST(
 
 	int result;
 
-	printf("before_CALL_FUNCTION_ext\n");
+	ECHO(("before_CALL_FUNCTION_ext\n"));
 
 	result = ext();
 
-	printf("after_CALL_FUNCTION_ext\n");
+	ECHO(("after_CALL_FUNCTION_ext\n"));
 
-	printf("result_was_%d\n", result);
+	ECHO(("result_was_%d\n", result));
 
 	return(EXIT_SUCCESS);
 }

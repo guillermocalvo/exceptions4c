@@ -13,18 +13,18 @@ DEFINE_TEST(
 ){
 	const e4c_exception * exception_thrown;
 
-	printf("before_REUSING_CONTEXT_block\n");
+	ECHO(("before_REUSING_CONTEXT_block\n"));
 
 	{
 		e4c_reusing_context(exception_thrown){
 
-			printf("inside_REUSING_CONTEXT_block\n");
+			ECHO(("inside_REUSING_CONTEXT_block\n"));
 
 			break;
 		}
 	}
 
-	printf("after_REUSING_CONTEXT_block\n");
+	ECHO(("after_REUSING_CONTEXT_block\n"));
 
 	return(exception_thrown == NULL ? 123 : -123);
 }

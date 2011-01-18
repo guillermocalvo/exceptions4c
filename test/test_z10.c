@@ -5,11 +5,9 @@
 
 static void handler_z10(int signal_number){
 
-	printf("handler_%d\n", signal_number);
-	fflush(stdout);
+	ECHO(("handler_%d\n", signal_number));
 
-	printf("\nhandler_executed\n");
-	fflush(stdout);
+	ECHO(("\nhandler_executed\n"));
 
 	exit(123);
 }
@@ -27,34 +25,22 @@ DEFINE_REQUIREMENT(
 	int * null_pointer = NULL;
 	int integer;
 
-	/*
-		Note:
-		We'll be using fflush because when the signal is received, all bets are
-		off; the buffered output of the program goes into the bit bucket.
-	*/
-
-	printf("before_SIGNAL\n");
-	fflush(stdout);
+	ECHO(("before_SIGNAL\n"));
 
 	if( signal(SIGSEGV, handler_z10) == SIG_ERR ){
-		printf("could_not_set_handler_%d\n", SIGSEGV);
-		fflush(stdout);
+		ECHO(("could_not_set_handler_%d\n", SIGSEGV));
 	}else{
-		printf("handler_was_set_%d\n", SIGSEGV);
-		fflush(stdout);
+		ECHO(("handler_was_set_%d\n", SIGSEGV));
 	}
 
-
-	printf("before_NULL_POINTER\n");
-	fflush(stdout);
+	ECHO(("before_NULL_POINTER\n"));
 
 	/* some smartypants compilers might need to be fooled */
 	/* if(null_pointer != &integer) null_pointer = NULL; */
 
 	integer = *null_pointer;
 
-	printf("after_NULL_POINTER_%d\n", integer);
-	fflush(stdout);
+	ECHO(("after_NULL_POINTER_%d\n", integer));
 
 	return(EXIT_SUCCESS);
 }

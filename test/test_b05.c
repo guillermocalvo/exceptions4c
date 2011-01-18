@@ -14,21 +14,21 @@ DEFINE_TEST(
 
 	char * buffer;
 
-	printf("before_CONTEXT_BEGIN\n");
+	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
-	printf("before_CONTEXT_END\n");
+	ECHO(("before_CONTEXT_END\n"));
 
 	e4c_context_end();
 
-	printf("before_USING_MEMORY_block\n");
+	ECHO(("before_USING_MEMORY_block\n"));
 
 	e4c_using_memory(buffer, 256){
-		printf("inside_USING_MEMORY_block\n");
+		ECHO(("inside_USING_MEMORY_block\n"));
 	}
 
-	printf("after_USING_MEMORY_block\n");
+	ECHO(("after_USING_MEMORY_block\n"));
 
 	return(EXIT_SUCCESS);
 }
