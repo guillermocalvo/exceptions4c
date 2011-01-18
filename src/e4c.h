@@ -4,8 +4,8 @@
  *
  * exceptions4c header file
  *
- * @version     2.3
- * @author      Copyright (c) 2010 Guillermo Calvo
+ * @version     2.4
+ * @author      Copyright (c) 2011 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
  *
@@ -51,7 +51,7 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
-# define _E4C_VERSION(version)			version(2, 3, 12)
+# define _E4C_VERSION(version)			version(2, 4, 0)
 
 # if !defined(E4C_THREADSAFE) && ( \
 		defined(PTHREAD_H) \
@@ -172,11 +172,17 @@ in order to enable the multi-thread version of exceptions4c."
 # ifndef _E4C_NORETURN
 
 #	ifdef	__GNUC__
-#		define _E4C_NORETURN				__attribute__ ((noreturn))
+#		define _E4C_NORETURN						__attribute__ ((noreturn))
+#		define _E4C_UNREACHABLE_RETURN(_value_)
 
 #	else
 #		define _E4C_NORETURN
+#		define _E4C_UNREACHABLE_RETURN(_value_)		return(_value_);
 #	endif
+
+# else
+
+#	define _E4C_UNREACHABLE_RETURN(_value_)
 
 # endif
 
@@ -349,15 +355,15 @@ in order to enable the multi-thread version of exceptions4c."
 
 # define _E4C_DEFINE_EXCEPTION(_name_, _message_, _super_) \
 	const e4c_exception _name_ = { \
-		/* name			*/	#_name_, \
-		/* message		*/	_message_, \
-		/* super		*/	&_super_, \
-		/* file			*/	_E4C_FILE_INFO, \
-		/* line			*/	_E4C_LINE_INFO, \
-		/* function		*/	NULL, \
-		/* error_number	*/	0, \
-		/* type			*/	&_name_, \
-		/* cause		*/	NULL \
+		#_name_, \
+		_message_, \
+		&_super_, \
+		_E4C_FILE_INFO, \
+		_E4C_LINE_INFO, \
+		NULL, \
+		0, \
+		&_name_, \
+		NULL \
 	}
 
 # define _E4C_SIGNAL_MAPPING(_signal_number_, _exception_) \
@@ -1114,7 +1120,7 @@ in order to enable the multi-thread version of exceptions4c."
  * @see     E4C_VERSION_REVISION
  * @see     E4C_VERSION_STRING
  */
-# define E4C_VERSION_NUMBER	\
+# define E4C_VERSION_NUMBER \
 	\
 	_E4C_VERSION(_E4C_V_NUMBER)
 
@@ -1128,7 +1134,7 @@ in order to enable the multi-thread version of exceptions4c."
  *
  * @see     E4C_VERSION_NUMBER
  */
-# define E4C_VERSION_THREADSAFE	\
+# define E4C_VERSION_THREADSAFE \
 	\
 	_E4C_V_THREADSAFE
 
@@ -1140,7 +1146,7 @@ in order to enable the multi-thread version of exceptions4c."
  *
  * @see     E4C_VERSION_NUMBER
  */
-# define E4C_VERSION_MAJOR	\
+# define E4C_VERSION_MAJOR \
 	\
 	_E4C_VERSION(_E4C_V_MAJOR)
 
@@ -1153,7 +1159,7 @@ in order to enable the multi-thread version of exceptions4c."
  *
  * @see     E4C_VERSION_NUMBER
  */
-# define E4C_VERSION_MINOR	\
+# define E4C_VERSION_MINOR \
 	\
 	_E4C_VERSION(_E4C_V_MINOR)
 
@@ -1165,7 +1171,7 @@ in order to enable the multi-thread version of exceptions4c."
  *
  * @see     E4C_VERSION_NUMBER
  */
-# define E4C_VERSION_REVISION	\
+# define E4C_VERSION_REVISION \
 	\
 	_E4C_VERSION(_E4C_V_REVISION)
 
@@ -1176,7 +1182,7 @@ in order to enable the multi-thread version of exceptions4c."
  *
  * @see     E4C_VERSION_NUMBER
  */
-# define E4C_VERSION_STRING	\
+# define E4C_VERSION_STRING \
 	\
 	_E4C_VERSION(_E4C_V_STRING)
 
@@ -1380,6 +1386,96 @@ in order to enable the multi-thread version of exceptions4c."
  */
 # define e4c_reusing_context(_thrown_exception_) \
 	_E4C_REUSING_CONTEXT(_thrown_exception_)
+
+/**
+ * Marks a function which never returns
+ *
+ * This macro helps both developer and compiler to assume that the marked
+ * function will not return the control to its caller (unless by throwing an
+ * exception).
+ *
+ * @note
+ * It does not make sense for these functions to have a return type other than
+ * @c void.
+ *
+ * For example, a function @c f1 that @b always throws an exception, could be
+ * marked with this macro:
+ *
+ * @code
+ * void f1(int foo) E4C_NORETURN;
+ * // ...
+ * void f1(int foo){
+ *     if(foo == 1){
+ *         throw(MyException1, "foo is one.");
+ *     }else{
+ *         throw(MyException2, "foo is not one.");
+ *     }
+ * }
+ * @endcode
+ *
+ * Then, if another function tested a condition and then called @c f1, it
+ * wouldn't need to return anything witnin the @c if branch, nor consider the
+ * @c else branch of the test.
+ *
+ * @code
+ * int f2(int bar, int foo){
+ *
+ *     if(bar == 0){
+ *         f1(foo);
+ *         // return(-1);
+ *     }// else
+ *
+ *     return(123);
+ *
+ * }
+ * @endcode
+ *
+ * If the compiler supports this macro, it could optimize the program and avoid
+ * spurious warnings of uninitialized variables.
+ *
+ * @see     E4C_UNREACHABLE_RETURN
+ */
+# define E4C_NORETURN \
+	\
+	_E4C_NORETURN
+
+/**
+ * Simulates a function return
+ *
+ * @param   _value_
+ *          The value that would be returned if the statement took place.
+ *
+ * This macro ensures portability on compilers which don't support functions
+ * that never return.
+ *
+ * It must be used after calling a function marked as @c E4C_NORETURN, so that
+ * the compiler will not complain about <em>control reaching end of non-void
+ * function</em>. For example:
+ *
+ * @code
+ * void f1(int foo) E4C_NORETURN;
+ *
+ * int f3(int bar, int foo){
+ *
+ *     if(bar != 0){
+ *         return(123);
+ *     }
+ *
+ *     f1(123);
+ *
+ *     E4C_UNREACHABLE_RETURN(-1);
+ * }
+ * @endcode
+ *
+ * This macro will become an actual @c return statement if the compiler does not
+ * support @c E4C_NORETURN, even though it will never be reached (because the
+ * called function will never return control).
+ *
+ * @see     E4C_NORETURN
+ */
+# define E4C_UNREACHABLE_RETURN(_value_) \
+	\
+	_E4C_UNREACHABLE_RETURN(_value_)
 
 /** @} */
 
@@ -2690,6 +2786,6 @@ extern void e4c_frame_repeat(
 
 extern void e4c_throw_exception(const e4c_exception * exception,
 	const char * file, int line, const char * function,
-	e4c_bool verbatim, const char * message, ...) _E4C_NORETURN;
+	e4c_bool verbatim, const char * message, ...) E4C_NORETURN;
 
 # endif
