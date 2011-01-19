@@ -672,7 +672,7 @@ void e4c_throw_exception(const e4c_exception * exception, const char * file, int
 		exception = &NullPointerException;
 	}
 
-	if(verbatim){
+	if(!verbatim){
 # if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
 		va_list		arguments_list;
 		int			printed;
