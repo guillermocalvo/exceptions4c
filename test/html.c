@@ -11,7 +11,26 @@
 
 /* TODO: enhance operating system detection */
 
-# if	defined(__FreeBSD) \
+# if	defined(__nucleus__)
+#	define PLATFORM_OS "Nucleus OS"
+# elif	defined(__minix)
+#	define PLATFORM_OS "MINIX"
+# elif	defined(__QNXNTO__)
+#	define PLATFORM_OS "QNX 6.x"
+# elif	defined(QNX)
+#	define PLATFORM_OS "QNX 4.x"
+# elif	defined(__ANDROID__)
+#	define PLATFORM_OS "Android"
+# elif	defined(__SYMBIAN32__)
+#	define PLATFORM_OS "Symbian OS"
+# elif	defined(_XBOX)
+#	define PLATFORM_OS "XBox"
+# elif	defined(__APPLE__) && defined(__MACH__)
+#	define PLATFORM_OS "MacOs X"
+# elif	defined(macintosh) \
+	||	defined(Macintosh)
+#	define PLATFORM_OS "MacOs 9"
+# elif	defined(__FreeBSD) \
 	||	defined(__FreeBSD__)
 #	define PLATFORM_OS "FreeBSD"
 # elif	defined(__NetBSD) \
@@ -44,6 +63,8 @@
 	||	defined(__WIN64) \
 	||	defined(__WIN64__)
 #	define PLATFORM_OS "Microsoft Windows 64-bit"
+# elif	defined(_WIN32_WCE)
+#	define PLATFORM_OS "Microsoft Windows CE"
 # elif	defined(WIN32) \
 	||	defined(_WIN32) \
 	||	defined(__WIN32) \
@@ -52,12 +73,14 @@
 # elif	defined(WINDOWS) \
 	||	defined(_WINDOWS) \
 	||	defined(__WINDOWS) \
-	||	defined(__WINDOWS__)
+	||	defined(__WINDOWS__) \
+	||	defined(__TOS_WIN__)
 #	define PLATFORM_OS "Microsoft Windows"
 # elif	defined(MSDOS) \
 	||	defined(_MSDOS) \
 	||	defined(__MSDOS) \
-	||	defined(__MSDOS__)
+	||	defined(__MSDOS__) \
+	||	defined(__DOS__)
 #	define PLATFORM_OS "Microsoft MS-DOS"
 # else
 #	define PLATFORM_OS "Unknown operating system"
@@ -99,6 +122,26 @@
 #	define PLATFORM_COMPILER						"Open Watcom"
 #	define PLATFORM_COMPILER_VERSION				""
 #	define PLATFORM_COMPILER_VERSION_NUMBER			__WATCOMC__
+# elif defined(__DMC__)
+#	define PLATFORM_COMPILER						"Digital Mars"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			__DMC__
+# elif defined(__DJGPP__)
+#	define PLATFORM_COMPILER						"DJGPP"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			__DJGPP__
+# elif defined(__COMO__)
+#	define PLATFORM_COMPILER						"Comeau"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			__COMO_VERSION__
+# elif defined(__PACIFIC__)
+#	define PLATFORM_COMPILER						"Pacific C"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# elif defined(__POCC__)
+#	define PLATFORM_COMPILER						"Pelles C"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			__POCC__
 # elif defined(MSC)
 #	define PLATFORM_COMPILER						"Microsoft Visual C"
 #	define PLATFORM_COMPILER_VERSION				""
@@ -114,11 +157,19 @@
 # elif defined(__clang__)
 #	define PLATFORM_COMPILER						"Clang"
 #	define PLATFORM_COMPILER_VERSION				__clang_version__
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# elif defined(__llvm__)
+#	define PLATFORM_COMPILER						"LLVM"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
 # elif defined(__LCC__)
 #	define PLATFORM_COMPILER						"Lcc-Win32"
 #	define PLATFORM_COMPILER_VERSION				""
 #	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
+# elif defined(__MINGW32__)
+#	define PLATFORM_COMPILER						"MinGW"
+#	define PLATFORM_COMPILER_VERSION				""
+#	define PLATFORM_COMPILER_VERSION_NUMBER			__MINGW32_MAJOR_VERSION
 # elif defined(__GNUC__)
 #	define PLATFORM_COMPILER						"GCC"
 #	define PLATFORM_COMPILER_VERSION				__VERSION__
