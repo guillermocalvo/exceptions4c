@@ -41,22 +41,51 @@
 # define WINDOWS
 # endif
 
-# if defined(_POSIX_C_SOURCE) && !defined(HAVE_POSIX_WEXITSTATUS)
-#	define HAVE_POSIX_WEXITSTATUS
+# if !defined(MSDOS) && ( \
+		defined(_MSDOS) \
+	||	defined(__MSDOS) \
+	||	defined(__MSDOS__) \
+)
+# define MSDOS
 # endif
 
-# if defined(LINUX) && !defined(HAVE_POSIX_WEXITSTATUS) && !defined(HAVE_WEXITSTATUS)
-# warning "Your platform is GNU/Linux but _POSIX_C_SOURCE is not defined. \
-Please define HAVE_POSIX_WEXITSTATUS at compiler level \
-in order to use POSIX's WEXITSTATUS macro."
+
+/*
+	When we run a test (through the function `system`), we need to get the exit
+	code returned by `main` to check whether it succeeded or failed.
+
+	On most platforms, `system` does not return the *exit code*, but a
+	*termination status*. This termination status must be passed to the macro
+	`WEXITSTATUS` in order to get the actual exit code. `WEXITSTATUS` is defined
+	in the header file <sys/wait.h>.
+
+	By default, we will try and include this header, unless GET_EXIT_CODE is
+	defined at compile time.
+
+	If the platform is well known not to have that header, then we won't include
+	it (unless HAVE_SYS_WAIT_H is defined).
+*/
+# ifndef GET_EXIT_CODE
+#	if !defined(HAVE_SYS_WAIT_H) && ( defined(WINDOWS) || defined(MSDOS) )
+#		define GET_EXIT_CODE(status) (status)
+#	else
+/*
+		In case your platform does not have <sys/wait.h>, please define
+		GET_EXIT_CODE at compile time.
+
+		This macro must take the status value returned by the `system`
+		function, and return the actual exit status of the executed process.
+
+		If your platform's `system` function already returns the actual exit
+		status, you can define GET_EXIT_CODE(status) just like this:
+
+			# define GET_EXIT_CODE(status) (status)
+*/
+#		include <sys/wait.h>
+#		define GET_EXIT_CODE(status) WEXITSTATUS(status)
+#	endif
 # endif
 
-# if defined(HAVE_POSIX_WEXITSTATUS) || defined(HAVE_WEXITSTATUS)
-#	include <sys/wait.h>
-#	define GET_EXIT_CODE(status) WEXITSTATUS(status)
-# else
-#	define GET_EXIT_CODE(status) (status)
-# endif
 
 # include "testing.h"
 # include "html.h"
@@ -69,6 +98,7 @@ E4C_DEFINE_EXCEPTION(GrandparentException, "This is a grandparent exception.", R
 E4C_DEFINE_EXCEPTION(ParentException, "This is a parent exception.", GrandparentException);
 E4C_DEFINE_EXCEPTION(ChildException, "This is a child exception.", ParentException);
 E4C_DEFINE_EXCEPTION(SiblingException, "This is a sibling exception.", ParentException);
+
 
 # if defined(WINDOWS)
 
