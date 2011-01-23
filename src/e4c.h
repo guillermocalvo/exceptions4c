@@ -51,46 +51,42 @@
 # ifndef _E4C_H_
 # define _E4C_H_
 
+
 # define _E4C_VERSION(version)			version(2, 4, 2)
 
 
-/*
- * The E4C_THREADSAFE compile-time parameter
- * is implicitly defined when either _THREAD_SAFE or _REENTRANT are defined.
- */
-# ifndef E4C_THREADSAFE
-#	if		defined(_THREAD_SAFE) \
-		||	defined(_REENTRANT)
-#		define E4C_THREADSAFE
-#	elif	defined(PTHREAD_H) \
-		||	defined(PTHREAD_BARRIER_SERIAL_THREAD) \
-		||	defined(PTHREAD_CANCEL_ASYNCHRONOUS) \
-		||	defined(PTHREAD_CANCEL_ENABLE) \
-		||	defined(PTHREAD_CANCEL_DEFERRED) \
-		||	defined(PTHREAD_CANCEL_DISABLE) \
-		||	defined(PTHREAD_CANCELED) \
-		||	defined(PTHREAD_COND_INITIALIZER) \
-		||	defined(PTHREAD_CREATE_DETACHED) \
-		||	defined(PTHREAD_CREATE_JOINABLE) \
-		||	defined(PTHREAD_EXPLICIT_SCHED) \
-		||	defined(PTHREAD_INHERIT_SCHED) \
-		||	defined(PTHREAD_MUTEX_DEFAULT) \
-		||	defined(PTHREAD_MUTEX_ERRORCHECK) \
-		||	defined(PTHREAD_MUTEX_NORMAL) \
-		||	defined(PTHREAD_MUTEX_INITIALIZER) \
-		||	defined(PTHREAD_MUTEX_RECURSIVE) \
-		||	defined(PTHREAD_ONCE_INIT) \
-		||	defined(PTHREAD_PRIO_INHERIT) \
-		||	defined(PTHREAD_PRIO_NONE) \
-		||	defined(PTHREAD_PRIO_PROTECT) \
-		||	defined(PTHREAD_PROCESS_SHARED) \
-		||	defined(PTHREAD_PROCESS_PRIVATE) \
-		||	defined(PTHREAD_RWLOCK_INITIALIZER) \
-		||	defined(PTHREAD_SCOPE_PROCESS) \
-		||	defined(PTHREAD_SCOPE_SYSTEM)
-#		error "Please define E4C_THREADSAFE at compiler level " \
+# if !defined(E4C_THREADSAFE) && ( \
+		defined(_THREAD_SAFE) \
+	||	defined(_REENTRANT) \
+	||	defined(PTHREAD_H) \
+	||	defined(PTHREAD_BARRIER_SERIAL_THREAD) \
+	||	defined(PTHREAD_CANCEL_ASYNCHRONOUS) \
+	||	defined(PTHREAD_CANCEL_ENABLE) \
+	||	defined(PTHREAD_CANCEL_DEFERRED) \
+	||	defined(PTHREAD_CANCEL_DISABLE) \
+	||	defined(PTHREAD_CANCELED) \
+	||	defined(PTHREAD_COND_INITIALIZER) \
+	||	defined(PTHREAD_CREATE_DETACHED) \
+	||	defined(PTHREAD_CREATE_JOINABLE) \
+	||	defined(PTHREAD_EXPLICIT_SCHED) \
+	||	defined(PTHREAD_INHERIT_SCHED) \
+	||	defined(PTHREAD_MUTEX_DEFAULT) \
+	||	defined(PTHREAD_MUTEX_ERRORCHECK) \
+	||	defined(PTHREAD_MUTEX_NORMAL) \
+	||	defined(PTHREAD_MUTEX_INITIALIZER) \
+	||	defined(PTHREAD_MUTEX_RECURSIVE) \
+	||	defined(PTHREAD_ONCE_INIT) \
+	||	defined(PTHREAD_PRIO_INHERIT) \
+	||	defined(PTHREAD_PRIO_NONE) \
+	||	defined(PTHREAD_PRIO_PROTECT) \
+	||	defined(PTHREAD_PROCESS_SHARED) \
+	||	defined(PTHREAD_PROCESS_PRIVATE) \
+	||	defined(PTHREAD_RWLOCK_INITIALIZER) \
+	||	defined(PTHREAD_SCOPE_PROCESS) \
+	||	defined(PTHREAD_SCOPE_SYSTEM) \
+)
+#	error "Please define E4C_THREADSAFE at compiler level " \
 "in order to enable the multi-thread version of exceptions4c."
-#	endif
 # endif
 
 
@@ -2795,5 +2791,6 @@ extern void e4c_frame_repeat(
 extern void e4c_throw_exception(const e4c_exception * exception,
 	const char * file, int line, const char * function,
 	e4c_bool verbatim, const char * message, ...) E4C_NORETURN;
+
 
 # endif
