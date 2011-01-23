@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 4, 2)
+# define _E4C_VERSION(version)			version(2, 4, 3)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -91,7 +91,9 @@
 
 
 /* C99 features */
-# if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+# if defined(_ISOC99_SOURCE) \
+	||	defined(_GNU_SOURCE) \
+	||	( defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) )
 
 #	ifndef HAVE_C99_STDBOOL
 #		define HAVE_C99_STDBOOL
@@ -113,7 +115,11 @@
 
 
 /* POSIX features */
-# if defined(_POSIX_C_SOURCE)
+# if defined(_POSIX_C_SOURCE) \
+	||	defined(_POSIX_SOURCE) \
+	||	defined(_XOPEN_SOURCE) \
+	||	defined(_XOPEN_SOURCE_EXTENDED) \
+	||	defined(_GNU_SOURCE)
 
 /*
  * POSIX.1 does not specify whether setjmp and longjmp save or restore the
