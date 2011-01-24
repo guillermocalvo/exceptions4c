@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 4, 3)
+# define _E4C_VERSION(version)			version(2, 4, 4)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -187,7 +187,7 @@
 
 #	else
 #		define _E4C_NORETURN
-#		define _E4C_UNREACHABLE_RETURN(_value_)		return(_value_);
+#		define _E4C_UNREACHABLE_RETURN(_value_)		return _value_
 #	endif
 
 # else

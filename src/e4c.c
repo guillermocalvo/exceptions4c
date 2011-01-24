@@ -69,6 +69,8 @@ at compiler level in order to use POSIX's sigsetjmp/siglongjmp functions."
 
 # define INITIALIZE_ONCE				if(!is_initialized) _e4c_initialize()
 
+# define RETURN_VOID
+
 # define FATAL_ERROR(exception, function, message, file, line, unreachable_return_value) \
 	_e4c_fatal_error(&exception, message, file, line, function, errno, NULL); \
 	E4C_UNREACHABLE_RETURN(unreachable_return_value); \
@@ -587,16 +589,16 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 	context = E4C_CONTEXT;
 
 	/* check if 'e4c_frame_repeat' was used before calling e4c_context_begin */
-	PREVENT_MISUSE(context == NULL, ContextHasNotBegunYet, function, "e4c_frame_repeat: " DESC_NOT_BEGUN_YET, file, line, (void)0);
+	PREVENT_MISUSE(context == NULL, ContextHasNotBegunYet, function, "e4c_frame_repeat: " DESC_NOT_BEGUN_YET, file, line, RETURN_VOID);
 
 	/* get the current frame */
 	frame = context->current_frame;
 
 	/* check if the current frame is NULL (unlikely) */
-	DEBUG_PREVENT(frame == NULL, "e4c_frame_repeat", DESC_INVALID_FRAME, (void)0);
+	DEBUG_PREVENT(frame == NULL, "e4c_frame_repeat", DESC_INVALID_FRAME, RETURN_VOID);
 
 	/* check if 'e4c_frame_repeat' was used before 'try' or 'use' */
-	PREVENT_MISUSE(IS_TOP_FRAME(frame), ExceptionSystemFatalError, function, ( stage == _e4c_beginning ? "e4c_frame_repeat: " DESC_CANNOT_REACQUIRE : "e4c_frame_repeat: " DESC_CANNOT_RETRY ), file, line, (void)0);
+	PREVENT_MISUSE(IS_TOP_FRAME(frame), ExceptionSystemFatalError, function, ( stage == _e4c_beginning ? "e4c_frame_repeat: " DESC_CANNOT_REACQUIRE : "e4c_frame_repeat: " DESC_CANNOT_RETRY ), file, line, RETURN_VOID);
 
 	/* check if "uncatchable" exception */
 	if(frame->uncaught && frame->thrown_exception.super == NULL){
@@ -617,7 +619,7 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 		}
 		frame->reacquire_attempts++;
 	}else{
-		FATAL_ERROR(ExceptionSystemFatalError, function, "e4c_frame_repeat: " DESC_CANNOT_REPEAT, file, line, (void)0);
+		FATAL_ERROR(ExceptionSystemFatalError, function, "e4c_frame_repeat: " DESC_CANNOT_REPEAT, file, line, RETURN_VOID);
 	}
 
 	/* reset the exception information */
@@ -650,13 +652,13 @@ void e4c_throw_exception(const e4c_exception * exception, const char * file, int
 	context = E4C_CONTEXT;
 
 	/* check if 'throw' was used before calling e4c_context_begin */
-	PREVENT_MISUSE(context == NULL, ContextHasNotBegunYet, function, "e4c_throw_exception: " DESC_NOT_BEGUN_YET, file, line, (void)0);
+	PREVENT_MISUSE(context == NULL, ContextHasNotBegunYet, function, "e4c_throw_exception: " DESC_NOT_BEGUN_YET, file, line, RETURN_VOID);
 
 	/* get the current frame */
 	frame = context->current_frame;
 
 	/* check if the current frame is NULL (unlikely) */
-	DEBUG_PREVENT(frame == NULL, "e4c_throw_exception", DESC_INVALID_FRAME, (void)0);
+	DEBUG_PREVENT(frame == NULL, "e4c_throw_exception", DESC_INVALID_FRAME, RETURN_VOID);
 
 	/* get the cause of this exception */
 	cause = ( frame->thrown ? malloc( sizeof(*cause) ) : NULL );
@@ -748,7 +750,7 @@ void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings){
 	context = E4C_CONTEXT;
 
 	/* check if e4c_context_set_signal_mappings was called before calling e4c_context_begin */
-	PREVENT(context == NULL, ContextHasNotBegunYet, "e4c_context_set_signal_mappings", NULL, (void)0);
+	PREVENT(context == NULL, ContextHasNotBegunYet, "e4c_context_set_signal_mappings", NULL, RETURN_VOID);
 
 	_e4c_set_signal_handlers(context, mappings);
 }
@@ -798,13 +800,13 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 	environment = _e4c_get_environment();
 
 	/* check if e4c_context_begin was called twice for this thread */
-	PREVENT(environment != NULL, ContextAlreadyBegun, "e4c_context_begin", NULL, (void)0);
+	PREVENT(environment != NULL, ContextAlreadyBegun, "e4c_context_begin", NULL, RETURN_VOID);
 
 	/* allocate memory for the new frame */
 	environment	= malloc( sizeof(*environment) );
 
 	/* check if there wasn't enough memory */
-	PREVENT(environment == NULL, NotEnoughMemoryException, "e4c_context_begin", DESC_MALLOC_CONTEXT, (void)0);
+	PREVENT(environment == NULL, NotEnoughMemoryException, "e4c_context_begin", DESC_MALLOC_CONTEXT, RETURN_VOID);
 
 	/* allocate memory for the new frame */
 	new_frame = malloc( sizeof(*new_frame) );
@@ -812,7 +814,7 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 	/* check if there wasn't enough memory */
 	if(new_frame == NULL){
 		free(environment);
-		FATAL_ERROR(NotEnoughMemoryException, "e4c_context_begin", DESC_MALLOC_FRAME, __FILE__, __LINE__, (void)0);
+		FATAL_ERROR(NotEnoughMemoryException, "e4c_context_begin", DESC_MALLOC_FRAME, __FILE__, __LINE__, RETURN_VOID);
 	}
 
 	/* add the new environment to the collection */
@@ -833,7 +835,7 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 
 	/* check if e4c_context_begin was called twice for this program */
 	/* this can also happen when the program uses threads but E4C_THREADSAFE is not defined */
-	PREVENT(context != NULL, ContextAlreadyBegun, "e4c_context_begin", NULL, (void)0);
+	PREVENT(context != NULL, ContextAlreadyBegun, "e4c_context_begin", NULL, RETURN_VOID);
 
 	/* update local and global variable */
 	context = current_context = &mainContext;
@@ -842,7 +844,7 @@ void e4c_context_begin(e4c_bool handle_signals, e4c_uncaught_handler uncaught_ha
 	new_frame = malloc( sizeof(*new_frame) );
 
 	/* check if there wasn't enough memory */
-	PREVENT(new_frame == NULL, NotEnoughMemoryException, "e4c_context_begin", DESC_MALLOC_FRAME, (void)0);
+	PREVENT(new_frame == NULL, NotEnoughMemoryException, "e4c_context_begin", DESC_MALLOC_FRAME, RETURN_VOID);
 
 # endif
 
@@ -868,13 +870,13 @@ void e4c_context_end(void){
 	environment = _e4c_remove_environment();
 
 	/* check if e4c_context_end was called before calling e4c_context_begin */
-	PREVENT(environment == NULL, ContextHasNotBegunYet, "e4c_context_end", NULL, (void)0);
+	PREVENT(environment == NULL, ContextHasNotBegunYet, "e4c_context_end", NULL, RETURN_VOID);
 
 	/* update local variable */
 	context = &environment->context;
 
 	/* check if the current context is NULL (unlikely) */
-	DEBUG_PREVENT(context == NULL, "e4c_context_end", DESC_INVALID_CONTEXT, (void)0);
+	DEBUG_PREVENT(context == NULL, "e4c_context_end", DESC_INVALID_CONTEXT, RETURN_VOID);
 
 # else
 
@@ -882,7 +884,7 @@ void e4c_context_end(void){
 	context = current_context;
 
 	/* check if e4c_context_end was called before calling e4c_context_begin */
-	PREVENT(context == NULL, ContextHasNotBegunYet, "e4c_context_end", NULL, (void)0);
+	PREVENT(context == NULL, ContextHasNotBegunYet, "e4c_context_end", NULL, RETURN_VOID);
 
 # endif
 
@@ -890,10 +892,10 @@ void e4c_context_end(void){
 	frame = context->current_frame;
 
 	/* check if there are no frames left (unlikely) */
-	DEBUG_PREVENT(frame == NULL, "e4c_context_end", DESC_NO_FRAMES_LEFT, (void)0);
+	DEBUG_PREVENT(frame == NULL, "e4c_context_end", DESC_NO_FRAMES_LEFT, RETURN_VOID);
 
 	/* check if there are too many frames left (breaking out of a try block) */
-	PREVENT(!IS_TOP_FRAME(frame), ExceptionSystemFatalError, "e4c_context_end", DESC_TOO_MANY_FRAMES, (void)0);
+	PREVENT(!IS_TOP_FRAME(frame), ExceptionSystemFatalError, "e4c_context_end", DESC_TOO_MANY_FRAMES, RETURN_VOID);
 
 	/* deallocate the current, top frame */
 	_e4c_delete_frame(frame);
@@ -1070,10 +1072,10 @@ static void e4c_handle_signal(int signal_number){
 	context = E4C_CONTEXT;
 
 	/* check if 'handleSignal' was called before e4c_context_begin or after e4c_context_end (very unlikely) */
-	DEBUG_PREVENT(context == NULL, "e4c_handle_signal", DESC_INVALID_CONTEXT, (void)0);
+	DEBUG_PREVENT(context == NULL, "e4c_handle_signal", DESC_INVALID_CONTEXT, RETURN_VOID);
 
 	/* check if the current frame is NULL (very unlikely) */
-	DEBUG_PREVENT(context->current_frame == NULL, "e4c_handle_signal", DESC_INVALID_FRAME, (void)0);
+	DEBUG_PREVENT(context->current_frame == NULL, "e4c_handle_signal", DESC_INVALID_FRAME, RETURN_VOID);
 
 	if(context->signal_mappings != NULL){
 		/* try to find a mapping for this signal */
