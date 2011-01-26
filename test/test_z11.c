@@ -3,6 +3,13 @@
 # include "testing.h"
 
 
+static int set_zero_z11(int dummy){
+
+	if(dummy == 0) return(1);
+
+	return(0);
+}
+
 static void handler_z11(int signal_number){
 
 	ECHO(("handler_%d\n", signal_number));
@@ -11,6 +18,7 @@ static void handler_z11(int signal_number){
 
 	exit(123);
 }
+
 
 DEFINE_REQUIREMENT(
 	z11,
@@ -22,8 +30,9 @@ DEFINE_REQUIREMENT(
 	NULL,
 	NULL
 ){
-	int zero = 0;
-	int integer = 1010;
+
+	int		divisor			= 10;
+	int		integer			= 100;
 
 	ECHO(("before_SIGNAL\n"));
 
@@ -33,12 +42,16 @@ DEFINE_REQUIREMENT(
 		ECHO(("handler_was_set_%d\n", SIGFPE));
 	}
 
+	/* some smartypants compilers might need to be fooled */
+	/* divisor = 0; */
+
+	ECHO(("before_SET_ZERO\n"));
+
+	divisor = set_zero_z11(divisor);
+
 	ECHO(("before_DIVISION_BY_ZERO\n"));
 
-	/* some smartypants compilers might need to be fooled */
-	/* if(zero != integer) zero = 0; */
-
-	integer = 31416 / zero;
+	integer = integer / divisor;
 
 	ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 

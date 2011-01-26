@@ -1,5 +1,14 @@
 
+# include <string.h>
 # include "testing.h"
+
+
+static void set_zero_g04(int * * pointer){
+
+	int * null_pointer = NULL;
+
+	memcpy(pointer, &null_pointer, sizeof(pointer) );
+}
 
 
 DEFINE_TEST(
@@ -12,23 +21,25 @@ DEFINE_TEST(
 	"BadPointerException"
 ){
 
-	int * null_pointer = NULL;
-	int integer;
+	int		integer			= 123;
+	int *	pointer			= &integer;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
+	/* some smartypants compilers might need to be fooled */
+	/* pointer = NULL; */
+
+	ECHO(("before_SET_NULL\n"));
+
+	set_zero_g04(&pointer);
+
 	ECHO(("before_NULL_POINTER\n"));
 
-	/* some smartypants compilers might need to be fooled */
-	/* if(null_pointer != &integer) null_pointer = NULL; */
-
-	integer = *null_pointer;
+	integer = *pointer;
 
 	ECHO(("after_NULL_POINTER_%d\n", integer));
-
-	if(integer) integer = 0;
 
 	ECHO(("before_CONTEXT_END\n"));
 

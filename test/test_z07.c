@@ -1,7 +1,15 @@
 
 # include <signal.h>
+# include <string.h>
 # include "testing.h"
 
+
+static void set_zero_z07(int * * pointer){
+
+	int * null_pointer = NULL;
+
+	memcpy(pointer, &null_pointer, sizeof(pointer) );
+}
 
 static void handler_z07(int signal_number){
 
@@ -22,8 +30,9 @@ DEFINE_REQUIREMENT(
 	"handler_executed",
 	ERROR_WHATEVER
 ){
-	int * null_pointer = NULL;
-	int integer;
+
+	int		integer			= 123;
+	int *	pointer			= &integer;
 
 	ECHO(("before_SIGNAL\n"));
 
@@ -33,12 +42,16 @@ DEFINE_REQUIREMENT(
 		ECHO(("handler_was_set_%d\n", SIGSEGV));
 	}
 
+	/* some smartypants compilers might need to be fooled */
+	/* pointer = NULL; */
+
+	ECHO(("before_SET_NULL\n"));
+
+	set_zero_z07(&pointer);
+
 	ECHO(("before_NULL_POINTER\n"));
 
-	/* some smartypants compilers might need to be fooled */
-	/* if(null_pointer != &integer) null_pointer = NULL; */
-
-	integer = *null_pointer;
+	integer = *pointer;
 
 	ECHO(("after_NULL_POINTER_%d\n", integer));
 
