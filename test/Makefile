@@ -11,7 +11,7 @@ LINKOBJ             = $(OBJ)
 
 SRC                 = $(SRC_LIBRARY) $(SRC_TEST_FRAMEWORK) $(SRC_TEST_SUITES)
 SRC_LIBRARY         = e4c.h e4c.c
-SRC_TEST_FRAMEWORK  = main.c testing.h testing.c html.c html.h
+SRC_TEST_FRAMEWORK  = main.c testing.h testing.c html.h html.c macros.h macros.c platform.h
 SRC_TEST_SUITES     = run__all.c $(SRC_TEST_SUITE_A) $(SRC_TEST_SUITE_B) $(SRC_TEST_SUITE_C) $(SRC_TEST_SUITE_D) $(SRC_TEST_SUITE_E) $(SRC_TEST_SUITE_F) $(SRC_TEST_SUITE_G) $(SRC_TEST_SUITE_H) $(SRC_TEST_SUITE_Z)
 SRC_TEST_SUITE_A    = run_a.c suite_a.c test_a01.c test_a02.c test_a03.c test_a04.c test_a05.c test_a06.c
 SRC_TEST_SUITE_B    = run_b.c suite_b.c test_b01.c test_b02.c test_b03.c test_b04.c test_b05.c test_b06.c test_b07.c test_b08.c test_b09.c test_b10.c test_b11.c test_b12.c test_b13.c test_b14.c
@@ -25,7 +25,7 @@ SRC_TEST_SUITE_Z    = run_z.c suite_z.c test_z01.c test_z02.c test_z03.c test_z0
 
 OBJ                 = $(OBJ_LIBRARY) $(OBJ_TEST_FRAMEWORK) $(OBJ_TEST_SUITES)
 OBJ_LIBRARY         = e4c.o
-OBJ_TEST_FRAMEWORK  = main.o testing.o html.o
+OBJ_TEST_FRAMEWORK  = main.o testing.o html.o macros.o
 OBJ_TEST_SUITES     = run__all.o $(OBJ_TEST_SUITE_A) $(OBJ_TEST_SUITE_B) $(OBJ_TEST_SUITE_C) $(OBJ_TEST_SUITE_D) $(OBJ_TEST_SUITE_E) $(OBJ_TEST_SUITE_F) $(OBJ_TEST_SUITE_G) $(OBJ_TEST_SUITE_H) $(OBJ_TEST_SUITE_Z)
 OBJ_TEST_SUITE_A    = run_a.o suite_a.o test_a01.o test_a02.o test_a03.o test_a04.o test_a05.o test_a06.o
 OBJ_TEST_SUITE_B    = run_b.o suite_b.o test_b01.o test_b02.o test_b03.o test_b04.o test_b05.o test_b06.o test_b07.o test_b08.o test_b09.o test_b10.o test_b11.o test_b12.o test_b13.o test_b14.o
@@ -60,6 +60,10 @@ testing.o: testing.c
 
 html.o: html.c
 	$(CC) -c html.c -o html.o $(CFLAGS)
+
+macros.o: macros.c
+	$(CC) -c macros.c -o macros.o $(CFLAGS)
+
 
 run__all.o: run__all.c
 	$(CC) -c run__all.c -o run__all.o $(CFLAGS)
@@ -348,6 +352,15 @@ html.h:
 
 html.c:
 	$(WGET) $(URL_TEST)/html.c
+
+macros.h:
+	$(WGET) $(URL_TEST)/macros.h
+
+macros.c:
+	$(WGET) $(URL_TEST)/macros.c
+
+platform.h:
+	$(WGET) $(URL_TEST)/platform.h
 
 
 run__all.c:

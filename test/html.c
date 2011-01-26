@@ -5,214 +5,20 @@
 
 # include "html.h"
 # include "testing.h"
+# include "platform.h"
+# include "macros.h"
 
 
-/* TODO: architecture detection */
+# define PRINT_STATELESS_MACRO(report, macro) \
+		if(macro.is_defined) fprintf(report, "%s:%%20%s%%0A", macro.name, (macro.is_defined ? "defined" : "undefined") )
 
-/* TODO: enhance operating system detection */
+# define PRINT_STATEFUL_MACRO(report, macro) \
+		if(macro.is_defined) fprintf( report, "%s:%%20%s%%20(%ld)%%0A", macro.name, macro.description, macro.value )
 
-# if	defined(__nucleus__)
-#	define PLATFORM_OS "Nucleus OS"
-# elif	defined(__minix)
-#	define PLATFORM_OS "MINIX"
-# elif	defined(__QNXNTO__)
-#	define PLATFORM_OS "QNX 6.x"
-# elif	defined(QNX)
-#	define PLATFORM_OS "QNX 4.x"
-# elif	defined(__ANDROID__)
-#	define PLATFORM_OS "Android"
-# elif	defined(__SYMBIAN32__)
-#	define PLATFORM_OS "Symbian OS"
-# elif	defined(_XBOX)
-#	define PLATFORM_OS "XBox"
-# elif	defined(__APPLE__) && defined(__MACH__)
-#	define PLATFORM_OS "MacOs X"
-# elif	defined(macintosh) \
-	||	defined(Macintosh)
-#	define PLATFORM_OS "MacOs 9"
-# elif	defined(__FreeBSD) \
-	||	defined(__FreeBSD__)
-#	define PLATFORM_OS "FreeBSD"
-# elif	defined(__NetBSD) \
-	||	defined(__NetBSD__)
-#	define PLATFORM_OS "NetBSD"
-# elif	defined(__OpenBSD__)
-#	define PLATFORM_OS "OpenBSD"
-# elif	defined(__CYGWIN__)
-#	define PLATFORM_OS "Cygwin"
-# elif	defined(LINUX) \
-	||	defined(_LINUX) \
-	||	defined(__LINUX) \
-	||	defined(__LINUX__) \
-	||	defined(linux) \
-	||	defined(_linux) \
-	||	defined(__linux) \
-	||	defined(__linux__) \
-	||	defined(gnu_linux) \
-	||	defined(_gnu_linux) \
-	||	defined(__gnu_linux) \
-	||	defined(__gnu_linux__)
-#	define PLATFORM_OS "GNU/Linux"
-# elif	defined(WINNT) \
-	||	defined(_WINNT) \
-	||	defined(__WINNT) \
-	||	defined(__WINNT__)
-#	define PLATFORM_OS "Microsoft Windows NT"
-# elif	defined(WIN64) \
-	||	defined(_WIN64) \
-	||	defined(__WIN64) \
-	||	defined(__WIN64__)
-#	define PLATFORM_OS "Microsoft Windows 64-bit"
-# elif	defined(_WIN32_WCE)
-#	define PLATFORM_OS "Microsoft Windows CE"
-# elif	defined(WIN32) \
-	||	defined(_WIN32) \
-	||	defined(__WIN32) \
-	||	defined(__WIN32__)
-#	define PLATFORM_OS "Microsoft Windows 32-bit"
-# elif	defined(WINDOWS) \
-	||	defined(_WINDOWS) \
-	||	defined(__WINDOWS) \
-	||	defined(__WINDOWS__) \
-	||	defined(__TOS_WIN__)
-#	define PLATFORM_OS "Microsoft Windows"
-# elif	defined(MSDOS) \
-	||	defined(_MSDOS) \
-	||	defined(__MSDOS) \
-	||	defined(__MSDOS__) \
-	||	defined(__DOS__)
-#	define PLATFORM_OS "Microsoft MS-DOS"
-# else
-#	define PLATFORM_OS "Unknown operating system"
-# endif
+# define PRINT_UNDEFINED_MACRO(report, macro) \
+		if(!macro.is_defined) fprintf(report, "%%20%s", macro.name)
 
-/* TODO: enhance compiler detection */
-
-# if defined(__TURBOC__)
-#	ifdef __BORLANDC__
-#		define PLATFORM_COMPILER					"Borland C++"
-#		if (__BORLANDC__ < 0x0200)
-#			define PLATFORM_COMPILER_VERSION			"1.0",
-#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
-#		elif (__BORLANDC__ == 0x0200)
-#			define PLATFORM_COMPILER_VERSION			"2.0",
-#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
-#		elif (__BORLANDC__ == 0x0400)
-#			define PLATFORM_COMPILER_VERSION			"3.0",
-#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
-#		elif (__BORLANDC__ == 0x0410)
-#			define PLATFORM_COMPILER_VERSION			"3.1",
-#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
-#		elif (__BORLANDC__ == 0x0452)
-#			define PLATFORM_COMPILER_VERSION			"4.0",
-#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
-#		elif (__BORLANDC__ == 0x0460)
-#			define PLATFORM_COMPILER_VERSION			"4.5",
-#			define PLATFORM_COMPILER_VERSION_NUMBER		-1L;
-#		else
-#			define PLATFORM_COMPILER_VERSION			""
-#			define PLATFORM_COMPILER_VERSION_NUMBER		__BORLANDC__;
-#		endif
-#	else
-#		define PLATFORM_COMPILER					"Turbo C"
-#		define PLATFORM_COMPILER_VERSION			""
-#		define PLATFORM_COMPILER_VERSION_NUMBER		__TURBOC__;
-#	endif
-# elif defined(__WATCOMC__)
-#	define PLATFORM_COMPILER						"Open Watcom"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			__WATCOMC__
-# elif defined(__DMC__)
-#	define PLATFORM_COMPILER						"Digital Mars"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			__DMC__
-# elif defined(__DJGPP__)
-#	define PLATFORM_COMPILER						"DJGPP"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			__DJGPP__
-# elif defined(__COMO__)
-#	define PLATFORM_COMPILER						"Comeau"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			__COMO_VERSION__
-# elif defined(__PACIFIC__)
-#	define PLATFORM_COMPILER						"Pacific C"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
-# elif defined(__POCC__)
-#	define PLATFORM_COMPILER						"Pelles C"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			__POCC__
-# elif defined(MSC)
-#	define PLATFORM_COMPILER						"Microsoft Visual C"
-#	define PLATFORM_COMPILER_VERSION				""
-#	ifdef _MSC_VER
-#		define PLATFORM_COMPILER_VERSION_NUMBER		_MSC_VER
-#	else
-#		define PLATFORM_COMPILER_VERSION_NUMBER		-1L
-#	endif
-# elif defined(__TINYC__)
-#	define PLATFORM_COMPILER						"Tiny C Compiler"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
-# elif defined(__clang__)
-#	define PLATFORM_COMPILER						"Clang"
-#	define PLATFORM_COMPILER_VERSION				__clang_version__
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
-# elif defined(__llvm__)
-#	define PLATFORM_COMPILER						"LLVM"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
-# elif defined(__LCC__)
-#	define PLATFORM_COMPILER						"Lcc-Win32"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
-# elif defined(__MINGW32__)
-#	define PLATFORM_COMPILER						"MinGW"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			__MINGW32_MAJOR_VERSION
-# elif defined(__GNUC__)
-#	define PLATFORM_COMPILER						"GCC"
-#	define PLATFORM_COMPILER_VERSION				__VERSION__
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
-# else
-#	define PLATFORM_COMPILER						"Unknown compiler"
-#	define PLATFORM_COMPILER_VERSION				""
-#	define PLATFORM_COMPILER_VERSION_NUMBER			-1L
-# endif
-
-# ifndef __STDC__
-#	define __STDC__ -1L
-# endif
-
-# ifndef __STDC_VERSION__
-#	define __STDC_VERSION__ -1L
-# endif
-
-# ifdef NDEBUG
-#	define IS_NDEBUG_DEFINED e4c_true
-# else
-#	define IS_NDEBUG_DEFINED e4c_false
-# endif
-
-# ifdef E4C_NOKEYWORDS
-#	define IS_E4C_NOKEYWORDS_DEFINED e4c_true
-# else
-#	define IS_E4C_NOKEYWORDS_DEFINED e4c_false
-# endif
-
-# ifdef E4C_THREADSAFE
-#	define IS_E4C_THREADSAFE_DEFINED e4c_true
-# else
-#	define IS_E4C_THREADSAFE_DEFINED e4c_false
-# endif
-
-# ifdef _POSIX_SOURCE
-#	define IS_POSIX_SOURCE_DEFINED e4c_true
-# else
-#	define IS_POSIX_SOURCE_DEFINED e4c_false
-# endif
-
-# define SUMMARY_MAX_ITEMS 6
+# define SUMMARY_MAX_ITEMS 5
 
 # define MIN(x, y) (x < y ? x : y )
 # define ELIDED(x) (x > SUMMARY_MAX_ITEMS ? e4c_true : e4c_false )
@@ -236,37 +42,33 @@
 	(is_requirement ? "requirement" : otherwise)
 
 
-long	STDC_VERSION	= __STDC_VERSION__;
-long	STDC			= __STDC__;
+static void print_stateful_macro(FILE * report, struct stateful_macro macro){
 
-
-static void print_numerical_macro(const char * name, long value, FILE * report){
-
-	if(value == -1L){
+	if(macro.is_defined){
 		fprintf(report,
 			"<div>"
 				"<div class=\"info image icon24\"></div>"
-				"<code>%s</code> is not defined"
+				"<code>%s</code> is defined as <code>%ld</code>, i.e. <em>%s (%s)</em>"
 			"</div>",
-		name);
+		macro.name, macro.value, macro.description, macro.detail);
 	}else{
 		fprintf(report,
 			"<div>"
 				"<div class=\"info image icon24\"></div>"
-				"<code>%s</code> is defined as <code>%ld</code>"
+				"<code>%s</code> is not defined, i.e. <em>%s</em>"
 			"</div>",
-		name, value);
+		macro.name, macro.description);
 	}
 }
 
-static void print_symbolical_macro(const char * name, e4c_bool defined, FILE * report){
+static void print_stateless_macro(FILE * report, struct stateless_macro macro){
 
 	fprintf(report,
 		"<div>"
 			"<div class=\"info image icon24\"></div>"
-			"<code>%s</code> is%s defined"
+			"<code>%s</code> is%s defined, i.e. <em>%s</em>"
 		"</div>",
-	name, (defined ? "" : " not"));
+	macro.name, (macro.is_defined ? "" : " not"), macro.detail);
 }
 
 static void print_percentage(char * buffer, int fraction, int total){
@@ -401,24 +203,65 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 							"%s_%s%%20failed.%%0A"
 							"%%0A"
 							"%%20Library%%20version:%%20%ld%%0A"
-							"%%20%%20%%20%%20Architecture:%%20...%%0A"
+							"%%20%%20%%20%%20Architecture:%%20%s%%0A"
 							"Operating%%20system:%%20%s%%0A"
-							"%%20%%20%%20%%20IDE/Compiler:%%20%s%%20%s(%ld)...%%0A",
+							"%%20%%20%%20%%20IDE/Compiler:%%20%s%%20%s(%ld)%%0A%%0A",
 		HUMAN_TYPE(test->is_requirement, "unit_test"), test->code,
 		HUMAN_TYPE(test->is_requirement, "unit_test"), test->code,
 		E4C_VERSION_NUMBER,
+		PLATFORM_ARCH,
 		PLATFORM_OS,
-		PLATFORM_COMPILER, PLATFORM_COMPILER_VERSION, (long)PLATFORM_COMPILER_VERSION_NUMBER
+		PLATFORM_COMPILER,
+		(PLATFORM_COMPILER_VERSION == NULL ? "" : PLATFORM_COMPILER_VERSION),
+		(long)PLATFORM_COMPILER_VERSION_NUMBER
 		);
 
+		PRINT_STATELESS_MACRO(report,	macros.e4c_nokeywords);
+		PRINT_STATELESS_MACRO(report,	macros.e4c_threadsafe);
+		PRINT_STATELESS_MACRO(report,	macros.reentrant);
+		PRINT_STATELESS_MACRO(report,	macros.thread_safe);
+		PRINT_STATELESS_MACRO(report,	macros.ndebug);
+		PRINT_STATELESS_MACRO(report,	macros.stdc);
+		PRINT_STATELESS_MACRO(report,	macros.strict_ansi);
+		PRINT_STATEFUL_MACRO(report,	macros.stdc_version);
+		PRINT_STATELESS_MACRO(report,	macros.isoc99_source);
+		PRINT_STATEFUL_MACRO(report,	macros.cplusplus);
+		PRINT_STATELESS_MACRO(report,	macros.gnu_source);
+		PRINT_STATELESS_MACRO(report,	macros.posix_source);
+		PRINT_STATEFUL_MACRO(report,	macros.posix_c_source);
+		PRINT_STATEFUL_MACRO(report,	macros.posix_version);
+		PRINT_STATEFUL_MACRO(report,	macros.posix2_c_version);
+		PRINT_STATEFUL_MACRO(report,	macros.xopen_source);
+		PRINT_STATEFUL_MACRO(report,	macros.xopen_version);
+		PRINT_STATELESS_MACRO(report,	macros.xopen_source_extended);
+		PRINT_STATELESS_MACRO(report,	macros.bsd_source);
+		PRINT_STATELESS_MACRO(report,	macros.svid_source);
+
+		fprintf(report, "%%0AUndefined%%20macros:");
+
+		PRINT_UNDEFINED_MACRO(report,	macros.e4c_nokeywords);
+		PRINT_UNDEFINED_MACRO(report,	macros.e4c_threadsafe);
+		PRINT_UNDEFINED_MACRO(report,	macros.reentrant);
+		PRINT_UNDEFINED_MACRO(report,	macros.thread_safe);
+		PRINT_UNDEFINED_MACRO(report,	macros.ndebug);
+		PRINT_UNDEFINED_MACRO(report,	macros.stdc);
+		PRINT_UNDEFINED_MACRO(report,	macros.strict_ansi);
+		PRINT_UNDEFINED_MACRO(report,	macros.stdc_version);
+		PRINT_UNDEFINED_MACRO(report,	macros.isoc99_source);
+		PRINT_UNDEFINED_MACRO(report,	macros.cplusplus);
+		PRINT_UNDEFINED_MACRO(report,	macros.gnu_source);
+		PRINT_UNDEFINED_MACRO(report,	macros.posix_source);
+		PRINT_UNDEFINED_MACRO(report,	macros.posix_c_source);
+		PRINT_UNDEFINED_MACRO(report,	macros.posix_version);
+		PRINT_UNDEFINED_MACRO(report,	macros.posix2_c_version);
+		PRINT_UNDEFINED_MACRO(report,	macros.xopen_source);
+		PRINT_UNDEFINED_MACRO(report,	macros.xopen_version);
+		PRINT_UNDEFINED_MACRO(report,	macros.xopen_source_extended);
+		PRINT_UNDEFINED_MACRO(report,	macros.bsd_source);
+		PRINT_UNDEFINED_MACRO(report,	macros.svid_source);
+
 		fprintf(report,
-							"%%20%%20%%20%%20%%20%%20%%20%%20__STDC__:%%20%ld%%0A"
-							"__STDC_VERSION__:%%20%ld%%0A"
-							"%%20%%20%%20%%20%%20%%20%%20%%20%%20%%20NDEBUG:%%20%s%%0A"
-							"%%20%%20E4C_THREADSAFE:%%20%s%%0A"
-							"%%20%%20E4C_NOKEYWORDS:%%20%s%%0A"
-							"%%20%%20%%20_POSIX_SOURCE:%%20%s%%0A"
-							"%%0A"
+							"%%0A%%0A"
 							"Exit%%20code:%%20%s%%20(%s)%%0A"
 							"%%20%%20%%20Output:%%20%s%%0A"
 							"%%20%%20%%20%%20Error:%%20%s%%0A"
@@ -429,12 +272,6 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 						"Create a new issue"
 					"</a>"
 				"</div>",
-		STDC,
-		STDC_VERSION,
-		(IS_NDEBUG_DEFINED			? "defined" : "not%20defined"),
-		(IS_E4C_THREADSAFE_DEFINED	? "defined" : "not%20defined"),
-		(IS_E4C_NOKEYWORDS_DEFINED	? "defined" : "not%20defined"),
-		(IS_POSIX_SOURCE_DEFINED	? "defined" : "not%20defined"),
 		(test->unexpected_exit_code	? "NOK" : "OK"), found,
 		(test->unexpected_output	? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK"),
 		(test->unexpected_error		? "NOK%20...%20(please%20copy%20and%20paste%20it%20below)" : "OK")
@@ -519,9 +356,9 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 	(*test->found_error ? "console" : "hidden"), test->found_error,
 	HUMAN_STATUS(test->status),
 	HUMAN_STATUS(test->status)
-   );
+	);
 
-   fprintf(report,
+	fprintf(report,
 				"<div class=\"paragraph\">"
 					"<div class=\"return image icon24\"></div>"
 					"<a href=\"#top\">"
@@ -679,8 +516,9 @@ static void print_unit_tests(test_suite_collection * suites, FILE * report){
 
 static void print_overall_statistics(statistics requirement_stats, statistics suite_stats, FILE * report){
 
-	time_t			now				= time(NULL);
-	const char *	date			= ctime(&now);
+	time_t			now		= time(NULL);
+	const char *	date	= ctime(&now);
+	const char *	compiler_version = PLATFORM_COMPILER_VERSION;
 
 	fprintf(report,
 		"<div>"
@@ -770,21 +608,21 @@ static void print_overall_statistics(statistics requirement_stats, statistics su
 					"</div>",
 	E4C_VERSION_STRING, date);
 
-# if (PLATFORM_COMPILER_VERSION_NUMBER == -1L)
-		fprintf(report,
-					"<div>"
-						"<div class=\"platform image icon24\"></div>"
-						"Compiler: %s %s"
-					"</div>",
-		PLATFORM_COMPILER, PLATFORM_COMPILER_VERSION);
-# else
+	if(compiler_version == NULL){
 		fprintf(report,
 					"<div>"
 						"<div class=\"platform image icon24\"></div>"
 						"Compiler: %s (%ld)"
 					"</div>",
 		PLATFORM_COMPILER, (long)PLATFORM_COMPILER_VERSION_NUMBER);
-# endif
+	}else{
+		fprintf(report,
+					"<div>"
+						"<div class=\"platform image icon24\"></div>"
+						"Compiler: %s %s"
+					"</div>",
+		PLATFORM_COMPILER, PLATFORM_COMPILER_VERSION);
+	}
 
 	fprintf(report,
 					"<div>"
@@ -793,12 +631,85 @@ static void print_overall_statistics(statistics requirement_stats, statistics su
 					"</div>",
 	PLATFORM_OS);
 
-	print_symbolical_macro("__STDC__", STDC > 0, report);
-	print_numerical_macro("__STDC_VERSION__", STDC_VERSION, report);
-	print_symbolical_macro("NDEBUG", IS_NDEBUG_DEFINED, report);
-	print_symbolical_macro("E4C_THREADSAFE", IS_E4C_THREADSAFE_DEFINED, report);
-	print_symbolical_macro("E4C_NOKEYWORDS", IS_E4C_NOKEYWORDS_DEFINED, report);
-	print_symbolical_macro("_POSIX_SOURCE", IS_POSIX_SOURCE_DEFINED, report);
+	fprintf(report,
+					"<div>"
+						"<div class=\"platform image icon24\"></div>"
+						"Architecture: %s"
+					"</div>",
+	PLATFORM_ARCH);
+
+	print_stateless_macro(report,	macros.e4c_nokeywords);
+	print_stateless_macro(report,	macros.e4c_threadsafe);
+
+	if(macros.reentrant.is_defined){
+		print_stateless_macro(report, macros.reentrant);
+	}
+
+	if(macros.thread_safe.is_defined || !macros.reentrant.is_defined){
+		print_stateless_macro(report, macros.thread_safe);
+	}
+
+	print_stateless_macro(report, macros.ndebug);
+
+	if(!macros.stdc_version.is_defined){
+		print_stateless_macro(report, macros.stdc);
+	}
+
+	if(macros.strict_ansi.is_defined){
+		print_stateless_macro(report, macros.strict_ansi);
+	}
+
+	if(macros.stdc_version.is_defined || !macros.stdc.is_defined){
+		print_stateful_macro(report, macros.stdc_version);
+	}
+
+	if(macros.isoc99_source.is_defined || ( !macros.gnu_source.is_defined && !macros.stdc_version.is_defined && !macros.stdc.is_defined) ){
+		print_stateless_macro(report, macros.isoc99_source);
+	}
+
+	if(macros.cplusplus.is_defined){
+		print_stateful_macro(report, macros.cplusplus);
+	}
+
+	if(macros.gnu_source.is_defined){
+		print_stateless_macro(report, macros.gnu_source);
+	}
+
+	if(macros.posix_source.is_defined && !macros.posix_c_source.is_defined){
+		print_stateless_macro(report, macros.posix_source);
+	}
+
+	if(macros.posix_c_source.is_defined || !macros.posix_source.is_defined){
+		print_stateful_macro(report, macros.posix_c_source);
+	}
+
+	if(macros.posix_version.is_defined){
+		print_stateful_macro(report, macros.posix_version);
+	}
+
+	if(macros.posix_source.is_defined || macros.posix_c_source.is_defined || macros.posix_version.is_defined){
+		print_stateful_macro(report, macros.posix2_c_version);
+	}
+
+	if(!macros.xopen_source.is_defined && (macros.xopen_version.is_defined || macros.gnu_source.is_defined) ){
+		print_stateful_macro(report, macros.xopen_version);
+	}
+
+	if(macros.xopen_source.is_defined && (!macros.xopen_version.is_defined && !macros.gnu_source.is_defined) ){
+		print_stateful_macro(report, macros.xopen_source);
+	}
+
+	if(macros.xopen_source_extended.is_defined){
+		print_stateless_macro(report, macros.xopen_source_extended);
+	}
+
+	if(macros.bsd_source.is_defined || !macros.gnu_source.is_defined){
+		print_stateless_macro(report, macros.bsd_source);
+	}
+
+	if(macros.svid_source.is_defined || !macros.gnu_source.is_defined){
+		print_stateless_macro(report, macros.svid_source);
+	}
 
 	fprintf(report,
 				"</div>"
@@ -851,8 +762,8 @@ static void print_requirements(statistics stats, test_suite_collection * suites,
 						"All requirements:"
 					"</div>"
 					"<div id=\"platform_list_summary\" class=\"summary\">"
-					"The detected platform is <em>%s</em> on <em>%s</em>.",
-		PLATFORM_COMPILER, PLATFORM_OS
+					"The detected platform is <em>%s</em> on <em>%s</em> on <em>%s</em>.",
+		PLATFORM_COMPILER, PLATFORM_OS, PLATFORM_ARCH
 	);
 
 	fprintf(report,
@@ -1119,12 +1030,17 @@ static void print_header(FILE * report){
 
 static void print_footer(FILE * report){
 
+	time_t			now		= time(NULL);
+	struct tm *		date	= localtime(&now);
+	int				year	= date->tm_year + 1900;
+
 	fprintf(report,
 		"<div id=\"footer\">"
 			"<a href=\"http://code.google.com/p/exceptions4c/\">exceptions4c</a>"
 			"<div class=\"e4c image icon24\"></div>"
-			"Copyleft Guillermo Calvo 2010"
-		"</div>"
+			"Copyleft Guillermo Calvo %d"
+		"</div>",
+		year
 	);
 }
 
