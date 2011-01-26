@@ -2,6 +2,14 @@
 # include "testing.h"
 
 
+static int set_zero_z05(int dummy){
+
+	if(dummy == 0) return(1);
+
+	return(0);
+}
+
+
 DEFINE_REQUIREMENT(
 	z05,
 	"Platform behavior when dividing by zero",
@@ -12,15 +20,20 @@ DEFINE_REQUIREMENT(
 	"before_DIVISION_BY_ZERO",
 	ERROR_WHATEVER
 ){
-	int zero = 0;
-	int integer = 1010;
+
+	int		divisor			= 10;
+	int		integer			= 100;
+
+	/* some smartypants compilers might need to be fooled */
+	/* divisor = 0; */
+
+	ECHO(("before_SET_ZERO\n"));
+
+	divisor = set_zero_z05(divisor);
 
 	ECHO(("before_DIVISION_BY_ZERO\n"));
 
-	/* some smartypants compilers might need to be fooled */
-	/* if(zero != integer) zero = 0; */
-
-	integer = 31416 / zero;
+	integer = integer / divisor;
 
 	ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 

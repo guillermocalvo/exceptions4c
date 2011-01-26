@@ -2,6 +2,14 @@
 # include "testing.h"
 
 
+static int set_zero_g05(int dummy){
+
+	if(dummy == 0) return(1);
+
+	return(0);
+}
+
+
 DEFINE_TEST(
 	g05,
 	"Division by zero exception",
@@ -12,19 +20,23 @@ DEFINE_TEST(
 	"ArithmeticException"
 ){
 
-	int zero = 0;
-	int integer = 100;
+	int		divisor			= 10;
+	int		integer			= 100;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
 	e4c_context_begin(e4c_true, e4c_print_exception);
 
+	/* some smartypants compilers might need to be fooled */
+	/* divisor = 0; */
+
+	ECHO(("before_SET_ZERO\n"));
+
+	divisor = set_zero_g05(divisor);
+
 	ECHO(("before_DIVISION_BY_ZERO\n"));
 
-	/* some smartypants compilers might need to be fooled */
-	/* if(zero != integer) zero = 0; */
-
-	integer = integer / zero;
+	integer = integer / divisor;
 
 	ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 

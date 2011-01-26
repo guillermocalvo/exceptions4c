@@ -2,6 +2,14 @@
 # include "testing.h"
 
 
+static int set_zero_g08(int dummy){
+
+	if(dummy == 0) return(1);
+
+	return(0);
+}
+
+
 DEFINE_TEST(
 	g08,
 	"Catching a division by zero exception",
@@ -13,8 +21,6 @@ DEFINE_TEST(
 ){
 
 	e4c_bool	caught		= e4c_false;
-	int			zero		= 0;
-	int			integer		= 100;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
@@ -24,12 +30,19 @@ DEFINE_TEST(
 
 	E4C_TRY{
 
-		ECHO(("before_DIVISION_BY_ZERO\n"));
+		int		divisor			= 10;
+		int		integer			= 100;
 
 		/* some smartypants compilers might need to be fooled */
-		/* if(zero != integer) zero = 0; */
+		/* divisor = 0; */
 
-		integer = integer / zero;
+		ECHO(("before_SET_ZERO\n"));
+
+		divisor = set_zero_g08(divisor);
+
+		ECHO(("before_DIVISION_BY_ZERO\n"));
+
+		integer = integer / divisor;
 
 		ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
 
@@ -54,7 +67,7 @@ DEFINE_TEST(
 	}else{
 		fprintf(stderr, "\nthe_signal_WAS_NOT_CAUGHT\n");
 	}
-	
+
 	fflush(stderr);
 
 	return(EXIT_SUCCESS);
