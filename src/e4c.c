@@ -271,10 +271,10 @@ static const char * signal_name_SIGINT      = "SIGINT";
 
 
 
-typedef enum _e4c_frame_stage			e4c_stage;
+typedef enum _e4c_frame_stage e4c_stage;
 
-typedef struct e4c_frame				e4c_frame;
-struct e4c_frame{
+typedef struct _e4c_frame e4c_frame;
+struct _e4c_frame{
 	e4c_frame *							previous;
 	volatile e4c_stage					stage;
 	volatile e4c_bool					thrown;
@@ -285,16 +285,16 @@ struct e4c_frame{
 	_E4C_JMP_BUF						address;
 };
 
-typedef struct e4c_context				e4c_context;
-struct e4c_context{
+typedef struct _e4c_context e4c_context;
+struct _e4c_context{
 	e4c_frame *							current_frame;
 	const e4c_signal_mapping *			signal_mappings;
 	e4c_uncaught_handler				uncaught_handler;
 };
 
 # ifdef E4C_THREADSAFE
-typedef struct e4c_environment			e4c_environment;
-struct e4c_environment{
+typedef struct _e4c_environment e4c_environment;
+struct _e4c_environment{
 	THREAD_TYPE							self;
 	e4c_environment *					next;
 	e4c_context							context;

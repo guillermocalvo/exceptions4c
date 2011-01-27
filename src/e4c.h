@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 4, 4)
+# define _E4C_VERSION(version)			version(2, 4, 5)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -1859,8 +1859,8 @@
  * @see     catch
  * @see     e4c_get_exception
  */
-typedef struct e4c_exception e4c_exception;
-struct e4c_exception{
+typedef struct _e4c_exception e4c_exception;
+struct _e4c_exception{
 
 	/** The name of this exception */
 	const char *					name;
@@ -1959,8 +1959,8 @@ struct e4c_exception{
  * @see     e4c_context_get_signal_mappings
  * @see     e4c_default_signal_mappings
  */
-typedef struct e4c_signal_mapping e4c_signal_mapping;
-struct e4c_signal_mapping{
+typedef struct _e4c_signal_mapping e4c_signal_mapping;
+struct _e4c_signal_mapping{
 
 	/** The signal to be converted */
 	int								signal_number;
@@ -2001,7 +2001,7 @@ struct e4c_signal_mapping{
  * @see     e4c_get_status
  * @see     finally
  */
-enum e4c_status{
+enum _e4c_status{
 
 	/** There was no exception */
 	e4c_succeeded,
@@ -2012,7 +2012,7 @@ enum e4c_status{
 	/** There was an exception and it wasn't caught */
 	e4c_failed
 };
-typedef enum e4c_status e4c_status;
+typedef enum _e4c_status e4c_status;
 
 /**
  * This is the signature of a function which will be executed in the event of an
