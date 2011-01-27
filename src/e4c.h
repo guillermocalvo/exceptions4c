@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 4, 5)
+# define _E4C_VERSION(version)			version(2, 4, 6)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -117,7 +117,10 @@
 /* POSIX features */
 # if defined(_POSIX_C_SOURCE) \
 	||	defined(_POSIX_SOURCE) \
+	||	defined(_POSIX_VERSION) \
+	||	defined(_POSIX2_C_VERSION) \
 	||	defined(_XOPEN_SOURCE) \
+	||	defined(_XOPEN_VERSION) \
 	||	defined(_XOPEN_SOURCE_EXTENDED) \
 	||	defined(_GNU_SOURCE)
 

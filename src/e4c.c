@@ -34,30 +34,13 @@
 # include "e4c.h"
 
 
-# if !defined(HAVE_POSIX_SIGSETJMP) && !defined(HAVE_SIGSETJMP) && ( \
-		defined(LINUX) \
-	||	defined(_LINUX) \
-	||	defined(__LINUX) \
-	||	defined(__LINUX__) \
-	||	defined(linux) \
-	||	defined(_linux) \
-	||	defined(__linux) \
-	||	defined(__linux__) \
-	||	defined(gnu_linux) \
-	||	defined(_gnu_linux) \
-	||	defined(__gnu_linux) \
-	||	defined(__gnu_linux__) \
-)
-# warning "Your platform is GNU/Linux but _POSIX_C_SOURCE is not defined. \
-If your program employs signal handling you should define HAVE_POSIX_SIGSETJMP \
-at compiler level in order to use POSIX's sigsetjmp/siglongjmp functions."
-# endif
-
 # ifdef __NO_INLINE__
 #	define E4C_INLINE
-# elif __STDC_VERSION__ >= 199901L
+# elif defined(_ISOC99_SOURCE) \
+	|| defined(_GNU_SOURCE) \
+	|| ( defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) )
 #	define E4C_INLINE inline
-# elif __GNUC__ >= 2
+# elif ( defined(__GNUC__) && (__GNUC__ >= 2) )
 #	define E4C_INLINE __extension__ inline
 # else
 #	define E4C_INLINE
