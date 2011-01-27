@@ -28,7 +28,7 @@ DEFINE_REQUIREMENT(
 	SEVERITY_NOT_CRITICAL,
 	"Your program prints something on <code>stderr</code> when it receives signal <code>SIGSEGV</code>. Therefore, you will not be able to keep the error output stream clean.",
 	EXIT_WHATEVER,
-	NULL,
+	OUTPUT_WHATEVER,
 	NULL
 ){
 

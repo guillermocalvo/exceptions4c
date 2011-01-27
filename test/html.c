@@ -134,27 +134,54 @@ static void print_graph(FILE * report, statistics stats, const char * what){
 
 static void print_unit_test(test_suite * suite, unit_test * test, FILE * report){
 
-	char	exit_code[128];
+	char	expected_value[128];
+	char	expected_stdin[128];
+	char	expected_stderr[128];
 	char	found[64];
 	char	expected[64];
-	char	etc[64];
 
 	print_exit_code(found, test->found_exit_code);
 
-	if(test->unexpected_exit_code){
+	if(test->expected_exit_code == EXIT_WHATEVER){
+
+		sprintf(expected_value, "<span class=\"console\">%s</span> <em>(any value is OK)</em>", found);
+
+	}else if(test->unexpected_exit_code){
 
 		print_exit_code(expected, test->expected_exit_code);
 
-		sprintf(etc, " (expecting: <span class=\"console\">%s</span>)", expected);
-	}else if(test->expected_exit_code == EXIT_WHATEVER){
+		sprintf(expected_value, "<span class=\"console\">%s</span> (expecting <span class=\"console\">%s</span>)", found, expected);
 
-		sprintf(etc, " (any value is OK)");
 	}else{
 
-		*etc = '\0';
+		sprintf(expected_value, "Expecting <span class=\"console\">%s</span>", found);
 	}
 
-	sprintf(exit_code, "<span class=\"console\">%s</span>%s", found, etc);
+	if(test->expected_output == OUTPUT_WHATEVER){
+
+		sprintf(expected_stdin, "<em>Any output is OK</em>");
+
+	}else if(test->expected_output == NULL){
+
+		sprintf(expected_stdin, "Expecting no output");
+
+	}else{
+
+		sprintf(expected_stdin, "Expecting <span class=\"console\">%s</span>", test->expected_output);
+	}
+
+	if(test->expected_error == ERROR_WHATEVER){
+
+		sprintf(expected_stderr, "<em>Anything is OK</em>");
+
+	}else if(test->expected_error == NULL){
+
+		sprintf(expected_stderr, "Expecting no error");
+
+	}else{
+
+		sprintf(expected_stderr, "Expecting <span class=\"console\">%s</span>", test->expected_error);
+	}
 
 	fprintf(report,
 		"<div>"
@@ -311,7 +338,7 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 	HUMAN_TYPE(suite->is_requirement, "test_suite"),
 	HUMAN_STATUS(suite->status), suite->title, suite->title,
 	(test->unexpected_exit_code ? "failed" : "passed"),
-	exit_code
+	expected_value
 	);
 
 	fprintf(report,
@@ -319,10 +346,7 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 							"<td>Output</td>"
 							"<td>"
 								"<div class=\"%s image icon24\"></div>"
-								"Expecting: "
-								"<span class=\"console\">"
 									"%s"
-								"</span>"
 								"<br/>"
 								"<textarea cols=\"80\" rows=\"8\" class=\"%s\">%s</textarea>"
 							"</td>"
@@ -331,10 +355,7 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 							"<td>Error</td>"
 							"<td>"
 								"<div class=\"%s image icon24\"></div>"
-								"Expecting: "
-								"<span class=\"console\">"
 									"%s"
-								"</span>"
 								"<br/>"
 								"<textarea cols=\"80\" rows=\"8\" class=\"%s\">%s</textarea>"
 							"</td>"
@@ -349,10 +370,10 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 					"</table>"
 				"</div>",
 	(test->unexpected_output ? "failed" : "passed"),
-	(test->expected_output	!= NULL ? test->expected_output : "(no output)"),
+	expected_stdin,
 	(*test->found_output ? "console" : "hidden"), test->found_output,
 	(test->unexpected_error ? "failed" : "passed"),
-	(test->expected_error	!= NULL ? ( test->expected_error != ERROR_WHATEVER ? test->expected_error : "(platform-defined)"	) : " (no error)"),
+	expected_stderr,
 	(*test->found_error ? "console" : "hidden"), test->found_error,
 	HUMAN_STATUS(test->status),
 	HUMAN_STATUS(test->status)

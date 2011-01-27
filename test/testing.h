@@ -6,7 +6,9 @@
 # include <stdio.h>
 # include "e4c.h"
 
-# define EXIT_WHATEVER			76543210
+# define EXIT_WHATEVER			54321
+# define ERROR_WHATEVER			(void *)54321
+# define OUTPUT_WHATEVER		(void *)54321
 
 # define SEVERITY_CRITICAL		e4c_true
 # define SEVERITY_NOT_CRITICAL	e4c_false
@@ -17,76 +19,6 @@
 # define STATUS_PASSED			0
 # define STATUS_WARNING			1
 # define STATUS_FAILED			2
-
-/*
-
-	WHAT IS "EXIT_WHATEVER" USED FOR?
-
-	1. When an unhandled signal is received, all bets are off
-
-		The behavior of a program when it receives a signal is undefined,
-		specially in a multithreaded program.
-
-		There are a few tests in which I check what happens when a signal is
-		received and exceptions4c wasn't told to handle it.
-
-		In these tests, the exit code will be implementation-defined, so there's
-		no point in checking it.
-
-	2. pthreads-win32/pthread_exit does not meet the specification
-
-		According to PTHREADS specifications:
-
-			"The process shall exit with an exit status of 0 after the last
-			thread has been terminated. The behavior shall be as if the
-			implementation called exit() with a zero argument at thread
-			termination time."
-
-		So, in the event of an uncaught exception, the program SHOULD be
-		returning:
-
-			* EXIT_FAILURE		if the library is in single-thread mode.
-			* EXIT_SUCCESS		if the library is in multi-thread mode.
-
-		But:
-
-		Since the windows implementation of PTHREADS (at least, pthreads-win32,
-		the one I am currently using) returns the value passed as parameter to
-		pthread_exit (in this case, PTHREAD_CANCELED) as the actual program exit
-		code, I won't check the exit code when the tests are running in
-		thread-safe mode.
-
-	That's why I am using EXIT_WHATEVER instead of EXIT_SUCCESS or EXIT_FAILURE
-	in some of the unit tests.
-
-*/
-
-# define ERROR_WHATEVER		(void *)87654321
-
-/*
-
-	WHAT IS "ERROR_WHATEVER" USED FOR?
-
-	1. When an unhandled signal is received, all bets are off
-
-		Some platforms make the program dump information regarding the crash.
-
-		For example, when a program compiled by OpenWatcom atempts to dereference
-		a null pointer, the following is printed to the error output:
-
-			The instruction at 0x???????? referenced memory at 0x00000000.
-			The memory could not be read.
-			Exception fielded by 0x????????
-			EAX=0x???????? EBX=0x???????? ECX=0x???????? EDX=0x????????
-			ESI=0x???????? EDI=0x???????? EBP=0x???????? ESP=0x????????
-			EIP=0x???????? EFL=0x???????? CS =0x???????? SS =0x????????
-			DS =0x???????? ES =0x???????? FS =0x???????? GS =0x????????
-			Stack dump (SS:ESP)
-			0x???????? 0x???????? 0x???????? 0x???????? 0x???????? 0x????????
-			0x???????? 0x???????? 0x???????? 0x???????? 0x???????? 0x????????
-			...
-
-*/
 
 
 /*

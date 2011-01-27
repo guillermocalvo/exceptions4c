@@ -255,7 +255,7 @@ static void run_test(test_runner * runner, unit_test * test){
 
 	test->unexpected_exit_code	= ( test->expected_exit_code	!= EXIT_WHATEVER	&& test->found_exit_code != test->expected_exit_code );
 	test->unexpected_error		= ( test->expected_error		!= ERROR_WHATEVER	&& is_unexpected_token(test->expected_error, last_error) );
-	test->unexpected_output		= ( test->expected_output		!= NULL				&& is_unexpected_token(test->expected_output, last_output) );
+	test->unexpected_output		= ( test->expected_output		!= OUTPUT_WHATEVER	&& is_unexpected_token(test->expected_output, last_output) );
 
 	if(!test->unexpected_exit_code && !test->unexpected_output && !test->unexpected_error){
 		test->status = STATUS_PASSED;
