@@ -4,6 +4,14 @@
 # include <time.h>
 # include <signal.h>
 
+# if !defined(MAC) && ( \
+	||	defined(__APPLE__) \
+	||	defined(__MACH__) \
+	||	defined(macintosh) \
+	||	defined(Macintosh)
+)
+# define MAC
+# endif
 
 # if !defined(LINUX) && ( \
 		defined(_LINUX) \
@@ -47,6 +55,14 @@
 	||	defined(__MSDOS__) \
 )
 # define MSDOS
+# endif
+
+# if defined(MAC)
+#	define PLATFORM_OPEN_REPORT "open %s"
+# elif defined(LINUX)
+#	define PLATFORM_OPEN_REPORT "gnome-open %s"
+# elif defined(WINDOWS)
+#	define PLATFORM_OPEN_REPORT "start %s"
 # endif
 
 
@@ -100,20 +116,11 @@ E4C_DEFINE_EXCEPTION(ChildException, "This is a child exception.", ParentExcepti
 E4C_DEFINE_EXCEPTION(SiblingException, "This is a sibling exception.", ParentException);
 
 
-# if defined(WINDOWS)
+# ifdef PLATFORM_OPEN_REPORT
 
 	static void open_report(test_runner * runner){
 
-		sprintf(runner->buffer, "start %s", runner->report);
-
-		system(runner->buffer);
-	}
-
-# elif defined(LINUX)
-
-	static void open_report(test_runner * runner){
-
-		sprintf(runner->buffer, "gnome-open %s", runner->report);
+		sprintf(runner->buffer, PLATFORM_OPEN_REPORT, runner->report);
 
 		system(runner->buffer);
 	}
