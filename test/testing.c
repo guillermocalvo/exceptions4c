@@ -5,7 +5,7 @@
 # include <signal.h>
 
 # if !defined(MAC) && ( \
-	||	defined(__APPLE__) \
+		defined(__APPLE__) \
 	||	defined(__MACH__) \
 	||	defined(macintosh) \
 	||	defined(Macintosh)
