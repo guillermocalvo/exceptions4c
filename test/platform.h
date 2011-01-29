@@ -114,7 +114,7 @@
 # elif	defined(mips) \
 	||	defined(__mips) \
 	||	defined(__mips__) \
-	||	defined(__MIPS__) \
+	||	defined(__MIPS__)
 #	define PLATFORM_ARCH "MIPS"
 # elif	( defined(_M_PPC) && (_M_PPC == 620) )
 #	define PLATFORM_ARCH "PowerPC 620"
