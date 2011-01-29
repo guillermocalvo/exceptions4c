@@ -122,6 +122,9 @@ The test framework consists in 5 main files:
   * `testing.c`
   * `html.h`
   * `html.c`
+  * `macros.h`
+  * `macros.c`
+  * `platform.h`
 
 The rest of the files are named after the specific unit test or test suite they
 stand for:
