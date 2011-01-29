@@ -8,7 +8,7 @@
 		defined(__APPLE__) \
 	||	defined(__MACH__) \
 	||	defined(macintosh) \
-	||	defined(Macintosh)
+	||	defined(Macintosh) \
 )
 # define MAC
 # endif
