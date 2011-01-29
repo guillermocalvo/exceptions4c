@@ -123,17 +123,17 @@ struct macro_collection macros = {
 		"_POSIX_C_SOURCE",
 #	ifdef _POSIX_C_SOURCE
 #		if _POSIX_C_SOURCE >= 200809L
-			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1-2008", "(includes C90, real-time, threads; excludes XSI)"
+			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1-2008", "Includes C90, real-time, threads; excludes XSI"
 #		elif _POSIX_C_SOURCE >= 200112L
-			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1-2001", "(includes C90, real-time, threads; excludes XSI)"
+			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1-2001", "Includes C90, real-time, threads; excludes XSI"
 #		elif _POSIX_C_SOURCE >= 199506L
-			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1c", "(includes C90, real-time, threads)"
+			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1c", "Includes C90, real-time, threads"
 #		elif _POSIX_C_SOURCE >= 199309L
-			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1b", "(includes C90, real-time)"
+			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1b", "Includes C90, real-time"
 #		elif _POSIX_C_SOURCE >= 2
-			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.2-1992", "(includes C90)"
+			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.2-1992", "Includes C90"
 #		else
-			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1-1990", "(includes C90)"
+			IS_DEFINED, _POSIX_C_SOURCE, "POSIX.1-1990", "Includes C90"
 #		endif
 #	else
 		IS_NOT_DEFINED, 0L, "Possibly not POSIX compliant", NULL
