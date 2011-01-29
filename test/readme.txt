@@ -115,7 +115,7 @@ The source code is divided into:
   * test framework files
   * unit tests / test suites files
 
-The test framework consists in 5 main files:
+The test framework consists in 8 main files:
 
   * `main.c`
   * `testing.h`
