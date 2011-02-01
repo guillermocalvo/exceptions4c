@@ -1,6 +1,6 @@
 
 CC                  = gcc
-CFLAGS              = -Wall -Wextra
+CFLAGS              = -Wall -Wextra -ansi -pedantic
 BIN                 = e4c_test
 RM                  = rm -f
 WGET                = wget
@@ -37,12 +37,16 @@ OBJ_TEST_SUITE_G    = run_g.o suite_g.o test_g01.o test_g02.o test_g03.o test_g0
 OBJ_TEST_SUITE_H    = run_h.o suite_h.o test_h01.o test_h02.o test_h03.o test_h04.o test_h05.o test_h06.o test_h07.o test_h08.o test_h09.o test_h10.o test_h11.o
 OBJ_TEST_SUITE_Z    = run_z.o suite_z.o test_z01.o test_z02.o test_z03.o test_z04.o test_z05.o test_z06.o test_z07.o test_z08.o test_z09.o test_z10.o test_z11.o test_z12.o
 
-.PHONY: all clean
+.PHONY: all run clean
 
 all: $(SRC) $(BIN)
 
+run: all
+	./$(BIN)
+
 clean:
 	${RM} $(OBJ) $(BIN)
+
 
 $(BIN): $(OBJ)
 	$(CC) $(LINKOBJ) -o $(BIN)
