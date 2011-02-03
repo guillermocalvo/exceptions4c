@@ -2,7 +2,7 @@
 # include "testing.h"
 
 
-static void aux(){
+static void aux(void){
 
 	ECHO(("before_SECOND_TRY_FINALLY_block\n"));
 

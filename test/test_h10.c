@@ -64,7 +64,7 @@ static int ext2(void * pointer){
 	return(EXIT_SUCCESS);
 }
 
-static int ext1(){
+static int ext1(void){
 
 	const		e4c_exception * error;
 	e4c_bool	is_ready1;

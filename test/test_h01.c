@@ -11,7 +11,7 @@ static void aux(void * pointer){
 	}
 }
 
-static int ext(){
+static int ext(void){
 
 	const		e4c_exception * error;
 	e4c_bool	is_ready1;
@@ -48,7 +48,7 @@ static int ext(){
 
 		}
 	}
-	
+
 	ECHO(("__ext_after_REUSING_CONTEXT\n"));
 
 	is_ready2 = e4c_context_is_ready();
