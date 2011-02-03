@@ -293,9 +293,9 @@ static E4C_INLINE e4c_bool				_e4c_extends(const e4c_exception * child, const e4
 static void								_e4c_propagate(e4c_context * context, const e4c_exception * exception) E4C_NORETURN;
 static void								_e4c_at_uncaught_exception(e4c_context * context);
 static void								_e4c_set_signal_handlers(e4c_context * context, const e4c_signal_mapping * mappings);
-static void								_e4c_initialize();
+static void								_e4c_initialize(void);
 static void								e4c_handle_signal(int signal_number);
-static void								e4c_at_exit();
+static void								e4c_at_exit(void);
 
 # ifndef NDEBUG
 	static E4C_INLINE void				_e4c_print_exception_hierarchy(const e4c_exception * exception);
@@ -303,9 +303,9 @@ static void								e4c_at_exit();
 
 # ifdef E4C_THREADSAFE
 	static void							_e4c_add_environment(e4c_environment * environment);
-	static e4c_environment *			_e4c_remove_environment();
-	static e4c_environment *			_e4c_get_environment();
-	static E4C_INLINE e4c_context *		_e4c_get_context();
+	static e4c_environment *			_e4c_remove_environment(void);
+	static e4c_environment *			_e4c_get_environment(void);
+	static E4C_INLINE e4c_context *		_e4c_get_context(void);
 # endif
 
 
