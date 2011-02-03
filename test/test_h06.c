@@ -11,7 +11,7 @@ static void aux(void * pointer){
 	}
 }
 
-static int ext(){
+static int ext(void){
 
 	const		e4c_exception * error;
 	e4c_bool	is_ready1;

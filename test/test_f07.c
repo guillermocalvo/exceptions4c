@@ -2,7 +2,7 @@
 # include "testing.h"
 
 
-static void aux5(){
+static void aux5(void){
 
 	ECHO(("inside_aux5\n"));
 
@@ -13,7 +13,7 @@ static void aux5(){
 	ECHO(("before_EXIT_aux5\n"));
 }
 
-static void aux4(){
+static void aux4(void){
 
 	ECHO(("inside_aux4\n"));
 
@@ -30,7 +30,7 @@ static void aux4(){
 	ECHO(("before_EXIT_aux4\n"));
 }
 
-static void aux3(){
+static void aux3(void){
 
 	ECHO(("inside_aux3\n"));
 
@@ -39,7 +39,7 @@ static void aux3(){
 	ECHO(("before_EXIT_aux3\n"));
 }
 
-static void aux2(){
+static void aux2(void){
 
 	ECHO(("inside_aux2\n"));
 
@@ -53,7 +53,7 @@ static void aux2(){
 }
 
 
-static void aux1(){
+static void aux1(void){
 
 	ECHO(("inside_aux1\n"));
 

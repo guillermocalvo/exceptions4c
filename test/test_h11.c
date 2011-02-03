@@ -64,7 +64,7 @@ static int ext2(void * pointer){
 	return(EXIT_SUCCESS);
 }
 
-static int ext1(){
+static int ext1(void){
 
 	const e4c_exception * error;
 	e4c_bool is_ready1;
@@ -145,7 +145,7 @@ DEFINE_TEST_LONG_DESCRIPTION(
 	int result = -1;
 
 	ECHO(("before_USING_CONTEXT\n"));
-	
+
 	e4c_using_context(e4c_true, e4c_print_exception){
 
 		ECHO(("before_TRY_block\n"));
