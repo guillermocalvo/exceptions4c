@@ -27,7 +27,7 @@
 */
 
 # define DEFINE_UNIT_TEST(IS_REQUIREMENT, CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
-	int test_##CODE##_function(); \
+	int test_##CODE##_function(void); \
 	\
 	unit_test test_##CODE = { \
 		/* is_requirement */		IS_REQUIREMENT, \
@@ -49,7 +49,7 @@
 		/* unexpected_error */		0, \
 		/* status */				0 \
 	}; \
-	int test_##CODE##_function()
+	int test_##CODE##_function(void)
 
 # define DEFINE_TEST(CODE, TITLE, DESCRIPTION, AT_FAILURE, EXIT_CODE, OUT, ERR) \
 	DEFINE_UNIT_TEST(TYPE_UNIT_TEST, CODE, TITLE, DESCRIPTION, NULL, SEVERITY_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
@@ -152,7 +152,7 @@ E4C_DECLARE_EXCEPTION(GrandparentException);
 # define END_SUITE_COLLECTION NEW
 
 
-typedef int (*test_function)();
+typedef int (*test_function)(void);
 
 typedef struct unit_test_struct				unit_test;
 typedef struct test_suite_struct			test_suite;
