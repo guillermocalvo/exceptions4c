@@ -1,10 +1,9 @@
-
 --------------------------------
  EXCEPTIONS4C TESTING FRAMEWORK
 --------------------------------
 
 The `exceptions4c` testing framework ensures the library's reliability and
-checks that the it works as expected. There are many unit tests designed for
+checks that it works as expected. There are many unit tests designed for
 many circumstances, and every combination of the library's features.
 
 = Platform Requirements =
