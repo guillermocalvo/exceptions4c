@@ -501,7 +501,6 @@ void e4c_frame_init(e4c_stage stage, const char * file, int line, const char * f
 			MISUSE_ERROR(ContextHasNotBegunYet, "E4C_WITH: " DESC_NOT_BEGUN_YET, file, line, function);
 		}
 		MISUSE_ERROR(ContextHasNotBegunYet, "E4C_TRY: " DESC_NOT_BEGUN_YET, file, line, function);
-		E4C_UNREACHABLE_RETURN(NULL);
 	}
 
 	current_frame = context->current_frame;
@@ -515,7 +514,6 @@ void e4c_frame_init(e4c_stage stage, const char * file, int line, const char * f
 	/* check if there wasn't enough memory */
 	if(new_frame == NULL){
 		INTERNAL_ERROR(NotEnoughMemoryException, DESC_MALLOC_FRAME, "e4c_frame_init");
-		E4C_UNREACHABLE_RETURN(NULL);
 	}
 
 	*new_frame = _e4c_new_frame(current_frame, stage);
