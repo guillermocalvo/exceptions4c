@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 4, 8)
+# define _E4C_VERSION(version)			version(2, 4, 9)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -114,30 +114,7 @@
 # endif
 
 
-/* POSIX features */
-# if defined(_POSIX_C_SOURCE) \
-	||	defined(_POSIX_SOURCE) \
-	||	defined(_POSIX_VERSION) \
-	||	defined(_POSIX2_C_VERSION) \
-	||	defined(_XOPEN_SOURCE) \
-	||	defined(_XOPEN_VERSION) \
-	||	defined(_XOPEN_SOURCE_EXTENDED) \
-	||	defined(_GNU_SOURCE)
-
-/*
- * POSIX.1 does not specify whether setjmp and longjmp save or restore the
- * current set of blocked signals. If a program employs signal handling it
- * should use POSIX's sigsetjmp/siglongjmp.
- */
-#	ifndef HAVE_POSIX_SIGSETJMP
-#		define HAVE_POSIX_SIGSETJMP
-#	endif
-
-# endif
-
-
 # include <stdlib.h>
-# include <setjmp.h>
 
 
 # if defined(HAVE_C99_STDBOOL) || defined(HAVE_STDBOOL_H)
@@ -200,17 +177,6 @@
 # endif
 
 
-# if defined(HAVE_POSIX_SIGSETJMP) || defined(HAVE_SIGSETJMP)
-#	define _E4C_SETJMP(_address_)		sigsetjmp(_address_, e4c_true)
-#	define _E4C_LONGJMP(_address_)		siglongjmp(_address_, 1)
-#	define _E4C_JMP_BUF					sigjmp_buf
-# else
-#	define _E4C_SETJMP(_address_)		setjmp(_address_)
-#	define _E4C_LONGJMP(_address_)		longjmp(_address_, 1)
-#	define _E4C_JMP_BUF					jmp_buf
-# endif
-
-
 # ifndef NDEBUG
 #	define _E4C_FILE_INFO				__FILE__
 #	define _E4C_LINE_INFO				__LINE__
@@ -265,7 +231,7 @@
  */
 
 # define _E4C_FRAME_LOOP(_stage_) \
-	(void)_E4C_SETJMP( *( e4c_frame_init(_stage_, _E4C_INFO) ) ); \
+	e4c_frame_init(_stage_, _E4C_INFO); \
 	while( e4c_frame_step() )
 
 # define E4C_TRY \
@@ -2784,7 +2750,7 @@ extern void e4c_print_exception(const e4c_exception * exception);
  * directly (but through the 'keyword' macros).
  */
 
-extern _E4C_JMP_BUF * e4c_frame_init(enum _e4c_frame_stage stage,
+extern void e4c_frame_init(enum _e4c_frame_stage stage,
 	const char * file, int line, const char * function);
 
 extern e4c_bool e4c_frame_step(void);

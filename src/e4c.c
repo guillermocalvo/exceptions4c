@@ -29,9 +29,43 @@
 
 # include <stdio.h>
 # include <signal.h>
+# include <setjmp.h>
 # include <errno.h>
 # include <stdarg.h>
 # include "e4c.h"
+
+
+/* POSIX features */
+# if defined(_POSIX_C_SOURCE) \
+	||	defined(_POSIX_SOURCE) \
+	||	defined(_POSIX_VERSION) \
+	||	defined(_POSIX2_C_VERSION) \
+	||	defined(_XOPEN_SOURCE) \
+	||	defined(_XOPEN_VERSION) \
+	||	defined(_XOPEN_SOURCE_EXTENDED) \
+	||	defined(_GNU_SOURCE)
+
+/*
+ * POSIX.1 does not specify whether setjmp and longjmp save or restore the
+ * current set of blocked signals. If a program employs signal handling it
+ * should use POSIX's sigsetjmp/siglongjmp.
+ */
+#	ifndef HAVE_POSIX_SIGSETJMP
+#		define HAVE_POSIX_SIGSETJMP
+#	endif
+
+# endif
+
+
+# if defined(HAVE_POSIX_SIGSETJMP) || defined(HAVE_SIGSETJMP)
+#	define E4C_SETJMP(_address_)		sigsetjmp(_address_, e4c_true)
+#	define E4C_LONGJMP(_address_)		siglongjmp(_address_, 1)
+#	define E4C_JMP_BUF					sigjmp_buf
+# else
+#	define E4C_SETJMP(_address_)		setjmp(_address_)
+#	define E4C_LONGJMP(_address_)		longjmp(_address_, 1)
+#	define E4C_JMP_BUF					jmp_buf
+# endif
 
 
 # ifdef __NO_INLINE__
@@ -263,7 +297,7 @@ struct _e4c_frame{
 	volatile e4c_exception				thrown_exception;
 	volatile int						retry_attempts;
 	volatile int						reacquire_attempts;
-	_E4C_JMP_BUF						address;
+	E4C_JMP_BUF							address;
 };
 
 typedef struct _e4c_context e4c_context;
@@ -453,7 +487,7 @@ e4c_status e4c_get_status(void){
 	return(e4c_recovered);
 }
 
-_E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line, const char * function){
+void e4c_frame_init(e4c_stage stage, const char * file, int line, const char * function){
 
 	e4c_context *	context;
 	e4c_frame *		current_frame;
@@ -489,7 +523,7 @@ _E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line, cons
 	/* make it the new current frame */
 	context->current_frame	= new_frame;
 
-	return( &(new_frame->address) );
+	(void)E4C_SETJMP(new_frame->address);
 }
 
 e4c_bool e4c_frame_hook(e4c_stage stage, const e4c_exception * catch_exception, const char * file, int line, const char * function){
@@ -641,7 +675,7 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 	frame->stage			= stage;
 
 	/* keep looping */
-	_E4C_LONGJMP(frame->address);
+	E4C_LONGJMP(frame->address);
 }
 
 void e4c_throw_exception(const e4c_exception * exception, const char * file, int line, const char * function, e4c_bool verbatim, const char * message, ...){
@@ -1096,7 +1130,7 @@ static void _e4c_propagate(e4c_context * context, const e4c_exception * exceptio
 	}
 
 	/* keep looping */
-	_E4C_LONGJMP(frame->address);
+	E4C_LONGJMP(frame->address);
 }
 
 static void e4c_handle_signal(int signal_number){
