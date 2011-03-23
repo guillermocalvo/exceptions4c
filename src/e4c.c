@@ -506,7 +506,7 @@ void e4c_frame_init(e4c_stage stage, const char * file, int line, const char * f
 	current_frame = context->current_frame;
 
 	/* check if the current frame is NULL (very unlikely) */
-	PREVENT_FUNC(current_frame == NULL, DESC_INVALID_FRAME, "e4c_frame_init", NULL);
+	PREVENT_PROC(current_frame == NULL, DESC_INVALID_FRAME, "e4c_frame_init");
 
 	/* create a new frame */
 	new_frame = malloc( sizeof(*new_frame) );
