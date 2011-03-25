@@ -75,6 +75,8 @@
 # define DESC_INVALID_FRAME			"The exception context has an invalid frame."
 # define DESC_INVALID_CONTEXT		"The exception context is invalid."
 # define DESC_NO_MAPPING			"There is no exception mapping for the received signal."
+# define DESC_SIGERR_HANDLE			"Could not register the signal handling procedure."
+# define DESC_SIGERR_DEFAULT		"Could not reset the default signal handling."
 
 # ifdef E4C_THREADSAFE
 #	include <pthread.h>
@@ -251,6 +253,8 @@ static const char * signal_name_SIGINT		= "SIGINT";
 
 
 
+
+typedef void (*signal_handler)(int);
 
 typedef enum _e4c_frame_stage e4c_stage;
 
@@ -1104,6 +1108,7 @@ static void e4c_handle_signal(int signal_number){
 	e4c_context *				context;
 	const e4c_signal_mapping *	mapping;
 	e4c_exception				new_exception;
+	signal_handler				previous_handler;
 
 	context = E4C_CONTEXT;
 
@@ -1144,10 +1149,12 @@ static void e4c_handle_signal(int signal_number){
 						break;
 				}
 				/* reset the handler for this signal */
-				signal(signal_number, e4c_handle_signal);
-
+				previous_handler = signal(signal_number, e4c_handle_signal);
+				if(previous_handler == SIG_ERR){
+					/* we were unable to register the signal handling procedure again */
+					INTERNAL_ERROR(ExceptionSystemFatalError, DESC_SIGERR_HANDLE, "e4c_handle_signal");
+				}
 				/* throw the appropriate exception to the current context */
-
 				new_exception = _e4c_new_exception(mapping->exception, NULL, signal_name, signal_number, "e4c_handle_signal", errno, NULL);
 				_e4c_propagate(context, &new_exception);
 			}
@@ -1156,21 +1163,25 @@ static void e4c_handle_signal(int signal_number){
 	}
 	/* this should never happen, but anyway... */
 	/* we were unable to find the exception that represents the received signal number */
-	new_exception = _e4c_new_exception(&ExceptionSystemFatalError, "e4c_handle_signal: " DESC_NO_MAPPING, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_handle_signal", errno, NULL);
-	_e4c_propagate(context, &new_exception);
+	INTERNAL_ERROR(ExceptionSystemFatalError, DESC_NO_MAPPING, "e4c_handle_signal");
 }
 
 static void _e4c_set_signal_handlers(e4c_context * context, const e4c_signal_mapping * mappings){
 
 	/* assert: context != NULL */
 
-	const e4c_signal_mapping * next_mapping;
+	const e4c_signal_mapping *	next_mapping;
+	signal_handler				previous_handler;
 
 	if(context->signal_mappings != NULL){
 		next_mapping = context->signal_mappings;
 		/* reset all the previously set signal handlers */
 		while(next_mapping->exception != NULL){
-			signal(next_mapping->signal_number, SIG_DFL);
+			previous_handler = signal(next_mapping->signal_number, SIG_DFL);
+			if(previous_handler == SIG_ERR){
+				/* we were unable to reset to the default action */
+				INTERNAL_ERROR(ExceptionSystemFatalError, DESC_SIGERR_DEFAULT, "e4c_set_signal_handlers");
+			}
 			next_mapping++;
 		}
 	}
@@ -1185,7 +1196,11 @@ static void _e4c_set_signal_handlers(e4c_context * context, const e4c_signal_map
 	context->signal_mappings = next_mapping = mappings;
 
 	while(next_mapping->exception != NULL){
-		signal(next_mapping->signal_number, e4c_handle_signal);
+		previous_handler = signal(next_mapping->signal_number, e4c_handle_signal);
+		if(previous_handler == SIG_ERR){
+			/* we were unable to register the signal handling procedure */
+			INTERNAL_ERROR(ExceptionSystemFatalError, DESC_SIGERR_HANDLE, "e4c_set_signal_handlers");
+		}
 		next_mapping++;
 	}
 
@@ -1214,7 +1229,7 @@ static E4C_INLINE e4c_bool _e4c_extends(const e4c_exception * child, const e4c_e
 
 static void e4c_at_exit(void){
 
-	if(DANGLING_CONTEXT){
+	if(!fatal_error_flag && DANGLING_CONTEXT){
 		const e4c_exception exception = _e4c_new_exception(&ContextNotEnded, DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_at_exit", errno, NULL);
 		e4c_print_exception(&exception);
 		fatal_error_flag = e4c_true;
