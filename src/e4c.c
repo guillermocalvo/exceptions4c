@@ -4,7 +4,7 @@
  *
  * exceptions4c source code file
  *
- * @version		2.4
+ * @version		2.5
  * @author		Copyright (c) 2011 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -77,6 +77,7 @@
 # define DESC_NO_MAPPING			"There is no exception mapping for the received signal."
 # define DESC_SIGERR_HANDLE			"Could not register the signal handling procedure."
 # define DESC_SIGERR_DEFAULT		"Could not reset the default signal handling."
+# define DESC_SIGERR_IGNORE			"Could not ignore the signal."
 
 # ifdef E4C_THREADSAFE
 #	include <pthread.h>
@@ -1111,7 +1112,6 @@ static void e4c_handle_signal(int signal_number){
 	signal_handler				previous_handler;
 
 	context = E4C_CONTEXT;
-
 	/* check if 'handleSignal' was called before e4c_context_begin or after e4c_context_end (very unlikely) */
 	PREVENT_PROC(context == NULL, DESC_INVALID_CONTEXT, "e4c_handle_signal");
 
@@ -1122,7 +1122,7 @@ static void e4c_handle_signal(int signal_number){
 		/* try to find a mapping for this signal */
 		mapping = context->signal_mappings;
 		/* loop until we find the NULL terminator */
-		while(mapping->exception != NULL){
+		while(mapping->signal_number != _E4C_INVALID_SIGNAL){
 			if(signal_number == mapping->signal_number){
 				const char * signal_name;
 				switch(signal_number){
@@ -1176,7 +1176,7 @@ static void _e4c_set_signal_handlers(e4c_context * context, const e4c_signal_map
 	if(context->signal_mappings != NULL){
 		next_mapping = context->signal_mappings;
 		/* reset all the previously set signal handlers */
-		while(next_mapping->exception != NULL){
+		while(next_mapping->signal_number != _E4C_INVALID_SIGNAL){
 			previous_handler = signal(next_mapping->signal_number, SIG_DFL);
 			if(previous_handler == SIG_ERR){
 				/* we were unable to reset to the default action */
@@ -1195,12 +1195,26 @@ static void _e4c_set_signal_handlers(e4c_context * context, const e4c_signal_map
 	/* set up signal mapping */
 	context->signal_mappings = next_mapping = mappings;
 
-	while(next_mapping->exception != NULL){
-		previous_handler = signal(next_mapping->signal_number, e4c_handle_signal);
-		if(previous_handler == SIG_ERR){
-			/* we were unable to register the signal handling procedure */
-			INTERNAL_ERROR(ExceptionSystemFatalError, DESC_SIGERR_HANDLE, "e4c_set_signal_handlers");
+	while(next_mapping->signal_number != _E4C_INVALID_SIGNAL){
+
+		signal_handler	handler;
+		const char *	error_message;
+
+		if(next_mapping->exception != NULL){
+			/* map this signal to this exception */
+			handler			= e4c_handle_signal;
+			error_message	= DESC_SIGERR_HANDLE;
+		}else{
+			/* ignore this signal */
+			handler			= SIG_IGN;
+			error_message	= DESC_SIGERR_IGNORE;
 		}
+
+		previous_handler = signal(next_mapping->signal_number, handler);
+		if(previous_handler == SIG_ERR){
+			INTERNAL_ERROR(ExceptionSystemFatalError, error_message, "e4c_set_signal_handlers");
+		}
+
 		next_mapping++;
 	}
 

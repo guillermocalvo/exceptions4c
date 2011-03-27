@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version     2.4
+ * @version     2.5
  * @author      Copyright (c) 2011 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 4, 13)
+# define _E4C_VERSION(version)			version(2, 5, 0)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -174,6 +174,17 @@
 #	else
 #		define _E4C_FUNCTION_NAME	NULL
 #	endif
+
+# endif
+
+
+/*
+ * The _E4C_INVALID_SIGNAL compile-time parameter
+ * could be defined in order to work with some specific compiler.
+ */
+# ifndef _E4C_INVALID_SIGNAL
+
+#	define _E4C_INVALID_SIGNAL	-1
 
 # endif
 
@@ -383,7 +394,7 @@
 	{_signal_number_, &_exception_}
 
 # define _E4C_NULL_SIGNAL_MAPPING \
-	{0, NULL}
+	{_E4C_INVALID_SIGNAL, NULL}
 
 
 /**
@@ -1355,10 +1366,10 @@
  * @endcode
  *
  * If you need to rely on the signal handling system, you may call
- * @c #e4c_context_set_signal_mappings explicitely. You must take into
- * account that you could be @e hijacking your client's original signal
- * mappings, so you should also call @c #e4c_context_get_signal_mappings in
- * order to restore the previous signal mappings when you are done.
+ * @c #e4c_context_set_signal_mappings explicitly. You must take into account
+ * that you could be @e hijacking your client's original signal mappings, so you
+ * should also call @c #e4c_context_get_signal_mappings in order to restore the
+ * previous signal mappings when you are done.
  *
  * @code
  * const e4c_signal_mapping new_mappings[] = {
@@ -1949,6 +1960,10 @@ struct _e4c_exception{
  * @c e4c_context_set_signal_mappings. This way, only the specified signals will
  * be handled as exceptions, and they will be converted to the specified
  * exceptions.
+ *
+ * Additionally, you can map a specific signal to a @c NULL exception in order
+ * to @e ignore it (i.e. neither the signal will be converted to an exception,
+ * nor the program will crash).
  *
  * These are some of the signals you can handle:
  *
