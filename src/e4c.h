@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define _E4C_VERSION(version)			version(2, 6, 1)
+# define _E4C_VERSION(version)			version(2, 6, 2)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -313,9 +313,9 @@
 
 # define _E4C_REUSING_CONTEXT(_thrown_exception_) \
 	\
-	E4C_BOOL		_E4C_AUTO(BEGIN)	= !e4c_context_is_ready(); \
-	E4C_BOOL		_E4C_AUTO(DONE)		= E4C_FALSE; \
-	e4c_exception	_E4C_AUTO(EXCEPTION); \
+	volatile E4C_BOOL		_E4C_AUTO(BEGIN)	= !e4c_context_is_ready(); \
+	volatile E4C_BOOL		_E4C_AUTO(DONE)		= E4C_FALSE; \
+	volatile e4c_exception	_E4C_AUTO(EXCEPTION); \
 	\
 	(_thrown_exception_) = NULL; \
 	\
