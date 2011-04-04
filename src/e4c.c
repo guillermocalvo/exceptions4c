@@ -139,26 +139,6 @@
 #	define PREVENT_PROC(condition, message, function)
 # endif
 
-static const char * signal_name_UNKNOWN		= "{unknown signal}";
-DEFINE_SIGNAL_NAME(SIGABRT);
-DEFINE_SIGNAL_NAME(SIGFPE);
-DEFINE_SIGNAL_NAME(SIGILL);
-DEFINE_SIGNAL_NAME(SIGSEGV);
-DEFINE_SIGNAL_NAME(SIGTERM);
-DEFINE_SIGNAL_NAME(SIGINT);
-DEFINE_SIGNAL_NAME_SIGALRM
-DEFINE_SIGNAL_NAME_SIGCHLD
-DEFINE_SIGNAL_NAME_SIGTRAP
-DEFINE_SIGNAL_NAME_SIGPIPE
-DEFINE_SIGNAL_NAME_SIGSTOP
-DEFINE_SIGNAL_NAME_SIGKILL
-DEFINE_SIGNAL_NAME_SIGHUP
-DEFINE_SIGNAL_NAME_SIGXCPU
-DEFINE_SIGNAL_NAME_SIGQUIT
-DEFINE_SIGNAL_NAME_SIGBREAK
-DEFINE_SIGNAL_NAME_SIGUSR1
-DEFINE_SIGNAL_NAME_SIGUSR2
-
 # define WHEN_SIGNAL(signal_id) \
 	case signal_id:	signal_name = signal_name_##signal_id;	break;
 
@@ -322,6 +302,106 @@ struct _e4c_environment{
 
 
 
+static volatile	e4c_bool	fatal_error_flag	= e4c_false;
+static e4c_bool				is_initialized		= e4c_false;
+
+MUTEX_DEFINE(is_initialized_mutex)
+MUTEX_DEFINE(environment_collection_mutex)
+
+# ifdef E4C_THREADSAFE
+	static e4c_environment * environment_collection = NULL;
+# else
+	static e4c_context mainContext;
+	static e4c_context * current_context = NULL;
+# endif
+
+static const char * signal_name_UNKNOWN		= "{unknown signal}";
+DEFINE_SIGNAL_NAME(SIGABRT);
+DEFINE_SIGNAL_NAME(SIGFPE);
+DEFINE_SIGNAL_NAME(SIGILL);
+DEFINE_SIGNAL_NAME(SIGSEGV);
+DEFINE_SIGNAL_NAME(SIGTERM);
+DEFINE_SIGNAL_NAME(SIGINT);
+DEFINE_SIGNAL_NAME_SIGALRM
+DEFINE_SIGNAL_NAME_SIGCHLD
+DEFINE_SIGNAL_NAME_SIGTRAP
+DEFINE_SIGNAL_NAME_SIGPIPE
+DEFINE_SIGNAL_NAME_SIGSTOP
+DEFINE_SIGNAL_NAME_SIGKILL
+DEFINE_SIGNAL_NAME_SIGHUP
+DEFINE_SIGNAL_NAME_SIGXCPU
+DEFINE_SIGNAL_NAME_SIGQUIT
+DEFINE_SIGNAL_NAME_SIGBREAK
+DEFINE_SIGNAL_NAME_SIGUSR1
+DEFINE_SIGNAL_NAME_SIGUSR2
+
+static const e4c_signal_mapping e4c_default_signal_mappings_array[] = {
+	E4C_SIGNAL_MAPPING(SIGABRT,		AbortException),
+	E4C_SIGNAL_MAPPING(SIGFPE,		ArithmeticException),
+	E4C_SIGNAL_MAPPING(SIGILL,		IllegalInstructionException),
+	E4C_SIGNAL_MAPPING(SIGSEGV,		BadPointerException),
+	E4C_SIGNAL_MAPPING(SIGTERM,		TerminationException),
+	E4C_SIGNAL_MAPPING(SIGINT,		UserInterruptionException),
+	E4C_SIGNAL_MAPPING_SIGALRM
+	E4C_SIGNAL_MAPPING_SIGCHLD
+	E4C_SIGNAL_MAPPING_SIGTRAP
+	E4C_SIGNAL_MAPPING_SIGPIPE
+	E4C_SIGNAL_MAPPING_SIGSTOP
+	E4C_SIGNAL_MAPPING_SIGKILL
+	E4C_SIGNAL_MAPPING_SIGHUP
+	E4C_SIGNAL_MAPPING_SIGXCPU
+	E4C_SIGNAL_MAPPING_SIGQUIT
+	E4C_SIGNAL_MAPPING_SIGBREAK
+	E4C_SIGNAL_MAPPING_SIGUSR1
+	E4C_SIGNAL_MAPPING_SIGUSR2
+	E4C_NULL_SIGNAL_MAPPING
+};
+
+const e4c_signal_mapping * e4c_default_signal_mappings = &e4c_default_signal_mappings_array[0];
+
+static
+DEFINE_RAW_EXCEPTION(ExceptionSystemFatalError,			DESC_INVALID_STATE,					NULL);
+static
+E4C_DEFINE_EXCEPTION(ContextAlreadyBegun,				DESC_ALREADY_BEGUN,					ExceptionSystemFatalError);
+static
+E4C_DEFINE_EXCEPTION(ContextHasNotBegunYet,				DESC_NOT_BEGUN_YET,					ExceptionSystemFatalError);
+static
+E4C_DEFINE_EXCEPTION(ContextNotEnded,					DESC_NOT_ENDED,						ExceptionSystemFatalError);
+
+DEFINE_RAW_EXCEPTION(AssertionException,				"Assertion failed.",				NULL);
+
+E4C_DEFINE_EXCEPTION(RuntimeException,					"Runtime exception.",				RuntimeException);
+E4C_DEFINE_EXCEPTION(NotEnoughMemoryException,			"Not enough memory.",				RuntimeException);
+E4C_DEFINE_EXCEPTION(FileOpenException,					"Couldn't open file.",				RuntimeException);
+E4C_DEFINE_EXCEPTION(IllegalArgumentException,			"Illegal argument.",				RuntimeException);
+
+E4C_DEFINE_EXCEPTION(SignalException,					"Signal received.",					RuntimeException);
+E4C_DEFINE_EXCEPTION(SignalAlarmException,				"Alarm clock signal received.",		SignalException);
+E4C_DEFINE_EXCEPTION(SignalChildException,				"Child process signal received.",	SignalException);
+E4C_DEFINE_EXCEPTION(SignalTrapException,				"Trace trap.",						SignalException);
+E4C_DEFINE_EXCEPTION(ErrorSignalException,				"Error signal received.",			SignalException);
+E4C_DEFINE_EXCEPTION(IllegalInstructionException,		"Illegal instruction.",				ErrorSignalException);
+E4C_DEFINE_EXCEPTION(ArithmeticException,				"Erroneous arithmetic operation.",	ErrorSignalException);
+E4C_DEFINE_EXCEPTION(BrokenPipeException,				"Broken pipe.",						ErrorSignalException);
+E4C_DEFINE_EXCEPTION(BadPointerException,				"Segmentation violation.",			ErrorSignalException);
+E4C_DEFINE_EXCEPTION(NullPointerException,				"Null pointer.",					BadPointerException);
+E4C_DEFINE_EXCEPTION(ControlSignalException,			"Control signal received.",			SignalException);
+E4C_DEFINE_EXCEPTION(StopException,						"Stop signal received.",			ControlSignalException);
+E4C_DEFINE_EXCEPTION(KillException,						"Kill signal received.",			ControlSignalException);
+E4C_DEFINE_EXCEPTION(HangUpException,					"Hang up signal received.",			ControlSignalException);
+E4C_DEFINE_EXCEPTION(TerminationException,				"Termination signal received.",		ControlSignalException);
+E4C_DEFINE_EXCEPTION(AbortException,					"Abort signal received.",			ControlSignalException);
+E4C_DEFINE_EXCEPTION(CPUTimeException,					"Exceeded CPU time.",				ControlSignalException);
+E4C_DEFINE_EXCEPTION(UserControlSignalException,		"User control signal received.",	ControlSignalException);
+E4C_DEFINE_EXCEPTION(UserQuitException,					"Quit signal received.",			UserControlSignalException);
+E4C_DEFINE_EXCEPTION(UserInterruptionException,			"Interrupt signal received.",		UserControlSignalException);
+E4C_DEFINE_EXCEPTION(UserBreakException,				"Break signal received.",			UserControlSignalException);
+E4C_DEFINE_EXCEPTION(ProgramSignalException,			"User-defined signal received.",	SignalException);
+E4C_DEFINE_EXCEPTION(ProgramSignal1Exception,			"User-defined signal 1 received.",	ProgramSignalException);
+E4C_DEFINE_EXCEPTION(ProgramSignal2Exception,			"User-defined signal 2 received.",	ProgramSignalException);
+
+
+
 
 static E4C_INLINE
 e4c_exception
@@ -443,87 +523,6 @@ _e4c_get_context(
 );
 
 # endif
-
-
-
-
-static volatile	e4c_bool	fatal_error_flag	= e4c_false;
-static e4c_bool				is_initialized		= e4c_false;
-
-MUTEX_DEFINE(is_initialized_mutex)
-MUTEX_DEFINE(environment_collection_mutex)
-
-# ifdef E4C_THREADSAFE
-	static e4c_environment * environment_collection = NULL;
-# else
-	static e4c_context mainContext;
-	static e4c_context * current_context = NULL;
-# endif
-
-static const e4c_signal_mapping e4c_default_signal_mappings_array[] = {
-	E4C_SIGNAL_MAPPING(SIGABRT,		AbortException),
-	E4C_SIGNAL_MAPPING(SIGFPE,		ArithmeticException),
-	E4C_SIGNAL_MAPPING(SIGILL,		IllegalInstructionException),
-	E4C_SIGNAL_MAPPING(SIGSEGV,		BadPointerException),
-	E4C_SIGNAL_MAPPING(SIGTERM,		TerminationException),
-	E4C_SIGNAL_MAPPING(SIGINT,		UserInterruptionException),
-	E4C_SIGNAL_MAPPING_SIGALRM
-	E4C_SIGNAL_MAPPING_SIGCHLD
-	E4C_SIGNAL_MAPPING_SIGTRAP
-	E4C_SIGNAL_MAPPING_SIGPIPE
-	E4C_SIGNAL_MAPPING_SIGSTOP
-	E4C_SIGNAL_MAPPING_SIGKILL
-	E4C_SIGNAL_MAPPING_SIGHUP
-	E4C_SIGNAL_MAPPING_SIGXCPU
-	E4C_SIGNAL_MAPPING_SIGQUIT
-	E4C_SIGNAL_MAPPING_SIGBREAK
-	E4C_SIGNAL_MAPPING_SIGUSR1
-	E4C_SIGNAL_MAPPING_SIGUSR2
-	E4C_NULL_SIGNAL_MAPPING
-};
-
-const e4c_signal_mapping * e4c_default_signal_mappings = &e4c_default_signal_mappings_array[0];
-
-static
-DEFINE_RAW_EXCEPTION(ExceptionSystemFatalError,			DESC_INVALID_STATE,					NULL);
-static
-E4C_DEFINE_EXCEPTION(ContextAlreadyBegun,				DESC_ALREADY_BEGUN,					ExceptionSystemFatalError);
-static
-E4C_DEFINE_EXCEPTION(ContextHasNotBegunYet,				DESC_NOT_BEGUN_YET,					ExceptionSystemFatalError);
-static
-E4C_DEFINE_EXCEPTION(ContextNotEnded,					DESC_NOT_ENDED,						ExceptionSystemFatalError);
-
-DEFINE_RAW_EXCEPTION(AssertionException,				"Assertion failed.",				NULL);
-
-E4C_DEFINE_EXCEPTION(RuntimeException,					"Runtime exception.",				RuntimeException);
-E4C_DEFINE_EXCEPTION(NotEnoughMemoryException,			"Not enough memory.",				RuntimeException);
-E4C_DEFINE_EXCEPTION(FileOpenException,					"Couldn't open file.",				RuntimeException);
-E4C_DEFINE_EXCEPTION(IllegalArgumentException,			"Illegal argument.",				RuntimeException);
-
-E4C_DEFINE_EXCEPTION(SignalException,					"Signal received.",					RuntimeException);
-E4C_DEFINE_EXCEPTION(SignalAlarmException,				"Alarm clock signal received.",		SignalException);
-E4C_DEFINE_EXCEPTION(SignalChildException,				"Child process signal received.",	SignalException);
-E4C_DEFINE_EXCEPTION(SignalTrapException,				"Trace trap.",						SignalException);
-E4C_DEFINE_EXCEPTION(ErrorSignalException,				"Error signal received.",			SignalException);
-E4C_DEFINE_EXCEPTION(IllegalInstructionException,		"Illegal instruction.",				ErrorSignalException);
-E4C_DEFINE_EXCEPTION(ArithmeticException,				"Erroneous arithmetic operation.",	ErrorSignalException);
-E4C_DEFINE_EXCEPTION(BrokenPipeException,				"Broken pipe.",						ErrorSignalException);
-E4C_DEFINE_EXCEPTION(BadPointerException,				"Segmentation violation.",			ErrorSignalException);
-E4C_DEFINE_EXCEPTION(NullPointerException,				"Null pointer.",					BadPointerException);
-E4C_DEFINE_EXCEPTION(ControlSignalException,			"Control signal received.",			SignalException);
-E4C_DEFINE_EXCEPTION(StopException,						"Stop signal received.",			ControlSignalException);
-E4C_DEFINE_EXCEPTION(KillException,						"Kill signal received.",			ControlSignalException);
-E4C_DEFINE_EXCEPTION(HangUpException,					"Hang up signal received.",			ControlSignalException);
-E4C_DEFINE_EXCEPTION(TerminationException,				"Termination signal received.",		ControlSignalException);
-E4C_DEFINE_EXCEPTION(AbortException,					"Abort signal received.",			ControlSignalException);
-E4C_DEFINE_EXCEPTION(CPUTimeException,					"Exceeded CPU time.",				ControlSignalException);
-E4C_DEFINE_EXCEPTION(UserControlSignalException,		"User control signal received.",	ControlSignalException);
-E4C_DEFINE_EXCEPTION(UserQuitException,					"Quit signal received.",			UserControlSignalException);
-E4C_DEFINE_EXCEPTION(UserInterruptionException,			"Interrupt signal received.",		UserControlSignalException);
-E4C_DEFINE_EXCEPTION(UserBreakException,				"Break signal received.",			UserControlSignalException);
-E4C_DEFINE_EXCEPTION(ProgramSignalException,			"User-defined signal received.",	SignalException);
-E4C_DEFINE_EXCEPTION(ProgramSignal1Exception,			"User-defined signal 1 received.",	ProgramSignalException);
-E4C_DEFINE_EXCEPTION(ProgramSignal2Exception,			"User-defined signal 2 received.",	ProgramSignalException);
 
 
 

@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 5, 2)
+# define _E4C_VERSION(version)			version(2, 5, 3)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
