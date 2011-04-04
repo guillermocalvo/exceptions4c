@@ -13,9 +13,9 @@ static void aux(void * pointer){
 
 static int ext2(void * pointer){
 
-	const		e4c_exception * error;
-	e4c_bool	is_ready1;
-	e4c_bool	is_ready2;
+	volatile const		e4c_exception * thrown_exception;
+	volatile E4C_BOOL	is_ready1;
+	volatile E4C_BOOL	is_ready2;
 
 	is_ready1 = e4c_context_is_ready();
 
@@ -28,7 +28,7 @@ static int ext2(void * pointer){
 	ECHO(("____ext2_before_REUSING_CONTEXT\n"));
 
 	{
-		e4c_reusing_context(error){
+		e4c_reusing_context(thrown_exception){
 
 			E4C_TRY{
 
@@ -55,7 +55,7 @@ static int ext2(void * pointer){
 
 	if(is_ready1 != is_ready2) return(112233);
 
-	if(error == NULL){
+	if(thrown_exception == NULL){
 
 		ECHO(("____ext2_there_was_no_error\n"));
 
@@ -63,7 +63,7 @@ static int ext2(void * pointer){
 
 	}else{
 
-		ECHO(("____ext2_there_was_an_error_%s\n", error->name));
+		ECHO(("____ext2_there_was_an_error_%s\n", thrown_exception->name));
 
 		return(2000);
 	}
@@ -72,10 +72,10 @@ static int ext2(void * pointer){
 
 static int ext1(void){
 
-	const		e4c_exception * error;
-	e4c_bool	is_ready1;
-	e4c_bool	is_ready2;
-	int			status_code = -1;
+	volatile const		e4c_exception * thrown_exception;
+	volatile E4C_BOOL	is_ready1;
+	volatile E4C_BOOL	is_ready2;
+	volatile int		status_code = -1;
 
 	is_ready1 = e4c_context_is_ready();
 
@@ -88,7 +88,7 @@ static int ext1(void){
 	ECHO(("__ext1_before_REUSING_CONTEXT\n"));
 
 	{
-		e4c_reusing_context(error){
+		e4c_reusing_context(thrown_exception){
 
 			ECHO(("__ext1_before_TRY_block\n"));
 
@@ -125,7 +125,7 @@ static int ext1(void){
 
 	if(is_ready1 != is_ready2) return(112233);
 
-	if(error == NULL){
+	if(thrown_exception == NULL){
 
 		ECHO(("__ext1_there_was_no_error\n"));
 
@@ -133,7 +133,7 @@ static int ext1(void){
 
 	}else{
 
-		ECHO(("__ext1_there_was_an_error_%s\n", error->name));
+		ECHO(("__ext1_there_was_an_error_%s\n", thrown_exception->name));
 
 		return(status_code + 123);
 	}
@@ -155,7 +155,7 @@ DEFINE_TEST_LONG_DESCRIPTION(
 
 	ECHO(("before_USING_CONTEXT\n"));
 
-	e4c_using_context(e4c_true, e4c_print_exception){
+	e4c_using_context(E4C_TRUE, e4c_print_exception){
 
 		ECHO(("before_CALL_FUNCTION_ext1\n"));
 

@@ -20,11 +20,11 @@ DEFINE_TEST(
 	"the_signal_WAS_CAUGHT"
 ){
 
-	e4c_bool	caught		= e4c_false;
+	E4C_BOOL	caught		= E4C_FALSE;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(e4c_true, e4c_print_exception);
+	e4c_context_begin(E4C_TRUE, e4c_print_exception);
 
 	ECHO(("before_TRY_block\n"));
 
@@ -50,7 +50,7 @@ DEFINE_TEST(
 
 		ECHO(("inside_CATCH_block\n"));
 
-		caught = e4c_true;
+		caught = E4C_TRUE;
 
 		ECHO(("catching__%s\n", e4c_get_exception()->name));
 

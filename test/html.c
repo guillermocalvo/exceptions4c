@@ -21,7 +21,7 @@
 # define SUMMARY_MAX_ITEMS 5
 
 # define MIN(x, y) (x < y ? x : y )
-# define ELIDED(x) (x > SUMMARY_MAX_ITEMS ? e4c_true : e4c_false )
+# define ELIDED(x) (x > SUMMARY_MAX_ITEMS)
 
 # define AFTER_SUMMARY_ITEM(index, total) \
 	( \

@@ -157,10 +157,10 @@ static const char * load_file(const char * file_path, char * store, int bytes){
 	int				tmp				= ' ';
 	int				read			= 0;
 	const char *	last_token		= NULL;
-	e4c_bool		new_token		= e4c_true;
-	e4c_bool		looking_for_token = e4c_true;
+	E4C_BOOL		new_token		= E4C_TRUE;
+	E4C_BOOL		looking_for_token = E4C_TRUE;
 # ifdef NDEBUG
-	e4c_bool		ready_for_token	= e4c_false;
+	E4C_BOOL		ready_for_token	= E4C_FALSE;
 # endif
 
 	file = fopen(file_path, "r");
@@ -180,17 +180,17 @@ static const char * load_file(const char * file_path, char * store, int bytes){
 		if(looking_for_token){
 			if(tmp == ':'){
 # ifdef NDEBUG
-				ready_for_token	= e4c_true;
+				ready_for_token	= E4C_TRUE;
 # else
-				looking_for_token = e4c_false;
+				looking_for_token = E4C_FALSE;
 # endif
 			}else if(tmp <= ' '){
-				new_token = e4c_true;
+				new_token = E4C_TRUE;
 			}else if(new_token){
-				new_token = e4c_false;
+				new_token = E4C_FALSE;
 				last_token = store + read;
 # ifdef NDEBUG
-				if(ready_for_token) looking_for_token = e4c_false;
+				if(ready_for_token) looking_for_token = E4C_FALSE;
 # endif
 			}
 		}
@@ -210,7 +210,7 @@ static const char * load_file(const char * file_path, char * store, int bytes){
 	return(last_token);
 }
 
-static e4c_bool is_unexpected_token(const char * expected_token, const char * token){
+static E4C_BOOL is_unexpected_token(const char * expected_token, const char * token){
 
 	int index;
 
@@ -218,14 +218,17 @@ static e4c_bool is_unexpected_token(const char * expected_token, const char * to
 		return(token != NULL);
 	}
 
-	if(token == NULL) return(e4c_true);
+	if(token == NULL){
+		return(E4C_TRUE);
+	}
 
 	for(index = 0; expected_token[index] != '\0'; index++){
 		if( token[index] != expected_token[index] ){
-			return(e4c_true);
+			return(E4C_TRUE);
 		}
 	}
-	return(e4c_false);
+	
+	return(E4C_FALSE);
 }
 
 static const char * make_command_line(test_runner * runner){
