@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 5, 0)
+# define _E4C_VERSION(version)			version(2, 5, 1)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -109,6 +109,10 @@
 
 #	ifndef HAVE_C99_VSNPRINTF
 #		define HAVE_C99_VSNPRINTF
+#	endif
+
+#	ifndef HAVE_C99_SNPRINTF
+#		define HAVE_C99_SNPRINTF
 #	endif
 
 # endif
@@ -2523,7 +2527,11 @@ E4C_DECLARE_EXCEPTION(ProgramSignal2Exception);
  * @see     e4c_using_context
  * @see     e4c_reusing_context
  */
-extern e4c_bool e4c_context_is_ready(void);
+extern
+e4c_bool
+e4c_context_is_ready(
+	void
+);
 
 /**
  * Begins an exception context
@@ -2571,8 +2579,12 @@ extern e4c_bool e4c_context_is_ready(void);
  * @see     e4c_uncaught_handler
  * @see     e4c_print_exception
  */
-extern void e4c_context_begin(
-	e4c_bool handle_signals, e4c_uncaught_handler uncaught_handler);
+extern
+void
+e4c_context_begin(
+	e4c_bool					handle_signals,
+	e4c_uncaught_handler		uncaught_handler
+);
 
 /**
  * Ends the current exception context
@@ -2587,7 +2599,11 @@ extern void e4c_context_begin(
  * @see     e4c_using_context
  * @see     e4c_reusing_context
  */
-extern void e4c_context_end(void);
+extern
+void
+e4c_context_end(
+	void
+);
 
 /**
  * Assigns the specified signal mappings to the exception context
@@ -2610,7 +2626,11 @@ extern void e4c_context_end(void);
  * @see     e4c_signal_mapping
  * @see     e4c_default_signal_mappings
  */
-extern void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings);
+extern
+void
+e4c_context_set_signal_mappings(
+	const e4c_signal_mapping *	mappings
+);
 
 /**
  * Retrieves the signal mappings for the current exception context
@@ -2626,7 +2646,11 @@ extern void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings)
  * @see     e4c_signal_mapping
  * @see     e4c_default_signal_mappings
  */
-extern const e4c_signal_mapping * e4c_context_get_signal_mappings(void);
+extern
+const e4c_signal_mapping *
+e4c_context_get_signal_mappings(
+	void
+);
 
 /**
  * Returns the completeness status of the executing code block
@@ -2648,7 +2672,11 @@ extern const e4c_signal_mapping * e4c_context_get_signal_mappings(void);
  * @see     e4c_get_status
  * @see     finally
  */
-extern e4c_status e4c_get_status(void);
+extern
+e4c_status
+e4c_get_status(
+	void
+);
 
 /**
  * Returns the exception that was thrown
@@ -2700,7 +2728,11 @@ extern e4c_status e4c_get_status(void);
  * @see     catch
  * @see     finally
  */
-extern const e4c_exception * e4c_get_exception(void);
+extern
+const e4c_exception *
+e4c_get_exception(
+	void
+);
 
 /** @} */
 
@@ -2730,7 +2762,11 @@ extern const e4c_exception * e4c_get_exception(void);
  *
  * @see     E4C_VERSION_NUMBER
  */
-extern long e4c_library_version(void);
+extern
+long
+e4c_library_version(
+	void
+);
 
 /**
  * Returns whether an exception is of a given exception type
@@ -2769,8 +2805,12 @@ extern long e4c_library_version(void);
  * @see     e4c_exception
  * @see     e4c_get_exception
  */
-extern e4c_bool e4c_is_instance_of(const e4c_exception * instance,
-	const e4c_exception * type);
+extern
+e4c_bool
+e4c_is_instance_of(
+	const e4c_exception *		instance,
+	const e4c_exception *		type
+);
 
 /**
  * Prints a fatal error message regarding the specified exception
@@ -2790,7 +2830,11 @@ extern e4c_bool e4c_is_instance_of(const e4c_exception * instance,
  * @throws  NullPointerException
  *          If @c exception is @c NULL
  */
-extern void e4c_print_exception(const e4c_exception * exception);
+extern
+void
+e4c_print_exception(
+	const e4c_exception *		exception
+);
 
 /** @} */
 
@@ -2799,22 +2843,53 @@ extern void e4c_print_exception(const e4c_exception * exception);
  * directly (but through the 'keyword' macros).
  */
 
-extern _E4C_JMP_BUF * e4c_frame_init(enum _e4c_frame_stage stage,
-	const char * file, int line, const char * function);
+extern
+_E4C_JMP_BUF *
+e4c_frame_init(
+	enum _e4c_frame_stage		stage,
+	const char *				file,
+	int							line,
+	const char *				function
+);
 
-extern e4c_bool e4c_frame_step(void);
+extern
+e4c_bool
+e4c_frame_step(
+	void
+);
 
-extern e4c_bool e4c_frame_hook(enum _e4c_frame_stage stage,
-	const e4c_exception * exception, const char * file, int line,
-	const char * function);
+extern
+e4c_bool
+e4c_frame_hook(
+	enum _e4c_frame_stage		stage,
+	const e4c_exception *		exception_type,
+	const char *				file,
+	int							line,
+	const char *				function
+);
 
-extern void e4c_frame_repeat(
-	int max_repeat_attempts, enum _e4c_frame_stage stage,
-	const char * file, int line, const char * function);
+extern
+void
+e4c_frame_repeat(
+	int							max_repeat_attempts,
+	enum _e4c_frame_stage		stage,
+	const char *				file,
+	int							line,
+	const char *				function
+);
 
-extern void e4c_throw_exception(const e4c_exception * exception,
-	const char * file, int line, const char * function,
-	e4c_bool verbatim, const char * message, ...) E4C_NORETURN;
+extern
+void
+e4c_throw_exception(
+	const e4c_exception *		exception,
+	const char *				file,
+	int							line,
+	const char *				function,
+	e4c_bool					verbatim,
+	const char *				message,
+	...
+)
+E4C_NORETURN;
 
 
 # endif
