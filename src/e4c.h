@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version     2.5
+ * @version     2.6
  * @author      Copyright (c) 2011 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -48,11 +48,11 @@
  */
 
 
-# ifndef _E4C_H_
-# define _E4C_H_
+# ifndef EXCEPTIONS4C
+# define EXCEPTIONS4C
 
 
-# define _E4C_VERSION(version)			version(2, 5, 6)
+# define _E4C_VERSION(version)			version(2, 6, 0)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -289,14 +289,13 @@
 	/* simple optimization: e4c_frame_step() will avoid disposing stage */
 
 # define E4C_CATCH(_exception_type_) \
-	else if( e4c_frame_hook(_e4c_catching, (_exception_type_).type, _E4C_INFO) )
+	else if( e4c_frame_hook(_e4c_catching, &_exception_type_, _E4C_INFO) )
 
 # define E4C_FINALLY \
 	else if( e4c_frame_hook(_e4c_finalizing, NULL, _E4C_INFO) )
 
 # define E4C_THROW(_exception_type_, _message_) \
-	e4c_throw_exception( (_exception_type_).type, _E4C_INFO, \
-	e4c_true, _message_ )
+	e4c_throw_exception(&_exception_type_, _E4C_INFO, e4c_true, _message_ )
 
 # define E4C_WITH(_resource_, _dispose_) \
 	_E4C_FRAME_LOOP(_e4c_beginning) \
@@ -353,8 +352,7 @@
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_THROWF(_exception_type_, _format_, ...) \
 		e4c_throw_exception( \
-			(_exception_type_).type, _E4C_INFO, \
-			e4c_false, _format_, __VA_ARGS__ \
+			&_exception_type_, _E4C_INFO, e4c_false, _format_, __VA_ARGS__ \
 		)
 # endif
 
@@ -379,23 +377,17 @@
 	e4c_frame_repeat(_max_acquire_attempts_, _e4c_beginning, _E4C_INFO)
 
 # define _E4C_DECLARE_EXCEPTION(_name_) \
-	extern const e4c_exception _name_
+	extern const e4c_exception_type _name_
 
 # define _E4C_DEFINE_EXCEPTION(_name_, _message_, _super_) \
-	const e4c_exception _name_ = { \
+	const e4c_exception_type _name_ = { \
 		#_name_, \
 		_message_, \
 		&_super_, \
-		_E4C_FILE_INFO, \
-		_E4C_LINE_INFO, \
-		NULL, \
-		0, \
-		&_name_, \
-		NULL \
 	}
 
-# define _E4C_SIGNAL_MAPPING(_signal_number_, _exception_) \
-	{_signal_number_, &_exception_}
+# define _E4C_SIGNAL_MAPPING(_signal_number_, _exception_type_) \
+	{_signal_number_, &_exception_type_}
 
 # define _E4C_NULL_SIGNAL_MAPPING \
 	{_E4C_INVALID_SIGNAL, NULL}
@@ -423,7 +415,7 @@
 # endif
 
 /**
- * Introduces a block of code capable of handling a specific kind of exceptions
+ * Introduces a block of code capable of handling a specific type of exceptions
  *
  * @param   _exception_type_
  *          The type of exceptions to be handled
@@ -466,7 +458,7 @@
  * the comparison:
  *
  * @code
- * (exception->type == SignalException.type)
+ * (exception->type == &SignalException)
  * @endcode
  *
  * will yield @c false because the type of the thrown exception was not
@@ -481,9 +473,9 @@
  *    ...
  * }catch(RuntimeException){
  *    const e4c_exception * exception = e4c_get_exception();
- *    if( e4c_is_instance_of(exception, SignalException.type) ){
+ *    if( e4c_is_instance_of(exception, &SignalException) ){
  *        ...
- *    }else if(exception->type == NotEnoughMemoryException.type){
+ *    }else if(exception->type == &NotEnoughMemoryException){
  *        ...
  *    }
  * }
@@ -506,7 +498,7 @@
  * possible way to execute more than one @c catch block would be by
  * <code>#retry</code>ing the entire @c try block.
  *
- * @see     e4c_exception
+ * @see     e4c_exception_type
  * @see     e4c_get_exception
  */
 # ifndef E4C_NOKEYWORDS
@@ -642,8 +634,8 @@
  * @param   _exception_type_
  *          The type of exception to be thrown
  * @param   _message_
- *          The @em ad-hoc message describing the exception. If @c NULL, then
- *          the default message for the specified exception will be used
+ *          The @e ad-hoc message describing the exception. If @c NULL, then the
+ *          default message for the specified exception type will be used
  *
  * Creates a new instance of the specified type of exception and then throws it.
  * The provided message is copied into the thrown exception, so it can be freely
@@ -660,6 +652,7 @@
  *
  * @see     throwf
  * @see     rethrow
+ * @see     e4c_exception_type
  * @see     e4c_exception
  * @see     e4c_uncaught_handler
  * @see     e4c_get_exception
@@ -1283,9 +1276,9 @@
  *         // of the exception system (if the caller was aware, the exception
  *         // would have been simply propagated).
  *
- *         if(exception->type == #NullPointerException){
+ *         if(exception->type == &NotEnoughMemoryException){
  *             return(-3);
- *         }else if(exception->type == #NotEnoughMemoryException){
+ *         }else if( is_instance_of(&exception, &MyException) ){
  *             return(-2);
  *         }
  *         return(-1);
@@ -1716,7 +1709,7 @@
  * exception has to be @e defined somewhere else). This macro is intended to be
  * used inside header files.
  *
- * @see     e4c_exception
+ * @see     e4c_exception_type
  * @see     E4C_DEFINE_EXCEPTION
  */
 # define E4C_DECLARE_EXCEPTION(_name_) \
@@ -1735,7 +1728,7 @@
  *
  * This macro allocates a new, @c const exception.
  *
- * @see     e4c_exception
+ * @see     e4c_exception_type
  * @see     RuntimeException
  * @see     E4C_DECLARE_EXCEPTION
  */
@@ -1748,8 +1741,8 @@
  *
  * @param   _signal_number_
  *          Numeric value of the signal to be converted
- * @param   _exception_
- *          Exception representing the signal
+ * @param   _exception_type_
+ *          Exception type representing the signal
  *
  * This macro comes in handy for initializing arrays of @c #e4c_signal_mapping.
  *
@@ -1758,9 +1751,9 @@
  * @see     e4c_context_get_signal_mappings
  * @see     E4C_DECLARE_EXCEPTION
  */
-# define E4C_SIGNAL_MAPPING(_signal_number_, _exception_) \
+# define E4C_SIGNAL_MAPPING(_signal_number_, _exception_type_) \
 	\
-	_E4C_SIGNAL_MAPPING(_signal_number_, _exception_)
+	_E4C_SIGNAL_MAPPING(_signal_number_, _exception_type_)
 
 /**
  * Represents a null signal mapping literal
@@ -1780,13 +1773,7 @@
 
 
 /**
- * Represents an exception in the exception handling system
- *
- * Exceptions are a means of breaking out of the normal flow of control of a
- * code block in order to handle errors or other exceptional conditions. An
- * exception should be thrown at the point where the error is detected; it may
- * be handled by the surrounding code block or by any code block that directly
- * or indirectly invoked the code block where the error occurred.
+ * Represents an exception type in the exception handling system
  *
  * The types of the exceptions a program will use are defined through the macro
  * @c #E4C_DEFINE_EXCEPTION:
@@ -1798,21 +1785,7 @@
  * @endcode
  *
  * When defining types of exceptions, they are given a name, a default message
- * and a supertype to organize them into a @e pseudo-hierarchy. These can be
- * considered as the @e compile-time attributes of a exception.
- *
- * However, exceptions provide further information regarding the exceptional
- * situation at @e run-time, such as:
- *
- * @li An @em ad-hoc message (as opposed to the @e default one)
- * @li The exact point of the program where it was thrown (source code file,
- *          line and function name, if available)
- * @li The value of the standard error code @c errno at the time the exception
- *          was thrown
- * @li The @e cause of the exception, which is the previous exception (if any),
- *          when the exception was thrown from a @c catch or @c finally block
- * @li The specific, @e run-time type of the exception, convenient when handling
- *          an abstract type of exceptions in a @c catch block
+ * and a supertype to organize them into a @e pseudo-hierarchy.
  *
  * Exceptions are usually defined as global objects. There is a set of
  * predefined exceptions built into the framework, and @c #RuntimeException is
@@ -1864,18 +1837,58 @@
  *     </ul>
  * </ul>
  *
+ * @see     e4c_exception
+ * @see     E4C_DEFINE_EXCEPTION
+ * @see     E4C_DECLARE_EXCEPTION
+ * @see     throw
+ * @see     catch
+ */
+typedef struct _e4c_exception_type e4c_exception_type;
+struct _e4c_exception_type{
+
+	/** The name of this exception type */
+	const char *					name;
+
+	/** The default message of this exception type */
+	const char						message[E4C_EXCEPTION_MESSAGE_SIZE];
+
+	/** The supertype of this exception type */
+	const e4c_exception_type *		super;
+};
+
+/**
+ * Represents an instance of an exception type
+ *
+ * Exceptions are a means of breaking out of the normal flow of control of a
+ * code block in order to handle errors or other exceptional conditions. An
+ * exception should be thrown at the point where the error is detected; it may
+ * be handled by the surrounding code block or by any code block that directly
+ * or indirectly invoked the code block where the error occurred.
+ *
+ * Exceptions provide information regarding the exceptional situation, such as:
+ *
+ * @li The exception @e name and @ type
+ * @li An @e ad-hoc message (as opposed to the @e default one)
+ * @li The exact point of the program where it was thrown (source code file,
+ *          line and function name, if available)
+ * @li The value of the standard error code @c errno at the time the exception
+ *          was thrown
+ * @li The @e cause of the exception, which is the previous exception (if any),
+ *          when the exception was thrown from a @c catch or @c finally block
+ * @li The specific, @e run-time type of the exception, convenient when handling
+ *          an abstract type of exceptions in a @c catch block
+ *
  * @note
  * @b Any exception can be caught by a block introduced by
  * @c #catch( @c #RuntimeException ), <strong>except for
  * @c #AssertionException</strong>.
  *
- * @see     E4C_DEFINE_EXCEPTION
- * @see     E4C_DECLARE_EXCEPTION
- * @see     RuntimeException
- * @see     AssertionException
+ * @see     e4c_exception_type
  * @see     throw
  * @see     catch
  * @see     e4c_get_exception
+ * @see     RuntimeException
+ * @see     AssertionException
  */
 typedef struct _e4c_exception e4c_exception;
 struct _e4c_exception{
@@ -1885,9 +1898,6 @@ struct _e4c_exception{
 
 	/** The message of this exception */
 	char							message[E4C_EXCEPTION_MESSAGE_SIZE];
-
-	/** The supertype of this exception */
-	const e4c_exception *			super;
 
 	/** The path of the source code file from which the exception was thrown */
 	const char *					file;
@@ -1901,8 +1911,8 @@ struct _e4c_exception{
 	/** The value of errno at the time the exception was thrown */
 	int								error_number;
 
-	/** The class of this exception */
-	const e4c_exception *			type;
+	/** The type of this exception */
+	const e4c_exception_type *		type;
 
 	/** The cause of this exception */
 	const e4c_exception *			cause;
@@ -1985,10 +1995,10 @@ typedef struct _e4c_signal_mapping e4c_signal_mapping;
 struct _e4c_signal_mapping{
 
 	/** The signal to be converted */
-	int								signal_number;
+	int									signal_number;
 
 	/** The exception representing the signal */
-	const e4c_exception * const		exception;
+	const e4c_exception_type * const	exception_type;
 
 };
 
@@ -2769,12 +2779,12 @@ e4c_library_version(
 );
 
 /**
- * Returns whether an exception is of a given exception type
+ * Returns whether an exception instance is of a given type
  *
  * @param   instance
  *          The thrown exception
- * @param   type
- *          A previously defined type of exception
+ * @param   exception_type
+ *          A previously defined type of exceptions
  * @return  Whether the specified exception is an instance of the given type
  *
  * @c e4c_is_instance_of can be used to determine if a thrown exception
@@ -2803,13 +2813,14 @@ e4c_library_version(
  * @throws  NullPointerException
  *          If either @c instance or @c type is @c NULL
  * @see     e4c_exception
+ * @see     e4c_exception_type
  * @see     e4c_get_exception
  */
 extern
 e4c_bool
 e4c_is_instance_of(
 	const e4c_exception *		instance,
-	const e4c_exception *		type
+	const e4c_exception_type *	exception_type
 );
 
 /**
@@ -2837,22 +2848,22 @@ e4c_print_exception(
 );
 
 /**
- * Prints an ASCII graph representing an exception's type hierarchy
+ * Prints an ASCII graph representing an exception type's hierarchy
  *
- * @param   exception
- *          The uncaught exception
+ * @param   exception_type
+ *          An exception type
  *
  * This is a convenience function for showing an ASCII graph representing an
- * exception's type hierarchy through the standard error output.
+ * exception type's hierarchy through the standard error output.
  *
- * @pre     @c exception cannot be @c NULL
+ * @pre     @c exception_type cannot be @c NULL
  * @throws  NullPointerException
- *          If @c exception is @c NULL
+ *          If @c exception_type is @c NULL
  */
 extern
 void
 e4c_print_exception_hierarchy(
-	const e4c_exception *		exception
+	const e4c_exception_type *	exception_type
 );
 
 /** @} */
@@ -2881,7 +2892,7 @@ extern
 e4c_bool
 e4c_frame_hook(
 	enum _e4c_frame_stage		stage,
-	const e4c_exception *		exception_type,
+	const e4c_exception_type *	exception_type,
 	const char *				file,
 	int							line,
 	const char *				function
@@ -2900,7 +2911,7 @@ e4c_frame_repeat(
 extern
 void
 e4c_throw_exception(
-	const e4c_exception *		exception,
+	const e4c_exception_type *	exception_type,
 	const char *				file,
 	int							line,
 	const char *				function,

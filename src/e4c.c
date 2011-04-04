@@ -4,7 +4,7 @@
  *
  * exceptions4c source code file
  *
- * @version		2.5
+ * @version		2.6
  * @author		Copyright (c) 2011 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -50,6 +50,8 @@
 
 # define CONTEXT_IS_READY				(E4C_CONTEXT != NULL)
 
+# define IS_UNCATCHABLE(exception)		(exception.type == NULL)
+
 # define INITIALIZE_ONCE				if(!is_initialized) _e4c_initialize()
 
 # if defined(HAVE_C99_SNPRINTF) || defined(HAVE_SNPRINTF)
@@ -58,17 +60,17 @@
 #	define VERBATIM_COPY(dst, src) (void)sprintf(dst, "%.*s", (int)E4C_EXCEPTION_MESSAGE_SIZE - 1, src);
 # endif
 
-# define EXCEPTION_LITERAL(_name_, _message_, _super_, _file_, _line_, _function_, _error_number_, _type_, _cause_) \
-	{ _name_, _message_, _super_, _file_, _line_, _function_, _error_number_, _type_, _cause_ }
+# define EXCEPTION_LITERAL(_name_, _message_, _file_, _line_, _function_, _error_number_, _type_, _cause_) \
+	{ _name_, _message_, _file_, _line_, _function_, _error_number_, _type_, _cause_ }
 
 # define NULL_EXCEPTION_LITERAL \
-	EXCEPTION_LITERAL(NULL, { '\0' }, NULL, NULL, 0, NULL, 0, NULL, NULL)
+	EXCEPTION_LITERAL(NULL, { '\0' }, NULL, 0, NULL, 0, NULL, NULL)
 
 # define EXCEPTION_TYPE_LITERAL(_name_, _message_, _super_) \
 	EXCEPTION_LITERAL(#_name_, _message_, _super_, _E4C_FILE_INFO, _E4C_LINE_INFO, NULL, 0, &_name_, NULL)
 
 # define DEFINE_RAW_EXCEPTION(_name_, _message_, _super_) \
-	const e4c_exception _name_ = EXCEPTION_TYPE_LITERAL(_name_, _message_, _super_)
+	const e4c_exception_type _name_ = { #_name_, _message_, _super_ };
 
 # define DESC_MALLOC_FRAME			"Could not create a new exception frame."
 # define DESC_MALLOC_CONTEXT		"Could not create a new exception context."
@@ -407,7 +409,7 @@ static E4C_INLINE
 void
 _e4c_initialize_exception(
 	e4c_exception *				exception,
-	const e4c_exception *		exception_type,
+	const e4c_exception_type *	exception_type,
 	const char *				message,
 	const char *				file,
 	int							line,
@@ -433,7 +435,7 @@ _e4c_delete_frame(
 static E4C_INLINE
 void
 _e4c_fatal_error(
-	const e4c_exception *		exception_type,
+	const e4c_exception_type *	exception_type,
 	const char *				message,
 	const char *				file,
 	int							line,
@@ -445,8 +447,8 @@ _e4c_fatal_error(
 static E4C_INLINE
 e4c_bool
 _e4c_extends(
-	const e4c_exception *		child,
-	const e4c_exception *		parent
+	const e4c_exception_type *	child,
+	const e4c_exception_type *	parent
 );
 
 static
@@ -529,32 +531,26 @@ e4c_bool e4c_context_is_ready(void){
 	return(CONTEXT_IS_READY);
 }
 
-e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception * type){
+e4c_bool e4c_is_instance_of(const e4c_exception * instance, const e4c_exception_type * exception_type){
 
-	if(instance == NULL || type == NULL){
-		if(instance != type){
-			if(instance == NULL){
-				/* the instance is NULL: maybe no exception was thrown */
-				e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception instance.");
-			}
-			/* the type is NULL: this is actually strange */
-			e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception type.");
-		}
-		/* both of the parameters are NULL: now this would be really weird */
-		e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception instance and type.");
+	if(instance == NULL){
+		/* the instance is NULL: maybe no exception was thrown */
+		e4c_throw_exception(&NullPointerException, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception instance.");
+	}else if(exception_type == NULL){
+		/* the type is NULL */
+		e4c_throw_exception(&NullPointerException, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_is_instance_of", e4c_true, "Null exception type.");
 	}
 
-	if(instance->type == type){
+	if(instance->type == exception_type){
 		return(e4c_true);
 	}
 
-	if(instance->super == NULL || instance->super == instance){
-		/* if instance is an actual thrown exception, then the instance will
-		never be equal to an instance's supertpe, but just in case... */
+	if(instance->type->super == NULL || instance->type->super == instance->type){
+		/* if this exception has no other super type... */
 		return(e4c_false);
 	}
 
-	return( _e4c_extends(instance->super, type) );
+	return( _e4c_extends(instance->type->super, exception_type) );
 }
 
 e4c_status e4c_get_status(void){
@@ -625,7 +621,7 @@ _E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line, cons
 	return( &(new_frame->address) );
 }
 
-e4c_bool e4c_frame_hook(e4c_stage stage, const e4c_exception * exception_type, const char * file, int line, const char * function){
+e4c_bool e4c_frame_hook(e4c_stage stage, const e4c_exception_type * exception_type, const char * file, int line, const char * function){
 
 	e4c_context *	context;
 	e4c_frame *		frame;
@@ -683,7 +679,7 @@ e4c_bool e4c_frame_step(void){
 	frame->stage++;
 
 	/* simple optimization */
-	if( frame->stage == _e4c_catching && (!frame->uncaught || frame->thrown_exception.super == NULL) ){
+	if(  frame->stage == _e4c_catching  &&  ( !frame->uncaught || IS_UNCATCHABLE(frame->thrown_exception) )  ){
 		/* if no exception was thrown, or if the thrown exception cannot be
 			caught, we don't need to go through the "catching" stage */
 		frame->stage++;
@@ -749,7 +745,7 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 	}
 
 	/* check if "uncatchable" exception */
-	if(frame->uncaught && frame->thrown_exception.super == NULL){
+	if( frame->uncaught && IS_UNCATCHABLE(frame->thrown_exception) ){
 		return;
 	}
 
@@ -780,7 +776,7 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 	_E4C_LONGJMP(frame->address);
 }
 
-void e4c_throw_exception(const e4c_exception * exception, const char * file, int line, const char * function, e4c_bool verbatim, const char * message, ...){
+void e4c_throw_exception(const e4c_exception_type * exception_type, const char * file, int line, const char * function, e4c_bool verbatim, const char * message, ...){
 
 # if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
 	/* we will only format the message if we can rely on vsnprintf */
@@ -819,9 +815,9 @@ void e4c_throw_exception(const e4c_exception * exception, const char * file, int
 		*cause = frame->thrown_exception;
 	}
 
-	/* convert NULL exceptions to NPE */
-	if(exception == NULL){
-		exception = &NullPointerException;
+	/* convert NULL exception type to NPE */
+	if(exception_type == NULL){
+		exception_type = &NullPointerException;
 	}
 
 	if(!verbatim){
@@ -839,7 +835,7 @@ void e4c_throw_exception(const e4c_exception * exception, const char * file, int
 	}
 
 	/* "instantiate" the specified exception */
-	_e4c_initialize_exception(&new_exception, exception, message, file, line, function, error_number, cause);
+	_e4c_initialize_exception(&new_exception, exception_type, message, file, line, function, error_number, cause);
 
 	_e4c_propagate(context, &new_exception);
 }
@@ -851,7 +847,7 @@ void e4c_print_exception(const e4c_exception * exception){
 # endif
 
 	if(exception == NULL){
-		e4c_throw_exception(NullPointerException.type, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_print_exception", e4c_true, "Null exception.");
+		e4c_throw_exception(&NullPointerException, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_print_exception", e4c_true, "Null exception.");
 	}
 
 # ifndef NDEBUG
@@ -881,8 +877,8 @@ void e4c_print_exception(const e4c_exception * exception){
 
 	fprintf(stderr, "The value of errno was %d.\n\n", exception->error_number);
 
-	if(exception->super != NULL){
-		e4c_print_exception_hierarchy(exception);
+	if(exception->type != NULL){
+		e4c_print_exception_hierarchy(exception->type);
 	}
 
 # else
@@ -893,25 +889,23 @@ void e4c_print_exception(const e4c_exception * exception){
 
 }
 
-void e4c_print_exception_hierarchy(const e4c_exception * exception){
+void e4c_print_exception_hierarchy(const e4c_exception_type * exception_type){
 
-	const char *			separator	= "________________________________________________________________";
-	int						deep		= 0;
-	const e4c_exception *	super;
+	const char *	separator	= "________________________________________________________________";
+	int				deep		= 0;
 
-	/* assert: exception != NULL */
-	/* assert: exception->super != NULL */
-
-	fprintf(stderr, "Exception hierarchy\n%s\n\n   %s\n", separator, exception->name);
-
-	super = exception->super;
-
-	while(super != NULL && exception->name != super->name){
-		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", super->name);
-		deep++;
-		exception	= super;
-		super		= (exception->super == NULL ? NULL : exception->super);
+	if(exception_type == NULL){
+		e4c_throw_exception(&NullPointerException, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_print_exception_hierarchy", e4c_true, "Null exception type.");
 	}
+
+	fprintf(stderr, "Exception hierarchy\n%s\n\n   %s\n", separator, exception_type->name);
+
+	while(exception_type->super != NULL && exception_type->super != exception_type){
+		exception_type = exception_type->super;
+		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", exception_type->name);
+		deep++;
+	}
+
 	fprintf(stderr, "%s\n", separator);
 }
 
@@ -1116,7 +1110,7 @@ void e4c_context_end(void){
 
 }
 
-static E4C_INLINE void _e4c_fatal_error(const e4c_exception * exception_type, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
+static E4C_INLINE void _e4c_fatal_error(const e4c_exception_type * exception_type, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
 
 	e4c_exception exception;
 
@@ -1163,8 +1157,9 @@ static E4C_INLINE void _e4c_delete_frame(e4c_frame * frame){
 	free(frame);
 }
 
-static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, const e4c_exception * exception_type, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
+static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, const e4c_exception_type * exception_type, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
 
+	/* assert: exception != NULL */
 	/* assert: exception_type != NULL */
 
 	if(message == NULL){
@@ -1174,12 +1169,11 @@ static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, cons
 	VERBATIM_COPY(exception->message, message);
 
 	exception->name			= exception_type->name;
-	exception->super		= exception_type->super;
 	exception->file			= file;
 	exception->line			= line;
 	exception->function		= function;
 	exception->error_number	= error_number;
-	exception->type			= exception_type->type;
+	exception->type			= exception_type;
 	exception->cause		= cause;
 }
 
@@ -1284,7 +1278,7 @@ static void e4c_handle_signal(int signal_number){
 					INTERNAL_ERROR(ExceptionSystemFatalError, DESC_SIGERR_HANDLE, "e4c_handle_signal");
 				}
 				/* throw the appropriate exception to the current context */
-				_e4c_initialize_exception(&new_exception, mapping->exception, NULL, signal_name, signal_number, "e4c_handle_signal", errno, NULL);
+				_e4c_initialize_exception(&new_exception, mapping->exception_type, NULL, signal_name, signal_number, "e4c_handle_signal", errno, NULL);
 				_e4c_propagate(context, &new_exception);
 			}
 			mapping++;
@@ -1329,7 +1323,7 @@ static void _e4c_set_signal_handlers(e4c_context * context, const e4c_signal_map
 		signal_handler	handler;
 		const char *	error_message;
 
-		if(next_mapping->exception != NULL){
+		if(next_mapping->exception_type != NULL){
 			/* map this signal to this exception */
 			handler			= e4c_handle_signal;
 			error_message	= DESC_SIGERR_HANDLE;
@@ -1349,7 +1343,7 @@ static void _e4c_set_signal_handlers(e4c_context * context, const e4c_signal_map
 
 }
 
-static E4C_INLINE e4c_bool _e4c_extends(const e4c_exception * child, const e4c_exception * parent){
+static E4C_INLINE e4c_bool _e4c_extends(const e4c_exception_type * child, const e4c_exception_type * parent){
 
 	/* assert: child != NULL */
 	/* assert: parent != NULL */
