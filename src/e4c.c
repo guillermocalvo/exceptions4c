@@ -274,29 +274,29 @@ typedef enum _e4c_frame_stage e4c_stage;
 
 typedef struct _e4c_frame e4c_frame;
 struct _e4c_frame{
-	e4c_frame *							previous;
-	volatile e4c_stage					stage;
-	volatile e4c_bool					thrown;
-	volatile e4c_bool					uncaught;
-	volatile e4c_exception				thrown_exception;
-	volatile int						retry_attempts;
-	volatile int						reacquire_attempts;
-	_E4C_JMP_BUF						address;
+	e4c_frame *					previous;
+	e4c_stage					stage;
+	e4c_bool					thrown;
+	e4c_bool					uncaught;
+	e4c_exception				thrown_exception;
+	int							retry_attempts;
+	int							reacquire_attempts;
+	_E4C_JMP_BUF				address;
 };
 
 typedef struct _e4c_context e4c_context;
 struct _e4c_context{
-	e4c_frame *							current_frame;
-	const e4c_signal_mapping *			signal_mappings;
-	e4c_uncaught_handler				uncaught_handler;
+	e4c_frame *					current_frame;
+	const e4c_signal_mapping *	signal_mappings;
+	e4c_uncaught_handler		uncaught_handler;
 };
 
 # ifdef E4C_THREADSAFE
 typedef struct _e4c_environment e4c_environment;
 struct _e4c_environment{
-	THREAD_TYPE							self;
-	e4c_environment *					next;
-	e4c_context							context;
+	THREAD_TYPE					self;
+	e4c_environment *			next;
+	e4c_context					context;
 };
 # endif
 
@@ -901,6 +901,30 @@ void e4c_print_exception(const e4c_exception * exception){
 
 }
 
+# ifndef NDEBUG
+static E4C_INLINE void _e4c_print_exception_hierarchy(const e4c_exception * exception){
+
+	const char *			separator	= "________________________________________________________________";
+	int						deep		= 0;
+	const e4c_exception *	super;
+
+	/* assert: exception != NULL */
+	/* assert: exception->super != NULL */
+
+	fprintf(stderr, "Exception hierarchy\n%s\n\n   %s\n", separator, exception->name);
+
+	super = exception->super;
+
+	while(super != NULL && exception->name != super->name){
+		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", super->name);
+		deep++;
+		exception	= super;
+		super		= (exception->super == NULL ? NULL : exception->super);
+	}
+	fprintf(stderr, "%s\n", separator);
+}
+# endif
+
 void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings){
 
 	e4c_context * context;
@@ -1101,32 +1125,6 @@ void e4c_context_end(void){
 # endif
 
 }
-
-
-
-# ifndef NDEBUG
-static E4C_INLINE void _e4c_print_exception_hierarchy(const e4c_exception * exception){
-
-	const char *			separator	= "________________________________________________________________";
-	int						deep		= 0;
-	const e4c_exception *	super;
-
-	/* assert: exception != NULL */
-	/* assert: exception->super != NULL */
-
-	fprintf(stderr, "Exception hierarchy\n%s\n\n   %s\n", separator, exception->name);
-
-	super = exception->super;
-
-	while(super != NULL && exception->name != super->name){
-		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", super->name);
-		deep++;
-		exception	= super;
-		super		= (exception->super == NULL ? NULL : exception->super);
-	}
-	fprintf(stderr, "%s\n", separator);
-}
-# endif
 
 static E4C_INLINE void _e4c_fatal_error(const e4c_exception * exception_type, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
 
