@@ -10,11 +10,11 @@
 # define ERROR_WHATEVER			(void *)54321
 # define OUTPUT_WHATEVER		(void *)54321
 
-# define SEVERITY_CRITICAL		e4c_true
-# define SEVERITY_NOT_CRITICAL	e4c_false
+# define SEVERITY_CRITICAL		E4C_TRUE
+# define SEVERITY_NOT_CRITICAL	E4C_FALSE
 
-# define TYPE_REQUIREMENT		e4c_true
-# define TYPE_UNIT_TEST			e4c_false
+# define TYPE_REQUIREMENT		E4C_TRUE
+# define TYPE_UNIT_TEST			E4C_FALSE
 
 # define STATUS_PASSED			0
 # define STATUS_WARNING			1
@@ -173,12 +173,12 @@ struct statistics_struts{
 
 struct unit_test_struct{
 
-	e4c_bool				is_requirement;
+	E4C_BOOL				is_requirement;
 	const char *			code;
 	const char *			title;
 	const char *			description1;
 	const char *			description2;
-	e4c_bool				is_critical;
+	E4C_BOOL				is_critical;
 	const char *			at_failure;
 	test_function			function;
 	int						expected_exit_code;
@@ -187,15 +187,15 @@ struct unit_test_struct{
 	int						found_exit_code;
 	char					found_output[640];
 	char					found_error[1024 * 2];
-	e4c_bool				unexpected_exit_code;
-	e4c_bool				unexpected_output;
-	e4c_bool				unexpected_error;
+	E4C_BOOL				unexpected_exit_code;
+	E4C_BOOL				unexpected_output;
+	E4C_BOOL				unexpected_error;
 	int						status;
 };
 
 struct test_suite_struct{
 
-	e4c_bool				is_requirement;
+	E4C_BOOL				is_requirement;
 	const char *			title;
 	const char *			description1;
 	const char *			description2;

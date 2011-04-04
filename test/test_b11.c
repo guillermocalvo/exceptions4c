@@ -12,18 +12,18 @@ DEFINE_TEST(
 	NULL
 ){
 
-	int is_executed = e4c_false;
+	int is_executed = E4C_FALSE;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(e4c_true, e4c_print_exception);
+	e4c_context_begin(E4C_TRUE, e4c_print_exception);
 
 	ECHO(("before_TRY_block\n"));
 
 	E4C_TRY{
 		ECHO(("inside_TRY_block\n"));
 	/* } */ E4C_USE{
-		is_executed = e4c_true;
+		is_executed = E4C_TRUE;
 		ECHO(("inside_USE_block\n"));
 	}
 
@@ -44,7 +44,7 @@ DEFINE_TEST(
 
 	ECHO(("after_CONTEXT_END\n"));
 
-	if(is_executed == e4c_true){
+	if(is_executed == E4C_TRUE){
 		ECHO(("USE_block_was_NOT_ignored\n"));
 	}else{
 		ECHO(("USE_block_was_ignored\n"));

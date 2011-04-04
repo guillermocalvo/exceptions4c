@@ -10,7 +10,7 @@ static void * e4c_acquire_buffer(size_t bytes){
 	return(buffer);
 }
 
-static void e4c_dispose_buffer(void * buffer, e4c_bool failed){
+static void e4c_dispose_buffer(void * buffer, E4C_BOOL failed){
 
 	if(failed){
 
@@ -37,7 +37,7 @@ DEFINE_TEST(
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(e4c_true, e4c_print_exception);
+	e4c_context_begin(E4C_TRUE, e4c_print_exception);
 
 	ECHO(("before_CONTEXT_END\n"));
 

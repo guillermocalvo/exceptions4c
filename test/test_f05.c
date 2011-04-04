@@ -12,12 +12,12 @@ DEFINE_TEST(
 	NULL
 ){
 
-	e4c_bool caught1 = e4c_false;
-	e4c_bool caught2 = e4c_false;
+	E4C_BOOL caught1 = E4C_FALSE;
+	E4C_BOOL caught2 = E4C_FALSE;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(e4c_true, e4c_print_exception);
+	e4c_context_begin(E4C_TRUE, e4c_print_exception);
 
 	ECHO(("before_TRY_block\n"));
 
@@ -29,13 +29,13 @@ DEFINE_TEST(
 
 	}E4C_CATCH(TamedException){
 
-		caught1 = e4c_true;
+		caught1 = E4C_TRUE;
 
 		ECHO(("inside_FIRST_CATCH_block\n"));
 
 	}E4C_CATCH(TamedException){
 
-		caught2 = e4c_true;
+		caught2 = E4C_TRUE;
 
 		ECHO(("inside_SECOND_CATCH_block\n"));
 

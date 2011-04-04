@@ -26,7 +26,7 @@ DEFINE_TEST(
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(e4c_false, e4c_print_exception);
+	e4c_context_begin(E4C_FALSE, e4c_print_exception);
 
 	/* some smartypants compilers might need to be fooled */
 	/* pointer = NULL; */
