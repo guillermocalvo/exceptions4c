@@ -52,7 +52,7 @@
 # define _E4C_H_
 
 
-# define _E4C_VERSION(version)			version(2, 5, 5)
+# define _E4C_VERSION(version)			version(2, 5, 6)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -2833,6 +2833,25 @@ e4c_is_instance_of(
 extern
 void
 e4c_print_exception(
+	const e4c_exception *		exception
+);
+
+/**
+ * Prints an ASCII graph representing an exception's type hierarchy
+ *
+ * @param   exception
+ *          The uncaught exception
+ *
+ * This is a convenience function for showing an ASCII graph representing an
+ * exception's type hierarchy through the standard error output.
+ *
+ * @pre     @c exception cannot be @c NULL
+ * @throws  NullPointerException
+ *          If @c exception is @c NULL
+ */
+extern
+void
+e4c_print_exception_hierarchy(
 	const e4c_exception *		exception
 );
 
