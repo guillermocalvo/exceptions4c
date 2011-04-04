@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define _E4C_VERSION(version)			version(2, 6, 0)
+# define _E4C_VERSION(version)			version(2, 6, 1)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -149,13 +149,13 @@
 # endif
 
 # if defined(__bool_true_false_are_defined) || defined(bool)
-#	define e4c_bool						bool
-#	define e4c_false					false
-#	define e4c_true						true
+#	define E4C_BOOL						bool
+#	define E4C_FALSE					false
+#	define E4C_TRUE						true
 # else
-#	define e4c_bool						int
-#	define e4c_false					0
-#	define e4c_true						1
+#	define E4C_BOOL						int
+#	define E4C_FALSE					0
+#	define E4C_TRUE						1
 # endif
 
 
@@ -216,7 +216,7 @@
 
 
 # if defined(HAVE_POSIX_SIGSETJMP) || defined(HAVE_SIGSETJMP)
-#	define _E4C_SETJMP(_address_)		sigsetjmp(_address_, e4c_true)
+#	define _E4C_SETJMP(_address_)		sigsetjmp(_address_, 1)
 #	define _E4C_LONGJMP(_address_)		siglongjmp(_address_, 1)
 #	define _E4C_JMP_BUF					sigjmp_buf
 # else
@@ -295,7 +295,7 @@
 	else if( e4c_frame_hook(_e4c_finalizing, NULL, _E4C_INFO) )
 
 # define E4C_THROW(_exception_type_, _message_) \
-	e4c_throw_exception(&_exception_type_, _E4C_INFO, e4c_true, _message_ )
+	e4c_throw_exception(&_exception_type_, _E4C_INFO, E4C_TRUE, _message_ )
 
 # define E4C_WITH(_resource_, _dispose_) \
 	_E4C_FRAME_LOOP(_e4c_beginning) \
@@ -313,30 +313,30 @@
 
 # define _E4C_REUSING_CONTEXT(_thrown_exception_) \
 	\
-	e4c_bool		_E4C_AUTO(BEGIN)	= !e4c_context_is_ready(); \
-	e4c_bool		_E4C_AUTO(DONE)		= e4c_false; \
+	E4C_BOOL		_E4C_AUTO(BEGIN)	= !e4c_context_is_ready(); \
+	E4C_BOOL		_E4C_AUTO(DONE)		= E4C_FALSE; \
 	e4c_exception	_E4C_AUTO(EXCEPTION); \
 	\
 	(_thrown_exception_) = NULL; \
 	\
 	if( _E4C_AUTO(BEGIN) ){ \
-		e4c_context_begin(e4c_false, NULL); \
+		e4c_context_begin(E4C_FALSE, NULL); \
 		E4C_TRY{ \
 			goto _E4C_AUTO(PAYLOAD); \
 			_E4C_AUTO(CLEANUP): \
-			_E4C_AUTO(DONE) = e4c_true; \
+			_E4C_AUTO(DONE) = E4C_TRUE; \
 		}E4C_CATCH(RuntimeException){ \
 			(_thrown_exception_)		= &_E4C_AUTO(EXCEPTION); \
 			_E4C_AUTO(EXCEPTION)		= *e4c_get_exception(); \
 			_E4C_AUTO(EXCEPTION).cause	= NULL; \
 		} \
 		e4c_context_end(); \
-		_E4C_AUTO(DONE)		= e4c_true; \
-		_E4C_AUTO(BEGIN)	= e4c_false; \
+		_E4C_AUTO(DONE)		= E4C_TRUE; \
+		_E4C_AUTO(BEGIN)	= E4C_FALSE; \
 	} \
 	\
 	_E4C_AUTO(PAYLOAD): \
-	for(; !_E4C_AUTO(DONE) || _E4C_AUTO(BEGIN); _E4C_AUTO(DONE) = e4c_true) \
+	for(; !_E4C_AUTO(DONE) || _E4C_AUTO(BEGIN); _E4C_AUTO(DONE) = E4C_TRUE) \
 		if( _E4C_AUTO(DONE) ){ \
 			goto _E4C_AUTO(CLEANUP); \
 		}else
@@ -352,21 +352,21 @@
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_THROWF(_exception_type_, _format_, ...) \
 		e4c_throw_exception( \
-			&_exception_type_, _E4C_INFO, e4c_false, _format_, __VA_ARGS__ \
+			&_exception_type_, _E4C_INFO, E4C_FALSE, _format_, __VA_ARGS__ \
 		)
 # endif
 
 # define E4C_RETHROW(_message_) \
 	e4c_throw_exception( \
 		( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
-		_E4C_INFO, e4c_true, _message_ \
+		_E4C_INFO, E4C_TRUE, _message_ \
 	)
 
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_RETHROWF(_format_, ...) \
 		e4c_throw_exception( \
 			( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
-			_E4C_INFO, e4c_false, _format_, __VA_ARGS__ \
+			_E4C_INFO, E4C_FALSE, _format_, __VA_ARGS__ \
 		)
 # endif
 
@@ -1530,12 +1530,12 @@
  * @code
  *
  * // block 1
- * e4c_context_begin (e4c_true, NULL);
+ * e4c_context_begin (E4C_TRUE, NULL);
  * // ...
  * e4c_context_end();
  *
  * // block 2
- * e4c_using_context(e4c_true, NULL){
+ * e4c_using_context(E4C_TRUE, NULL){
  *     // ...
  * }
  * @endcode
@@ -2538,7 +2538,7 @@ E4C_DECLARE_EXCEPTION(ProgramSignal2Exception);
  * @see     e4c_reusing_context
  */
 extern
-e4c_bool
+E4C_BOOL
 e4c_context_is_ready(
 	void
 );
@@ -2592,7 +2592,7 @@ e4c_context_is_ready(
 extern
 void
 e4c_context_begin(
-	e4c_bool					handle_signals,
+	E4C_BOOL					handle_signals,
 	e4c_uncaught_handler		uncaught_handler
 );
 
@@ -2817,7 +2817,7 @@ e4c_library_version(
  * @see     e4c_get_exception
  */
 extern
-e4c_bool
+E4C_BOOL
 e4c_is_instance_of(
 	const e4c_exception *		instance,
 	const e4c_exception_type *	exception_type
@@ -2883,13 +2883,13 @@ e4c_frame_init(
 );
 
 extern
-e4c_bool
+E4C_BOOL
 e4c_frame_step(
 	void
 );
 
 extern
-e4c_bool
+E4C_BOOL
 e4c_frame_hook(
 	enum _e4c_frame_stage		stage,
 	const e4c_exception_type *	exception_type,
@@ -2915,7 +2915,7 @@ e4c_throw_exception(
 	const char *				file,
 	int							line,
 	const char *				function,
-	e4c_bool					verbatim,
+	E4C_BOOL					verbatim,
 	const char *				message,
 	...
 )
