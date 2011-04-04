@@ -488,16 +488,6 @@ e4c_at_exit(
 	void
 );
 
-# ifndef NDEBUG
-
-static E4C_INLINE
-void
-_e4c_print_exception_hierarchy(
-	const e4c_exception *		exception
-);
-
-# endif
-
 # ifdef E4C_THREADSAFE
 
 static
@@ -892,7 +882,7 @@ void e4c_print_exception(const e4c_exception * exception){
 	fprintf(stderr, "The value of errno was %d.\n\n", exception->error_number);
 
 	if(exception->super != NULL){
-		_e4c_print_exception_hierarchy(exception);
+		e4c_print_exception_hierarchy(exception);
 	}
 
 # else
@@ -903,8 +893,7 @@ void e4c_print_exception(const e4c_exception * exception){
 
 }
 
-# ifndef NDEBUG
-static E4C_INLINE void _e4c_print_exception_hierarchy(const e4c_exception * exception){
+void e4c_print_exception_hierarchy(const e4c_exception * exception){
 
 	const char *			separator	= "________________________________________________________________";
 	int						deep		= 0;
@@ -925,7 +914,6 @@ static E4C_INLINE void _e4c_print_exception_hierarchy(const e4c_exception * exce
 	}
 	fprintf(stderr, "%s\n", separator);
 }
-# endif
 
 void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings){
 
