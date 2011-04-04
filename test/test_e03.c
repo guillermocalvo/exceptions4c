@@ -43,7 +43,7 @@ DEFINE_TEST_LONG_DESCRIPTION(
 
 		ECHO(("before_RETHROW\n"));
 
-		E4C_THROW(*e4c_get_exception(), "Nobody will catch me this time.");
+		E4C_RETHROW("Nobody will catch me this time.");
 
 		ECHO(("after_RETHROW\n"));
 
