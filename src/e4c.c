@@ -304,20 +304,48 @@ struct _e4c_environment{
 
 
 
-static volatile	E4C_BOOL	fatal_error_flag	= E4C_FALSE;
-static E4C_BOOL				is_initialized		= E4C_FALSE;
 
-MUTEX_DEFINE(is_initialized_mutex)
-MUTEX_DEFINE(environment_collection_mutex)
+/** flag to signal a critical error in the exception system */
+static volatile
+E4C_BOOL
+fatal_error_flag = E4C_FALSE;
+
+/** flag to determine if the exception system is initialized */
+static volatile
+E4C_BOOL
+is_initialized = E4C_FALSE;
 
 # ifdef E4C_THREADSAFE
-	static e4c_environment * environment_collection = NULL;
+
+/** collection of environments (one per thread) */
+static
+e4c_environment *
+environment_collection = NULL;
+
+/** mutex to control access to global variable is_initialized */
+MUTEX_DEFINE(is_initialized_mutex)
+
+/** mutex to control access to global variable environment_collection */
+MUTEX_DEFINE(environment_collection_mutex)
+
 # else
-	static e4c_context mainContext;
-	static e4c_context * current_context = NULL;
+
+/** main exception context of the program */
+static
+e4c_context
+main_context = {NULL, NULL, NULL};
+
+/** pointer to the current exception context */
+static
+e4c_context *
+current_context = NULL;
+
 # endif
 
-static const char * signal_name_UNKNOWN		= "{unknown signal}";
+/** symbolic signal names */
+static
+const char *
+signal_name_UNKNOWN = "{unknown signal}";
 DEFINE_SIGNAL_NAME(SIGABRT);
 DEFINE_SIGNAL_NAME(SIGFPE);
 DEFINE_SIGNAL_NAME(SIGILL);
@@ -337,6 +365,7 @@ DEFINE_SIGNAL_NAME_SIGBREAK
 DEFINE_SIGNAL_NAME_SIGUSR1
 DEFINE_SIGNAL_NAME_SIGUSR2
 
+/** default signal mapping */
 static const e4c_signal_mapping e4c_default_signal_mappings_array[] = {
 	E4C_SIGNAL_MAPPING(SIGABRT,		AbortException),
 	E4C_SIGNAL_MAPPING(SIGFPE,		ArithmeticException),
@@ -359,6 +388,7 @@ static const e4c_signal_mapping e4c_default_signal_mappings_array[] = {
 	E4C_NULL_SIGNAL_MAPPING
 };
 
+/** pointer to the default signal mapping */
 const e4c_signal_mapping * e4c_default_signal_mappings = &e4c_default_signal_mappings_array[0];
 
 static
@@ -1008,17 +1038,15 @@ void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_ha
 
 	INITIALIZE_ONCE;
 
-	/* get the current context */
-	context = current_context;
-
 	/* check if e4c_context_begin was called twice for this program */
 	/* this can also happen when the program uses threads but E4C_THREADSAFE is not defined */
-	if(context != NULL){
+	if(current_context != NULL){
 		MISUSE_ERROR(ContextAlreadyBegun, "e4c_context_begin: " DESC_ALREADY_BEGUN, NULL, 0, NULL);
 	}
 
-	/* update local and global variable */
-	context = current_context = &mainContext;
+	/* update global and local variable */
+	current_context	= &main_context;
+	context			= current_context;
 
 	/* allocate memory for the new frame */
 	new_frame = malloc( sizeof(*new_frame) );
@@ -1087,11 +1115,14 @@ void e4c_context_end(void){
 		INTERNAL_ERROR(ExceptionSystemFatalError, DESC_TOO_MANY_FRAMES, "e4c_context_end");
 	}
 
+	/* reset all signal handlers */
+	_e4c_set_signal_handlers(context, NULL);
+
 	/* deallocate the current, top frame */
 	_e4c_delete_frame(frame);
 
-	/* reset all signal handlers */
-	_e4c_set_signal_handlers(context, NULL);
+	/* deactivate the top frame (for sanity) */
+	context->current_frame = NULL;
 
 # ifdef E4C_THREADSAFE
 
@@ -1101,10 +1132,7 @@ void e4c_context_end(void){
 # else
 
 	/* deactivate the current context */
-	current_context				= NULL;
-
-	/* deactivate the top frame (for sanity) */
-	mainContext.current_frame	= NULL;
+	current_context = NULL;
 
 # endif
 
