@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define _E4C_VERSION(version)			version(2, 6, 4)
+# define _E4C_VERSION(version)			version(2, 6, 5)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -1915,7 +1915,7 @@ struct _e4c_exception{
 	const e4c_exception_type *		type;
 
 	/** The cause of this exception */
-	const e4c_exception *			cause;
+	e4c_exception *					cause;
 };
 
 /**

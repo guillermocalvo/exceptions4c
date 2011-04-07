@@ -445,7 +445,7 @@ _e4c_initialize_exception(
 	int							line,
 	const char *				function,
 	int							error_number,
-	const e4c_exception *		cause
+	e4c_exception *				cause
 );
 
 static E4C_INLINE
@@ -484,7 +484,7 @@ static
 void
 _e4c_propagate(
 	e4c_context *				context,
-	const e4c_exception *		exception
+	e4c_exception *				exception
 )
 E4C_NORETURN;
 
@@ -552,7 +552,7 @@ _e4c_get_context(
 
 long e4c_library_version(void){
 
-	return(E4C_VERSION_NUMBER);
+	return( (long)E4C_VERSION_NUMBER );
 }
 
 E4C_BOOL e4c_context_is_ready(void){
@@ -734,7 +734,7 @@ E4C_BOOL e4c_frame_step(void){
 
 	/* if the current frame has an uncaught exception, then we will propagate it */
 	if(tmp.uncaught){
-		_e4c_propagate(context, (const e4c_exception *)&tmp.thrown_exception);
+		_e4c_propagate(context, &tmp.thrown_exception);
 	}
 	/* otherwise, we're free to go */
 
@@ -985,7 +985,7 @@ const e4c_exception * e4c_get_exception(void){
 	/* check if the current frame is NULL (very unlikely) */
 	PREVENT_FUNC(frame == NULL, DESC_INVALID_FRAME, "e4c_get_exception", NULL);
 
-	return(frame->thrown ? (const e4c_exception *)&frame->thrown_exception : NULL);
+	return(frame->thrown ? &frame->thrown_exception : NULL);
 }
 
 void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_handler){
@@ -1184,7 +1184,7 @@ static E4C_INLINE void _e4c_delete_frame(e4c_frame * frame){
 	free(frame);
 }
 
-static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, const e4c_exception_type * exception_type, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
+static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, const e4c_exception_type * exception_type, const char * message, const char * file, int line, const char * function, int error_number, e4c_exception * cause){
 
 	/* assert: exception != NULL */
 	/* assert: exception_type != NULL */
@@ -1213,7 +1213,7 @@ static void _e4c_at_uncaught_exception(e4c_context * context){
 	handler	= context->uncaught_handler;
 
 	if(handler != NULL){
-		handler( (const e4c_exception *)&context->current_frame->thrown_exception);
+		handler(&context->current_frame->thrown_exception);
 	}
 
 	e4c_context_end();
@@ -1221,7 +1221,7 @@ static void _e4c_at_uncaught_exception(e4c_context * context){
 	STOP_EXECUTION;
 }
 
-static void _e4c_propagate(e4c_context * context, const e4c_exception * exception){
+static void _e4c_propagate(e4c_context * context, e4c_exception * exception){
 
 	/* assert: exception != NULL */
 	/* assert: context != NULL */
