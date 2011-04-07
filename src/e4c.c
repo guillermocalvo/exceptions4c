@@ -121,10 +121,10 @@
 # endif
 
 # define MISUSE_ERROR(exception, message, file, line, function) \
-	_e4c_fatal_error(&exception, message, file, line, function, errno, NULL);
+	_e4c_fatal_error(&exception, message, file, line, function, errno);
 
 # define INTERNAL_ERROR(exception, message, function) \
-	_e4c_fatal_error(&exception, message, __FILE__, __LINE__, function, errno, NULL);
+	_e4c_fatal_error(&exception, message, __FILE__, __LINE__, function, errno);
 
 # ifndef NDEBUG
 #	define PREVENT_FUNC(condition, message, function, unreachable_return_value) \
@@ -470,8 +470,7 @@ _e4c_fatal_error(
 	const char *				file,
 	int							line,
 	const char *				function,
-	int							error_number,
-	const e4c_exception *		cause
+	int							error_number
 );
 
 static E4C_INLINE
@@ -1138,11 +1137,11 @@ void e4c_context_end(void){
 
 }
 
-static E4C_INLINE void _e4c_fatal_error(const e4c_exception_type * exception_type, const char * message, const char * file, int line, const char * function, int error_number, const e4c_exception * cause){
+static E4C_INLINE void _e4c_fatal_error(const e4c_exception_type * exception_type, const char * message, const char * file, int line, const char * function, int error_number){
 
 	e4c_exception exception;
 
-	_e4c_initialize_exception(&exception, exception_type, message, file, line, function, error_number, cause);
+	_e4c_initialize_exception(&exception, exception_type, message, file, line, function, error_number, NULL);
 
 	INITIALIZE_ONCE;
 
