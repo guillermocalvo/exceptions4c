@@ -1171,13 +1171,13 @@ static E4C_INLINE void _e4c_initialize_frame(e4c_frame * frame, e4c_frame * prev
 
 static E4C_INLINE void _e4c_delete_frame(e4c_frame * frame){
 
-	const e4c_exception * cause;
+	e4c_exception * cause;
 
 	/* delete the dynamically-allocated causes of the thrown exception (if any) */
 	cause = frame->thrown_exception.cause;
 	while(cause != NULL){
-		const e4c_exception * next = cause->cause;
-		free( (e4c_exception *)cause );
+		e4c_exception * next = cause->cause;
+		free(cause);
 		cause = next;
 	}
 
