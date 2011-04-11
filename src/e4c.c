@@ -55,9 +55,31 @@
 # define INITIALIZE_ONCE				if(!is_initialized) _e4c_initialize()
 
 # if defined(HAVE_C99_SNPRINTF) || defined(HAVE_SNPRINTF)
-#	define VERBATIM_COPY(dst, src) (void)snprintf(dst, (size_t)E4C_EXCEPTION_MESSAGE_SIZE, "%s", src);
+#	define VERBATIM_COPY(dst, src) (void)snprintf(dst, (size_t)E4C_EXCEPTION_MESSAGE_SIZE, "%s", src)
 # else
-#	define VERBATIM_COPY(dst, src) (void)sprintf(dst, "%.*s", (int)E4C_EXCEPTION_MESSAGE_SIZE - 1, src);
+#	define VERBATIM_COPY(dst, src) (void)sprintf(dst, "%.*s", (int)E4C_EXCEPTION_MESSAGE_SIZE - 1, src)
+# endif
+
+# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
+	/* vsnprintf is available */
+#	define SET_MESSAGE(verbatim, format) \
+		(verbatim || format == NULL)
+		/* the exception message will be either copied verbatim or truncated */
+#	define FORMAT_MESSAGE(verbatim, dst, format) \
+		if( !SET_MESSAGE(verbatim, format) ){ \
+			va_list arguments_list; \
+			va_start(arguments_list, format); \
+			(void)vsnprintf(dst, (size_t)E4C_EXCEPTION_MESSAGE_SIZE, format, arguments_list); \
+			va_end(arguments_list); \
+		}
+		/* format the exception message (format can't be NULL) */
+# else
+	/* vsnprintf is not available */
+#	define SET_MESSAGE(copy, format)	E4C_TRUE
+		/* the exception message will be copied verbatim */
+#	define FORMAT_MESSAGE(copy, dst, format) \
+		(void)copy
+		/* ignore parameter */
 # endif
 
 # define EXCEPTION_LITERAL(_name_, _message_, _file_, _line_, _function_, _error_number_, _type_, _cause_) \
@@ -440,6 +462,7 @@ void
 _e4c_initialize_exception(
 	e4c_exception *				exception,
 	const e4c_exception_type *	exception_type,
+	E4C_BOOL					set_message,
 	const char *				message,
 	const char *				file,
 	int							line,
@@ -807,11 +830,6 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 
 void e4c_throw_exception(const e4c_exception_type * exception_type, const char * file, int line, const char * function, E4C_BOOL verbatim, const char * message, ...){
 
-# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
-	/* we will only format the message if we can rely on vsnprintf */
-	char				formatted_message[E4C_EXCEPTION_MESSAGE_SIZE];
-# endif
-
 	int					error_number;
 	e4c_context *		context;
 	e4c_frame *			frame;
@@ -849,22 +867,11 @@ void e4c_throw_exception(const e4c_exception_type * exception_type, const char *
 		exception_type = &NullPointerException;
 	}
 
-	if(!verbatim){
-# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
-		va_list		arguments_list;
-		int			printed;
-		va_start(arguments_list, message);
-		printed = vsnprintf(formatted_message, E4C_EXCEPTION_MESSAGE_SIZE, message, arguments_list);
-		va_end(arguments_list);
-		if(printed > 0) message = formatted_message;
-# else
-		/* if vsnprintf is absent, the message will be copied verbatim anyway */
-		(void)0;
-# endif
-	}
-
 	/* "instantiate" the specified exception */
-	_e4c_initialize_exception(&new_exception, exception_type, message, file, line, function, error_number, cause);
+	_e4c_initialize_exception(&new_exception, exception_type, SET_MESSAGE(verbatim, message), message, file, line, function, error_number, cause);
+
+	/* format the message (only if required *and* feasible) */
+	FORMAT_MESSAGE(verbatim, new_exception.message, message);
 
 	_e4c_propagate(context, &new_exception);
 }
@@ -1141,7 +1148,7 @@ static E4C_INLINE void _e4c_fatal_error(const e4c_exception_type * exception_typ
 
 	e4c_exception exception;
 
-	_e4c_initialize_exception(&exception, exception_type, message, file, line, function, error_number, NULL);
+	_e4c_initialize_exception(&exception, exception_type, E4C_TRUE, message, file, line, function, error_number, NULL);
 
 	INITIALIZE_ONCE;
 
@@ -1184,16 +1191,10 @@ static E4C_INLINE void _e4c_delete_frame(e4c_frame * frame){
 	free(frame);
 }
 
-static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, const e4c_exception_type * exception_type, const char * message, const char * file, int line, const char * function, int error_number, e4c_exception * cause){
+static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, const e4c_exception_type * exception_type, E4C_BOOL set_message, const char * message, const char * file, int line, const char * function, int error_number, e4c_exception * cause){
 
 	/* assert: exception != NULL */
 	/* assert: exception_type != NULL */
-
-	if(message == NULL){
-		message = exception_type->message;
-	}
-
-	VERBATIM_COPY(exception->message, message);
 
 	exception->name			= exception_type->name;
 	exception->file			= file;
@@ -1202,6 +1203,20 @@ static E4C_INLINE void _e4c_initialize_exception(e4c_exception * exception, cons
 	exception->error_number	= error_number;
 	exception->type			= exception_type;
 	exception->cause		= cause;
+
+	if(set_message){
+		/* initialize the message of this exception */
+		if(message != NULL){
+			/* copy the given message */
+			VERBATIM_COPY(exception->message, message);
+		}else{
+			/* copy the default message for this type of exception */
+			VERBATIM_COPY(exception->message, exception_type->message);
+		}
+	}else{
+		/* truncate the message of this exception (for sanity) */
+		exception->message[0] = '\0';
+	}
 }
 
 static void _e4c_at_uncaught_exception(e4c_context * context){
@@ -1305,7 +1320,7 @@ static void e4c_handle_signal(int signal_number){
 					INTERNAL_ERROR(ExceptionSystemFatalError, DESC_SIGERR_HANDLE, "e4c_handle_signal");
 				}
 				/* throw the appropriate exception to the current context */
-				_e4c_initialize_exception(&new_exception, mapping->exception_type, NULL, signal_name, signal_number, "e4c_handle_signal", errno, NULL);
+				_e4c_initialize_exception(&new_exception, mapping->exception_type, E4C_TRUE, NULL, signal_name, signal_number, "e4c_handle_signal", errno, NULL);
 				_e4c_propagate(context, &new_exception);
 			}
 			mapping++;
@@ -1397,7 +1412,7 @@ static void e4c_at_exit(void){
 
 		e4c_exception exception;
 
-		_e4c_initialize_exception(&exception, &ContextNotEnded, DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_at_exit", errno, NULL);
+		_e4c_initialize_exception(&exception, &ContextNotEnded, E4C_TRUE, DESC_NOT_ENDED, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_at_exit", errno, NULL);
 		e4c_print_exception(&exception);
 		fatal_error_flag = E4C_TRUE;
 	}
