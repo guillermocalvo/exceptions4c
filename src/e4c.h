@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define _E4C_VERSION(version)			version(2, 6, 9)
+# define _E4C_VERSION(version)			version(2, 6, 10)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -2515,7 +2515,7 @@ E4C_DECLARE_EXCEPTION(ProgramSignal2Exception);
 /** @} */
 
 /**
- * @name Exception context handling Functions
+ * @name Exception context handling functions
  *
  * These functions enclose the scope of the exception handling system and
  * retrieve the current exception context.
