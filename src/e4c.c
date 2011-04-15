@@ -213,7 +213,13 @@
 #	define E4C_SIGNAL_MAPPING_SIGPIPE
 # endif
 
-# ifdef SIGSTOP
+/* unless otherwise stated, SIGSTOP and SIGKILL cannot be caught or ignored */
+
+/*
+ * The E4C_CAN_HANDLE_SIGSTOP compile-time parameter
+ * could be defined in order to try to map signal SIGSTOP to StopException.
+ */
+# if defined(SIGSTOP) && defined(E4C_CAN_HANDLE_SIGSTOP)
 #	define DEFINE_SIGNAL_NAME_SIGSTOP			DEFINE_SIGNAL_NAME(SIGSTOP);
 #	define WHEN_SIGNAL_SIGSTOP					WHEN_SIGNAL(SIGSTOP)
 #	define E4C_SIGNAL_MAPPING_SIGSTOP			E4C_SIGNAL_MAPPING(SIGSTOP,		StopException),
@@ -223,7 +229,11 @@
 #	define E4C_SIGNAL_MAPPING_SIGSTOP
 # endif
 
-# ifdef SIGKILL
+/*
+ * The E4C_CAN_HANDLE_SIGKILL compile-time parameter
+ * could be defined in order to try to map signal SIGKILL to KillException.
+ */
+# if defined(SIGKILL) && defined(E4C_CAN_HANDLE_SIGKILL)
 #	define DEFINE_SIGNAL_NAME_SIGKILL			DEFINE_SIGNAL_NAME(SIGKILL);
 #	define WHEN_SIGNAL_SIGKILL					WHEN_SIGNAL(SIGKILL)
 #	define E4C_SIGNAL_MAPPING_SIGKILL			E4C_SIGNAL_MAPPING(SIGKILL,		KillException),
