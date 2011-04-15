@@ -92,7 +92,7 @@
 	EXCEPTION_LITERAL(#_name_, _message_, _super_, _E4C_FILE_INFO, _E4C_LINE_INFO, NULL, 0, &_name_, NULL)
 
 # define DEFINE_RAW_EXCEPTION(_name_, _message_, _super_) \
-	const e4c_exception_type _name_ = { #_name_, _message_, _super_ };
+	const e4c_exception_type _name_ = { #_name_, _message_, _super_ }
 
 # define DESC_MALLOC_EXCEPTION		"Could not create a new exception."
 # define DESC_MALLOC_FRAME			"Could not create a new exception frame."
