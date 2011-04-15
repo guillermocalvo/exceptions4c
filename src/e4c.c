@@ -94,6 +94,7 @@
 # define DEFINE_RAW_EXCEPTION(_name_, _message_, _super_) \
 	const e4c_exception_type _name_ = { #_name_, _message_, _super_ };
 
+# define DESC_MALLOC_EXCEPTION		"Could not create a new exception."
 # define DESC_MALLOC_FRAME			"Could not create a new exception frame."
 # define DESC_MALLOC_CONTEXT		"Could not create a new exception context."
 # define DESC_CATCH_NULL			"A NULL argument was passed."
@@ -147,6 +148,9 @@
 
 # define INTERNAL_ERROR(exception, message, function) \
 	_e4c_library_fatal_error(&exception, message, __FILE__, __LINE__, function, errno);
+
+# define MEMORY_ERROR(exception, message, line, function) \
+	_e4c_library_fatal_error(&exception, message, __FILE__, line, function, errno);
 
 # ifndef NDEBUG
 #	define PREVENT_FUNC(condition, message, function, unreachable_return_value) \
@@ -515,12 +519,27 @@ _e4c_library_fatal_error(
  *         e4c_context_set_signal_mappings
  *
  *     PRIVATE
+ *         _e4c_environment_allocate
+ *         _e4c_environment_deallocate
  *         _e4c_environment_add
  *         _e4c_environment_remove
  *         _e4c_environment_get_current
  *         _e4c_context_get_current
  *
  */
+
+static E4C_INLINE
+e4c_environment *
+_e4c_environment_allocate(
+	int							line,
+	const char *				function
+);
+
+static E4C_INLINE
+void
+_e4c_environment_deallocate(
+	e4c_environment *			environment
+);
 
 static
 void
@@ -593,8 +612,10 @@ _e4c_context_get_current(
  *         e4c_get_status
  *
  *     PRIVATE
- *         _e4c_frame_initialize
+
+ *         _e4c_frame_allocate
  *         _e4c_frame_deallocate
+ *         _e4c_frame_initialize
  *         _e4c_frame_propagate
  *
  */
@@ -605,6 +626,13 @@ _e4c_frame_initialize(
 	e4c_frame *					frame,
 	e4c_frame *					previous,
 	e4c_stage					stage
+);
+
+static E4C_INLINE
+e4c_frame *
+_e4c_frame_allocate(
+	int							line,
+	const char *				function
 );
 
 static E4C_INLINE
@@ -647,6 +675,8 @@ _e4c_exception_type_extends(
  *         e4c_print_exception
  *
  *     PRIVATE
+ *         _e4c_exception_allocate
+ *         _e4c_exception_deallocate
  *         _e4c_exception_initialize
  *         _e4c_exception_set_cause
  *
@@ -663,6 +693,19 @@ _e4c_exception_initialize(
 	int							line,
 	const char *				function,
 	int							error_number
+);
+
+static E4C_INLINE
+e4c_exception *
+_e4c_exception_allocate(
+	int							line,
+	const char *				function
+);
+
+static E4C_INLINE
+void
+_e4c_exception_deallocate(
+	e4c_exception *				exception
 );
 
 static E4C_INLINE
@@ -819,6 +862,35 @@ static e4c_environment * _e4c_environment_get_current(void){
 	return(found ? environment : NULL);
 }
 
+static E4C_INLINE e4c_environment * _e4c_environment_allocate(int line, const char * function){
+
+	e4c_environment * environment;
+
+	environment = malloc( sizeof(*environment) );
+
+	if(environment == NULL){
+		MEMORY_ERROR(NotEnoughMemoryException, DESC_MALLOC_CONTEXT, line, function);
+		E4C_UNREACHABLE_RETURN(NULL);
+	}
+
+	environment->context.current_frame = _e4c_frame_allocate(line, function);
+
+	/* if _e4c_frame_allocate fails, then environment won't be freed... but, anyway, the program will die */
+
+	return(environment);
+}
+
+static E4C_INLINE void _e4c_environment_deallocate(e4c_environment * environment){
+
+	if(environment->context.current_frame != NULL){
+		_e4c_frame_deallocate(environment->context.current_frame);
+		environment->context.current_frame = NULL;
+	}
+
+	free(environment);
+}
+
+
 static void _e4c_environment_add(e4c_environment * environment){
 
 	/* assert: environment != NULL */
@@ -897,21 +969,7 @@ void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_ha
 	}
 
 	/* allocate memory for the new environment */
-	environment	= malloc( sizeof(*environment) );
-
-	/* check if there wasn't enough memory */
-	if(environment == NULL){
-		INTERNAL_ERROR(NotEnoughMemoryException, NULL, "e4c_context_begin");
-	}
-
-	/* allocate memory for the new frame */
-	new_frame = malloc( sizeof(*new_frame) );
-
-	/* check if there wasn't enough memory */
-	if(new_frame == NULL){
-		free(environment);
-		INTERNAL_ERROR(NotEnoughMemoryException, DESC_MALLOC_FRAME, "e4c_context_begin");
-	}
+	environment	= _e4c_environment_allocate(__LINE__, "e4c_context_begin");
 
 	/* add the new environment to the collection */
 	_e4c_environment_add(environment);
@@ -937,20 +995,16 @@ void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_ha
 	context			= current_context;
 
 	/* allocate memory for the new frame */
-	new_frame = malloc( sizeof(*new_frame) );
+	new_frame = _e4c_frame_allocate(__LINE__, "e4c_context_begin");
 
-	/* check if there wasn't enough memory */
-	if(new_frame == NULL){
-		INTERNAL_ERROR(NotEnoughMemoryException, DESC_MALLOC_FRAME, "e4c_context_begin");
-	}
+	context->current_frame		= new_frame;
 
 # endif
 
+	_e4c_frame_initialize(context->current_frame, NULL, _e4c_done);
+
 	context->uncaught_handler	= uncaught_handler;
 	context->signal_mappings	= NULL;
-	context->current_frame		= new_frame;
-
-	_e4c_frame_initialize(new_frame, NULL, _e4c_done);
 
 	if(handle_signals){
 		_e4c_context_set_signal_handlers(context, e4c_default_signal_mappings);
@@ -1006,18 +1060,18 @@ void e4c_context_end(void){
 	/* reset all signal handlers */
 	_e4c_context_set_signal_handlers(context, NULL);
 
+# ifdef E4C_THREADSAFE
+
+	/* deallocate the thread environment */
+	_e4c_environment_deallocate(environment);
+
+# else
+
 	/* deallocate the current, top frame */
 	_e4c_frame_deallocate(frame);
 
 	/* deactivate the top frame (for sanity) */
-	context->current_frame = NULL;
-
-# ifdef E4C_THREADSAFE
-
-	/* deallocate the thread environment */
-	free(environment);
-
-# else
+	current_context->current_frame = NULL;
 
 	/* deactivate the current context */
 	current_context = NULL;
@@ -1156,13 +1210,7 @@ _E4C_JMP_BUF * e4c_frame_init(e4c_stage stage, const char * file, int line, cons
 	PREVENT_FUNC(current_frame == NULL, DESC_INVALID_FRAME, "e4c_frame_init", NULL);
 
 	/* create a new frame */
-	new_frame = malloc( sizeof(*new_frame) );
-
-	/* check if there wasn't enough memory */
-	if(new_frame == NULL){
-		INTERNAL_ERROR(NotEnoughMemoryException, DESC_MALLOC_FRAME, "e4c_frame_init");
-		E4C_UNREACHABLE_RETURN(NULL);
-	}
+	new_frame = _e4c_frame_allocate(__LINE__, "e4c_frame_init");
 
 	_e4c_frame_initialize(new_frame, current_frame, stage);
 
@@ -1187,16 +1235,26 @@ static E4C_INLINE void _e4c_frame_initialize(e4c_frame * frame, e4c_frame * prev
 	/* frame->address is an implementation-defined type */
 }
 
+static E4C_INLINE e4c_frame * _e4c_frame_allocate(int line, const char * function){
+
+	e4c_frame * frame;
+
+	frame = malloc( sizeof(*frame) );
+
+	if(frame == NULL){
+		MEMORY_ERROR(NotEnoughMemoryException, DESC_MALLOC_FRAME, line, function);
+		E4C_UNREACHABLE_RETURN(NULL);
+	}
+
+	return(frame);
+}
+
 static E4C_INLINE void _e4c_frame_deallocate(e4c_frame * frame){
 
-	e4c_exception * cause;
-
-	/* delete the dynamically-allocated causes of the thrown exception (if any) */
-	cause = frame->thrown_exception.cause;
-	while(cause != NULL){
-		e4c_exception * next = cause->cause;
-		free(cause);
-		cause = next;
+	/* delete the dynamically-allocated cause of the thrown exception (if any) */
+	if(frame->thrown_exception.cause != NULL){
+		_e4c_exception_deallocate(frame->thrown_exception.cause);
+		frame->thrown_exception.cause = NULL;
 	}
 
 	free(frame);
@@ -1383,8 +1441,11 @@ void e4c_throw_exception(const e4c_exception_type * exception_type, const char *
 	PREVENT_PROC(frame == NULL, DESC_INVALID_FRAME, "e4c_throw_exception");
 
 	/* get the cause of this exception */
-	cause = ( frame->thrown ? malloc( sizeof(*cause) ) : NULL );
-	/* (if there wasn't enough memory the cause will be lost) */
+	if(frame->thrown){
+		cause = _e4c_exception_allocate(__LINE__, "e4c_throw_exception");
+	}else{
+		cause = NULL;
+	}
 
 	/* copy the previous thrown exception in the newly allocated buffer */
 	if(cause != NULL){
@@ -1587,6 +1648,30 @@ static E4C_INLINE void _e4c_exception_initialize(e4c_exception * exception, cons
 		/* truncate the message of this exception (for sanity) */
 		exception->message[0] = '\0';
 	}
+}
+
+static E4C_INLINE e4c_exception * _e4c_exception_allocate(int line, const char * function){
+
+	e4c_exception * exception;
+
+	exception = malloc( sizeof(*exception) );
+
+	if(exception == NULL){
+		MEMORY_ERROR(NotEnoughMemoryException, DESC_MALLOC_EXCEPTION, line, function);
+		E4C_UNREACHABLE_RETURN(NULL);
+	}
+
+	return(exception);
+}
+
+static E4C_INLINE void _e4c_exception_deallocate(e4c_exception * exception){
+
+	if(exception->cause != NULL){
+		_e4c_exception_deallocate(exception->cause);
+		exception->cause = NULL;
+	}
+
+	free(exception);
 }
 
 static E4C_INLINE void _e4c_exception_set_cause(e4c_exception * exception, e4c_exception * cause){
