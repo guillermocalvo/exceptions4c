@@ -1397,7 +1397,7 @@ void e4c_frame_repeat(int max_repeat_attempts, enum _e4c_frame_stage stage, cons
 	}
 
 	/* check if "uncatchable" exception */
-	if( frame->uncaught && (frame->thrown_exception == NULL) && IS_UNCATCHABLE(frame->thrown_exception) ){
+	if( frame->uncaught && (frame->thrown_exception != NULL) && IS_UNCATCHABLE(frame->thrown_exception) ){
 		return;
 	}
 
