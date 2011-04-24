@@ -653,9 +653,16 @@ E4C_NORETURN;
  *         e4c_is_instance_of
  *
  *     PRIVATE
+ *         _e4c_print_exception_type
  *         _e4c_exception_type_extends
  *
  */
+
+static E4C_INLINE
+int
+_e4c_print_exception_type(
+	const e4c_exception_type *	exception_type
+);
 
 static E4C_INLINE
 E4C_BOOL
@@ -1605,22 +1612,35 @@ E4C_BOOL e4c_is_instance_of(const e4c_exception * instance, const e4c_exception_
 	return( _e4c_exception_type_extends(instance->type->super, exception_type) );
 }
 
+int _e4c_print_exception_type(const e4c_exception_type * exception_type){
+
+	int deep = -1;
+
+	if(exception_type->super == NULL || exception_type->super == exception_type){
+
+		fprintf(stderr, "    %s\n", exception_type->name);
+
+	}else{
+
+		deep = _e4c_print_exception_type(exception_type->super);
+
+		fprintf(stderr, "    %*s |\n    %*s +--%s\n", deep * 4, "", deep * 4, "", exception_type->name);
+	}
+
+	return(deep + 1);
+}
+
 void e4c_print_exception_hierarchy(const e4c_exception_type * exception_type){
 
 	const char *	separator	= "________________________________________________________________";
-	int				deep		= 0;
 
 	if(exception_type == NULL){
 		e4c_throw_exception(&NullPointerException, _E4C_FILE_INFO, _E4C_LINE_INFO, "e4c_print_exception_hierarchy", E4C_TRUE, "Null exception type.");
 	}
 
-	fprintf(stderr, "Exception hierarchy\n%s\n\n   %s\n", separator, exception_type->name);
+	fprintf(stderr, "Exception hierarchy\n%s\n\n", separator);
 
-	while(exception_type->super != NULL && exception_type->super != exception_type){
-		exception_type = exception_type->super;
-		fprintf(stderr, "    %*s |\n    %*s +-- %s\n", deep * 6, "", deep * 6, "", exception_type->name);
-		deep++;
-	}
+	(void)_e4c_print_exception_type(exception_type);
 
 	fprintf(stderr, "%s\n", separator);
 }
