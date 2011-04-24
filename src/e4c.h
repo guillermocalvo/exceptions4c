@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version     2.6
+ * @version     2.7
  * @author      Copyright (c) 2011 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -19,8 +19,8 @@
  * @li @c #with
  * @li @c #using
  *
- * In order to stop defining this keywords, there exists a @c E4C_NOKEYWORDS @e
- * compile-time parameter. When the keywords are not defined, the next set of
+ * In order to stop defining these keywords, there exists a @c E4C_NOKEYWORDS
+ * @e compile-time parameter. When the keywords are not defined, the next set of
  * alternative macros can be used to achieve the same functionality:
  *
  * @li @c E4C_TRY
@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define _E4C_VERSION(version)			version(2, 6, 15)
+# define E4C_VERSION_(version)			version(2, 7, 0)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -160,188 +160,189 @@
 
 
 /*
- * The _E4C_FUNCTION_NAME compile-time parameter
+ * The E4C_FUNCTION_NAME_ compile-time parameter
  * could be defined in order to work with some specific compiler.
  */
-# ifndef _E4C_FUNCTION_NAME
+# ifndef E4C_FUNCTION_NAME_
 
 #	ifdef HAVE_C99_FUNC
-#		define _E4C_FUNCTION_NAME		__func__
+#		define E4C_FUNCTION_NAME_		__func__
 
 #	elif defined(__GNUC__)
 #		if __GNUC__ >= 2
-#			define _E4C_FUNCTION_NAME	__extension__ __FUNCTION__
+#			define E4C_FUNCTION_NAME_	__extension__ __FUNCTION__
 #		else
-#			define _E4C_FUNCTION_NAME	NULL
+#			define E4C_FUNCTION_NAME_	NULL
 #		endif
 
 #	else
-#		define _E4C_FUNCTION_NAME	NULL
+#		define E4C_FUNCTION_NAME_		NULL
 #	endif
 
 # endif
 
 
 /*
- * The _E4C_INVALID_SIGNAL compile-time parameter
+ * The E4C_INVALID_SIGNAL_NUMBER_ compile-time parameter
  * could be defined in order to work with some specific compiler.
  */
-# ifndef _E4C_INVALID_SIGNAL
+# ifndef E4C_INVALID_SIGNAL_NUMBER_
 
-#	define _E4C_INVALID_SIGNAL	-1
+#	define E4C_INVALID_SIGNAL_NUMBER_	-1
 
 # endif
 
 
 /*
- * The _E4C_NORETURN compile-time parameter
+ * The E4C_NORETURN_ compile-time parameter
  * could be defined in order to work with some specific compiler.
  */
-# ifndef _E4C_NORETURN
+# ifndef E4C_NORETURN_
 
 #	ifdef	__GNUC__
-#		define _E4C_NORETURN						__attribute__ ((noreturn))
-#		define _E4C_UNREACHABLE_RETURN(_value_)
+#		define E4C_NORETURN_				__attribute__ ((noreturn))
+#		define E4C_UNREACHABLE_RETURN_(_value_)
 
 #	else
-#		define _E4C_NORETURN
-#		define _E4C_UNREACHABLE_RETURN(_value_)		return _value_
+#		define E4C_NORETURN_
+#		define E4C_UNREACHABLE_RETURN_(_value_) return _value_
 #	endif
 
 # else
 
-#	define _E4C_UNREACHABLE_RETURN(_value_)
+#	define E4C_UNREACHABLE_RETURN_(_value_)
 
 # endif
 
 
 # if defined(HAVE_POSIX_SIGSETJMP) || defined(HAVE_SIGSETJMP)
-#	define _E4C_SETJMP(_address_)		sigsetjmp(_address_, 1)
-#	define _E4C_LONGJMP(_address_)		siglongjmp(_address_, 1)
-#	define _E4C_JMP_BUF					sigjmp_buf
+#	define E4C_CONTINUATION_BUFFER_		sigjmp_buf
+#	define E4C_CONTINUATION_CREATE_(_continuation_) \
+		(void)sigsetjmp(_continuation_->buffer, 1)
 # else
-#	define _E4C_SETJMP(_address_)		setjmp(_address_)
-#	define _E4C_LONGJMP(_address_)		longjmp(_address_, 1)
-#	define _E4C_JMP_BUF					jmp_buf
+#	define E4C_CONTINUATION_BUFFER_		jmp_buf
+#	define E4C_CONTINUATION_CREATE_(_continuation_) \
+		(void)setjmp(_continuation_->buffer)
 # endif
 
 
 # ifndef NDEBUG
-#	define _E4C_FILE_INFO				__FILE__
-#	define _E4C_LINE_INFO				__LINE__
-#	define _E4C_FUNC_INFO				_E4C_FUNCTION_NAME
-#	define _E4C_ASSERT(_condition_) ( \
+#	define E4C_INFO_FILE_				__FILE__
+#	define E4C_INFO_LINE_				__LINE__
+#	define E4C_INFO_FUNC_				E4C_FUNCTION_NAME_
+#	define E4C_ASSERT(_condition_) ( \
 		(_condition_) \
 		? (void)0 \
 		: E4C_THROW(AssertionException, "Assertion failed: " #_condition_) \
 	)
 # else
-#	define _E4C_FILE_INFO				NULL
-#	define _E4C_LINE_INFO				0
-#	define _E4C_FUNC_INFO				NULL
-#	define _E4C_ASSERT(_ignore_)		( (void)0 )
+#	define E4C_INFO_FILE_				NULL
+#	define E4C_INFO_LINE_				0
+#	define E4C_INFO_FUNC_				NULL
+#	define E4C_ASSERT(_ignore_)			( (void)0 )
 # endif
 
-# define _E4C_INFO \
-			_E4C_FILE_INFO, \
-			_E4C_LINE_INFO, \
-			_E4C_FUNC_INFO
+# define E4C_INFO_ \
+			E4C_INFO_FILE_, \
+			E4C_INFO_LINE_, \
+			E4C_INFO_FUNC_
 
 
-# define _E4C_PASTE(_x_, _y_, _z_)		_x_ ## _ ## _y_ ## _ ## _z_
-# define _E4C_MANGLE(_pre_, _id_, _post_) _E4C_PASTE(_pre_, _id_, _post_)
-# define _E4C_AUTO(_id_)				_E4C_MANGLE(_implicit, _id_, __LINE__)
+# define E4C_PASTE_(_x_, _y_, _z_)		_x_ ## _ ## _y_ ## _ ## _z_
+# define E4C_MANGLE_(_pre_, _id_, _post_) E4C_PASTE_(_pre_, _id_, _post_)
+# define E4C_AUTO_(_id_)				E4C_MANGLE_(_implicit, _id_, __LINE__)
 
 
 # ifdef E4C_THREADSAFE
-#	define _E4C_V_THREADSAFE			( (int) 1 )
-#	define _E4C_V_THREADSAFE_STRING		" (multi-thread)"
+#	define E4C_VERSION_THREADSAFE_		( (int) 1 )
+#	define E4C_VERSION_THREADSAFE_STRING_ " (multi-thread)"
 # else
-#	define _E4C_V_THREADSAFE			( (int) 0 )
-#	define _E4C_V_THREADSAFE_STRING		" (single-thread)"
+#	define E4C_VERSION_THREADSAFE_		( (int) 0 )
+#	define E4C_VERSION_THREADSAFE_STRING_ " (single-thread)"
 # endif
 
 
-# define _E4C_V_STRING(_major_, _minor_, _revision_) \
-	#_major_ "." #_minor_ "." #_revision_ _E4C_V_THREADSAFE_STRING
-# define _E4C_V_NUMBER(_major_, _minor_, _revision_) ( \
-	( (long)_E4C_V_THREADSAFE	* 10000000) +	\
-	( (long)_major_				* 1000000) +	\
-	( (long)_minor_				* 1000) +		\
-	( (long)_revision_			* 1)			\
+# define E4C_VERSION_STRING_(_major_, _minor_, _revision_) \
+	#_major_ "." #_minor_ "." #_revision_ E4C_VERSION_THREADSAFE_STRING_
+# define E4C_VERSION_NUMBER_(_major_, _minor_, _revision_) ( \
+	( (long)E4C_VERSION_THREADSAFE_	* 10000000) +	\
+	( (long)_major_					* 1000000) +	\
+	( (long)_minor_					* 1000) +		\
+	( (long)_revision_				* 1)			\
 )
-# define _E4C_V_MAJOR(_major_, _minor_, _revision_)		( (int)_major_		)
-# define _E4C_V_MINOR(_major_, _minor_, _revision_)		( (int)_minor_		)
-# define _E4C_V_REVISION(_major_, _minor_, _revision_)	( (int)_revision_	)
+# define E4C_VERSION_MAJOR_(_major_, _minor_, _revision_) ( (int)_major_ )
+# define E4C_VERSION_MINOR_(_major_, _minor_, _revision_) ( (int)_minor_ )
+# define E4C_VERSION_REVISION_(_major_, _minor_, _revision_) ( (int)_revision_ )
 
 
 /*
  * These undocumented macros hide implementation details from documentation.
  */
 
-# define _E4C_FRAME_LOOP(_stage_) \
-	(void)_E4C_SETJMP( *( e4c_frame_init(_stage_, _E4C_INFO) ) ); \
-	while( e4c_frame_step() )
+# define E4C_FRAME_LOOP_(_stage_) \
+	E4C_CONTINUATION_CREATE_( e4c_frame_first_stage_(_stage_, E4C_INFO_) ); \
+	while( e4c_frame_next_stage_() )
 
 # define E4C_TRY \
-	_E4C_FRAME_LOOP(_e4c_acquiring) \
-	if( e4c_frame_hook(_e4c_trying, NULL, _E4C_INFO) && e4c_frame_step() )
-	/* simple optimization: e4c_frame_step() will avoid disposing stage */
+	E4C_FRAME_LOOP_(e4c_acquiring_) \
+	if( ( e4c_frame_get_stage_(E4C_INFO_) == e4c_trying_ ) \
+		&& e4c_frame_next_stage_() )
+	/* simple optimization: e4c_frame_next_stage_ will avoid disposing stage */
 
 # define E4C_CATCH(_exception_type_) \
-	else if( e4c_frame_hook(_e4c_catching, &_exception_type_, _E4C_INFO) )
+	else if( e4c_frame_catch_(&_exception_type_, E4C_INFO_) )
 
 # define E4C_FINALLY \
-	else if( e4c_frame_hook(_e4c_finalizing, NULL, _E4C_INFO) )
+	else if( e4c_frame_get_stage_(E4C_INFO_) == e4c_finalizing_ )
 
 # define E4C_THROW(_exception_type_, _message_) \
-	e4c_throw_exception(&_exception_type_, _E4C_INFO, E4C_TRUE, _message_ )
+	e4c_exception_throw_(&_exception_type_, E4C_INFO_, E4C_TRUE, _message_ )
 
 # define E4C_WITH(_resource_, _dispose_) \
-	_E4C_FRAME_LOOP(_e4c_beginning) \
-	if( e4c_frame_hook(_e4c_disposing, NULL, _E4C_INFO) ){ \
+	E4C_FRAME_LOOP_(e4c_beginning_) \
+	if( e4c_frame_get_stage_(E4C_INFO_) == e4c_disposing_ ){ \
 		_dispose_( (_resource_), (e4c_get_status() == e4c_failed) ); \
-	}else if( e4c_frame_hook(_e4c_acquiring, NULL, _E4C_INFO) ){
+	}else if( e4c_frame_get_stage_(E4C_INFO_) == e4c_acquiring_ ){
 
 # define E4C_USE \
-	}else if( e4c_frame_hook(_e4c_trying, NULL, _E4C_INFO) )
+	}else if( e4c_frame_get_stage_(E4C_INFO_) == e4c_trying_ )
 
 # define E4C_USING(_type_, _resource_, _args_) \
 	E4C_WITH( (_resource_), e4c_dispose_##_type_){ \
 		(_resource_) = e4c_acquire_##_type_ _args_; \
 	}E4C_USE
 
-# define _E4C_REUSING_CONTEXT(_thrown_exception_) \
+# define E4C_REUSING_CONTEXT(_thrown_exception_) \
 	\
-	volatile E4C_BOOL		_E4C_AUTO(BEGIN)	= !e4c_context_is_ready(); \
-	volatile E4C_BOOL		_E4C_AUTO(DONE)		= E4C_FALSE; \
-	volatile e4c_exception	_E4C_AUTO(EXCEPTION); \
+	volatile E4C_BOOL		E4C_AUTO_(BEGIN)	= !e4c_context_is_ready(); \
+	volatile E4C_BOOL		E4C_AUTO_(DONE)		= E4C_FALSE; \
+	volatile e4c_exception	E4C_AUTO_(EXCEPTION); \
 	\
 	(_thrown_exception_) = NULL; \
 	\
-	if( _E4C_AUTO(BEGIN) ){ \
+	if( E4C_AUTO_(BEGIN) ){ \
 		e4c_context_begin(E4C_FALSE, NULL); \
 		E4C_TRY{ \
-			goto _E4C_AUTO(PAYLOAD); \
-			_E4C_AUTO(CLEANUP): \
-			_E4C_AUTO(DONE) = E4C_TRUE; \
+			goto E4C_AUTO_(PAYLOAD); \
+			E4C_AUTO_(CLEANUP): \
+			E4C_AUTO_(DONE) = E4C_TRUE; \
 		}E4C_CATCH(RuntimeException){ \
-			(_thrown_exception_)		= &_E4C_AUTO(EXCEPTION); \
-			_E4C_AUTO(EXCEPTION)		= *e4c_get_exception(); \
-			_E4C_AUTO(EXCEPTION).cause	= NULL; \
+			(_thrown_exception_)		= &E4C_AUTO_(EXCEPTION); \
+			E4C_AUTO_(EXCEPTION)		= *e4c_get_exception(); \
+			E4C_AUTO_(EXCEPTION).cause	= NULL; \
 		} \
 		e4c_context_end(); \
-		_E4C_AUTO(DONE)		= E4C_TRUE; \
-		_E4C_AUTO(BEGIN)	= E4C_FALSE; \
+		E4C_AUTO_(DONE)		= E4C_TRUE; \
+		E4C_AUTO_(BEGIN)	= E4C_FALSE; \
 	} \
 	\
-	_E4C_AUTO(PAYLOAD): \
-	for(; !_E4C_AUTO(DONE) || _E4C_AUTO(BEGIN); _E4C_AUTO(DONE) = E4C_TRUE) \
-		if( _E4C_AUTO(DONE) ){ \
-			goto _E4C_AUTO(CLEANUP); \
+	E4C_AUTO_(PAYLOAD): \
+	for(; !E4C_AUTO_(DONE) || E4C_AUTO_(BEGIN); E4C_AUTO_(DONE) = E4C_TRUE) \
+		if( E4C_AUTO_(DONE) ){ \
+			goto E4C_AUTO_(CLEANUP); \
 		}else
 
-# define _E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_) \
+# define E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_) \
 	\
 	for( \
 		e4c_context_begin( (_handle_signals_), (_uncaught_handler_) ); \
@@ -351,46 +352,30 @@
 
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_THROWF(_exception_type_, _format_, ...) \
-		e4c_throw_exception( \
-			&_exception_type_, _E4C_INFO, E4C_FALSE, _format_, __VA_ARGS__ \
+		e4c_exception_throw_( \
+			&_exception_type_, E4C_INFO_, E4C_FALSE, _format_, __VA_ARGS__ \
 		)
 # endif
 
 # define E4C_RETHROW(_message_) \
-	e4c_throw_exception( \
+	e4c_exception_throw_( \
 		( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
-		_E4C_INFO, E4C_TRUE, _message_ \
+		E4C_INFO_, E4C_TRUE, _message_ \
 	)
 
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_RETHROWF(_format_, ...) \
-		e4c_throw_exception( \
+		e4c_exception_throw_( \
 			( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
-			_E4C_INFO, E4C_FALSE, _format_, __VA_ARGS__ \
+			E4C_INFO_, E4C_FALSE, _format_, __VA_ARGS__ \
 		)
 # endif
 
 # define E4C_RETRY(_max_retry_attempts_) \
-	e4c_frame_repeat(_max_retry_attempts_, _e4c_acquiring, _E4C_INFO)
+	e4c_frame_repeat_(_max_retry_attempts_, e4c_acquiring_, E4C_INFO_)
 
 # define E4C_REACQUIRE(_max_acquire_attempts_) \
-	e4c_frame_repeat(_max_acquire_attempts_, _e4c_beginning, _E4C_INFO)
-
-# define _E4C_DECLARE_EXCEPTION(_name_) \
-	extern const e4c_exception_type _name_
-
-# define _E4C_DEFINE_EXCEPTION(_name_, _message_, _super_) \
-	const e4c_exception_type _name_ = { \
-		#_name_, \
-		_message_, \
-		&_super_, \
-	}
-
-# define _E4C_SIGNAL_MAPPING(_signal_number_, _exception_type_) \
-	{_signal_number_, &_exception_type_}
-
-# define _E4C_NULL_SIGNAL_MAPPING \
-	{_E4C_INVALID_SIGNAL, NULL}
+	e4c_frame_repeat_(_max_acquire_attempts_, e4c_beginning_, E4C_INFO_)
 
 
 /**
@@ -1143,7 +1128,7 @@
  */
 # define E4C_VERSION_NUMBER \
 	\
-	_E4C_VERSION(_E4C_V_NUMBER)
+	E4C_VERSION_(E4C_VERSION_NUMBER_)
 
 /**
  * Provides the library thread mode (either single-thread or multi-thread)
@@ -1157,7 +1142,7 @@
  */
 # define E4C_VERSION_THREADSAFE \
 	\
-	_E4C_V_THREADSAFE
+	E4C_VERSION_THREADSAFE_
 
 /**
  * Provides the library major version number
@@ -1169,7 +1154,7 @@
  */
 # define E4C_VERSION_MAJOR \
 	\
-	_E4C_VERSION(_E4C_V_MAJOR)
+	E4C_VERSION_(E4C_VERSION_MAJOR_)
 
 /**
  * Provides the library minor version number
@@ -1182,7 +1167,7 @@
  */
 # define E4C_VERSION_MINOR \
 	\
-	_E4C_VERSION(_E4C_V_MINOR)
+	E4C_VERSION_(E4C_VERSION_MINOR_)
 
 /**
  * Provides the library revision number
@@ -1194,7 +1179,7 @@
  */
 # define E4C_VERSION_REVISION \
 	\
-	_E4C_VERSION(_E4C_V_REVISION)
+	E4C_VERSION_(E4C_VERSION_REVISION_)
 
 /**
  * Provides the library version number as a string literal
@@ -1205,7 +1190,7 @@
  */
 # define E4C_VERSION_STRING \
 	\
-	_E4C_VERSION(_E4C_V_STRING)
+	E4C_VERSION_(E4C_VERSION_STRING_)
 
 /**
  * Provides the maximum length (in bytes) of an exception message
@@ -1240,7 +1225,7 @@
  *
  * @c e4c_reusing_context needs to be given a variable that will point to
  * whichever exception thrown inside the block. This variable must be a pointer
- * to @c #e4c_exception and will be set to @c NULL if no exception was thrown
+ * to @c e4c_exception and will be set to @c NULL if no exception was thrown
  * inside the block.
  *
  * @code
@@ -1372,6 +1357,7 @@
  * const e4c_signal_mapping new_mappings[] = {
  *     E4C_SIGNAL_MAPPING(SIGABRT, Exception1),
  *     E4C_SIGNAL_MAPPING(SIGINT, Exception2),
+ *     E4C_IGNORE_SIGNAL(SIGTERM),
  *     ...
  *     E4C_NULL_SIGNAL_MAPPING
  * };
@@ -1380,7 +1366,7 @@
  *
  *     const e4c_signal_mapping * old_mappings = e4c_context_get_signal_mappings();
  *
- *     e4c_context_set_signal_mappings (new_mappings);
+ *     e4c_context_set_signal_mappings(new_mappings);
  *
  *     try{
  *         ...
@@ -1406,7 +1392,7 @@
  * @see     e4c_exception
  */
 # define e4c_reusing_context(_thrown_exception_) \
-	_E4C_REUSING_CONTEXT(_thrown_exception_)
+	E4C_REUSING_CONTEXT(_thrown_exception_)
 
 /**
  * Marks a function which never returns
@@ -1458,7 +1444,7 @@
  */
 # define E4C_NORETURN \
 	\
-	_E4C_NORETURN
+	E4C_NORETURN_
 
 /**
  * Simulates a function return
@@ -1496,7 +1482,7 @@
  */
 # define E4C_UNREACHABLE_RETURN(_value_) \
 	\
-	_E4C_UNREACHABLE_RETURN(_value_)
+	E4C_UNREACHABLE_RETURN_(_value_)
 
 /** @} */
 
@@ -1557,7 +1543,7 @@
  * @see     e4c_reusing_context
  */
 # define e4c_using_context(_handle_signals_, _uncaught_handler_) \
-	_E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
+	E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
 
 /**
  * Expresses a program assertion
@@ -1593,7 +1579,7 @@
  */
 # define e4c_assert(_condition_) \
 	\
-	_E4C_ASSERT(_condition_)
+	E4C_ASSERT(_condition_)
 
 /**
  * Throws an exception with a formatted message
@@ -1714,7 +1700,7 @@
  */
 # define E4C_DECLARE_EXCEPTION(_name_) \
 	\
-	_E4C_DECLARE_EXCEPTION(_name_)
+	extern const e4c_exception_type _name_
 
 /**
  * Defines an exception
@@ -1734,26 +1720,53 @@
  */
 # define E4C_DEFINE_EXCEPTION(_name_, _message_, _super_) \
 	\
-	_E4C_DEFINE_EXCEPTION(_name_, _message_, _super_)
+	const e4c_exception_type _name_ = { \
+		#_name_, \
+		_message_, \
+		&_super_ \
+	}
 
 /**
- * Represents a signal mapping literal
+ * Maps a specific signal number to a given exception type
  *
  * @param   _signal_number_
  *          Numeric value of the signal to be converted
  * @param   _exception_type_
  *          Exception type representing the signal
  *
- * This macro comes in handy for initializing arrays of @c #e4c_signal_mapping.
+ * This macro represents a signal mapping literal. It comes in handy for
+ * initializing arrays of @c e4c_signal_mapping.
  *
  * @see     e4c_signal_mapping
  * @see     e4c_context_set_signal_mappings
  * @see     e4c_context_get_signal_mappings
+ * @see     E4C_IGNORE_SIGNAL
+ * @see     E4C_NULL_SIGNAL_MAPPING
  * @see     E4C_DECLARE_EXCEPTION
  */
 # define E4C_SIGNAL_MAPPING(_signal_number_, _exception_type_) \
 	\
-	_E4C_SIGNAL_MAPPING(_signal_number_, _exception_type_)
+	{_signal_number_, &_exception_type_}
+
+/**
+ * Ignores a specific signal number
+ *
+ * @param   _signal_number_
+ *          Numeric value of the signal to be ignored
+ *
+ * This macro represents a signal mapping literal. It comes in handy for
+ * initializing arrays of @c e4c_signal_mapping.
+ *
+ * @see     e4c_signal_mapping
+ * @see     e4c_context_set_signal_mappings
+ * @see     e4c_context_get_signal_mappings
+ * @see     E4C_SIGNAL_MAPPING
+ * @see     E4C_NULL_SIGNAL_MAPPING
+ * @see     E4C_DECLARE_EXCEPTION
+ */
+# define E4C_IGNORE_SIGNAL(_signal_number_) \
+	\
+	{_signal_number_, NULL}
 
 /**
  * Represents a null signal mapping literal
@@ -1763,11 +1776,13 @@
  * @see     e4c_signal_mapping
  * @see     e4c_context_set_signal_mappings
  * @see     e4c_context_get_signal_mappings
+ * @see     E4C_SIGNAL_MAPPING
+ * @see     E4C_IGNORE_SIGNAL
  * @see     E4C_DECLARE_EXCEPTION
  */
 # define E4C_NULL_SIGNAL_MAPPING \
 	\
-	_E4C_NULL_SIGNAL_MAPPING
+	{E4C_INVALID_SIGNAL_NUMBER_, NULL}
 
 /** @} */
 
@@ -1843,8 +1858,8 @@
  * @see     throw
  * @see     catch
  */
-typedef struct _e4c_exception_type e4c_exception_type;
-struct _e4c_exception_type{
+typedef struct e4c_exception_type_ e4c_exception_type;
+struct e4c_exception_type_{
 
 	/** The name of this exception type */
 	const char *					name;
@@ -1890,8 +1905,8 @@ struct _e4c_exception_type{
  * @see     RuntimeException
  * @see     AssertionException
  */
-typedef struct _e4c_exception e4c_exception;
-struct _e4c_exception{
+typedef struct e4c_exception_ e4c_exception;
+struct e4c_exception_{
 
 	/** The name of this exception */
 	const char *					name;
@@ -1924,11 +1939,11 @@ struct _e4c_exception{
  * A signal is an asynchronous notification sent by the operating system to a
  * process in order to notify it of an event that occurred. Most of the signals
  * will, by default, crash the program as soon as they are raised.
- * @c @b exceptions4c can convert signals to @c #e4c_exception, so they can be
- * easily handled.
+ * @c @b exceptions4c can convert signals to exceptions, so they can be easily
+ * handled.
  *
  * For example, a @e suspicious or @e dangerous part of the program could be
- * wrapped up with @c #try blocks and then @c #catch * segmentation faults or
+ * wrapped up with @c #try blocks and then @c #catch segmentation faults or
  * divisions by zero. Then the program would clean up and continue normally:
  *
  * @code
@@ -1953,31 +1968,33 @@ struct _e4c_exception{
  * @c handle_signals=true.
  *
  * If you need to be more specific about which signals get converted to
- * exceptions, you can define an array of @c #e4c_signal_mapping:
+ * exceptions, you can define an array of signal mappings:
  *
  * @code
  * const e4c_signal_mapping my_signal_mappings[] = {
  *     E4C_SIGNAL_MAPPING(SIGABRT, Exception1),
  *     E4C_SIGNAL_MAPPING(SIGINT, Exception2),
+ *     E4C_IGNORE_SIGNAL(SIGTERM),
  *     ...
  *     E4C_NULL_SIGNAL_MAPPING
  * }
  * @endcode
  *
- * An array of @c #e4c_signal_mapping is defined through the macros
- * @c E4C_SIGNAL_MAPPING and @c E4C_NULL_SIGNAL_MAPPING. Every
- * @c e4c_signal_mapping array needs to be terminated by the <em>null signal
- * mapping</em> element, so the system finds out how many mappings there are in
- * a given array.
+ * An array of @c signal mappings is defined through the macros
+ * @c E4C_SIGNAL_MAPPING, @c E4C_IGNORE_SIGNAL and @c E4C_NULL_SIGNAL_MAPPING.
+ * Every @c e4c_signal_mapping array needs to be terminated by the <em>null
+ * signal mapping</em> element, so the system finds out how many mappings there
+ * are in a given array.
  *
  * Once the array is properly defined, it can be passed to the function
  * @c e4c_context_set_signal_mappings. This way, only the specified signals will
  * be handled as exceptions, and they will be converted to the specified
  * exceptions.
  *
- * Additionally, you can map a specific signal to a @c NULL exception in order
- * to @e ignore it (i.e. neither the signal will be converted to an exception,
- * nor the program will crash).
+ * Additionally, you can @e ignore specific signals by using
+ * @c E4C_IGNORE_SIGNAL instead of @c E4C_SIGNAL_MAPPING. If the specified
+ * signal is raised, the system won't convert it to an exception and the program
+ * will continue (even if unmeaningful).
  *
  * These are some of the signals you can handle:
  *
@@ -1989,10 +2006,12 @@ struct _e4c_exception{
  * @see     e4c_context_begin
  * @see     e4c_context_set_signal_mappings
  * @see     e4c_context_get_signal_mappings
+ * @see     E4C_SIGNAL_MAPPING
+ * @see     E4C_IGNORE_SIGNAL
  * @see     e4c_default_signal_mappings
  */
-typedef struct _e4c_signal_mapping e4c_signal_mapping;
-struct _e4c_signal_mapping{
+typedef struct e4c_signal_mapping_ e4c_signal_mapping;
+struct e4c_signal_mapping_{
 
 	/** The signal to be converted */
 	int									signal_number;
@@ -2033,7 +2052,7 @@ struct _e4c_signal_mapping{
  * @see     e4c_get_status
  * @see     finally
  */
-enum _e4c_status{
+enum e4c_status_{
 
 	/** There was no exception */
 	e4c_succeeded,
@@ -2044,7 +2063,7 @@ enum _e4c_status{
 	/** There was an exception and it wasn't caught */
 	e4c_failed
 };
-typedef enum _e4c_status e4c_status;
+typedef enum e4c_status_ e4c_status;
 
 /**
  * This is the signature of a function which will be executed in the event of an
@@ -2063,19 +2082,22 @@ typedef enum _e4c_status e4c_status;
 typedef void (*e4c_uncaught_handler)(const e4c_exception * exception);
 
 /*
- * Next enumeration is undocumented on purpose, in order to hide implementation
+ * Next types are undocumented on purpose, in order to hide implementation
  * details, subject to change.
  */
-enum _e4c_frame_stage{
-	_e4c_beginning,
-	_e4c_acquiring,
-	_e4c_trying,
-	_e4c_disposing,
-	_e4c_catching,
-	_e4c_finalizing,
-	_e4c_done
+enum e4c_frame_stage_{
+	e4c_beginning_,
+	e4c_acquiring_,
+	e4c_trying_,
+	e4c_disposing_,
+	e4c_catching_,
+	e4c_finalizing_,
+	e4c_done_
 };
 
+struct e4c_continuation_{
+	E4C_CONTINUATION_BUFFER_		buffer;
+};
 
 /**
  * @name Predefined signal mappings
@@ -2856,13 +2878,31 @@ e4c_print_exception(
  * This is a convenience function for showing an ASCII graph representing an
  * exception type's hierarchy through the standard error output.
  *
+ * For example, the output for @c #ProgramSignal2Exception would be:
+ *
+@verbatim
+
+	Exception hierarchy
+	________________________________________________________________
+
+	    RuntimeException
+	     |
+	     +--SignalException
+	         |
+	         +--ProgramSignalException
+	             |
+	             +--ProgramSignal2Exception
+	________________________________________________________________
+
+@endverbatim
+ *
  * @pre     @c exception_type cannot be @c NULL
  * @throws  NullPointerException
  *          If @c exception_type is @c NULL
  */
 extern
 void
-e4c_print_exception_hierarchy(
+e4c_print_exception_type(
 	const e4c_exception_type *	exception_type
 );
 
@@ -2874,9 +2914,9 @@ e4c_print_exception_hierarchy(
  */
 
 extern
-_E4C_JMP_BUF *
-e4c_frame_init(
-	enum _e4c_frame_stage		stage,
+struct e4c_continuation_ *
+e4c_frame_first_stage_(
+	enum e4c_frame_stage_		stage,
 	const char *				file,
 	int							line,
 	const char *				function
@@ -2884,14 +2924,21 @@ e4c_frame_init(
 
 extern
 E4C_BOOL
-e4c_frame_step(
+e4c_frame_next_stage_(
 	void
 );
 
 extern
+enum e4c_frame_stage_
+e4c_frame_get_stage_(
+	const char *				file,
+	int							line,
+	const char *				function
+);
+
+extern
 E4C_BOOL
-e4c_frame_hook(
-	enum _e4c_frame_stage		stage,
+e4c_frame_catch_(
 	const e4c_exception_type *	exception_type,
 	const char *				file,
 	int							line,
@@ -2900,9 +2947,9 @@ e4c_frame_hook(
 
 extern
 void
-e4c_frame_repeat(
+e4c_frame_repeat_(
 	int							max_repeat_attempts,
-	enum _e4c_frame_stage		stage,
+	enum e4c_frame_stage_		stage,
 	const char *				file,
 	int							line,
 	const char *				function
@@ -2910,7 +2957,7 @@ e4c_frame_repeat(
 
 extern
 void
-e4c_throw_exception(
+e4c_exception_throw_(
 	const e4c_exception_type *	exception_type,
 	const char *				file,
 	int							line,
