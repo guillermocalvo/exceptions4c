@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 7, 0)
+# define E4C_VERSION_(version)			version(2, 7, 1)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -1554,13 +1554,13 @@
  * An assertion is a mechanism to express that the developer @e thinks that a
  * specific condition is always met at some point of the program.
  *
- * @c e4c_assert is a convenient way to insert debugging assertions into a
+ * @c assert is a convenient way to insert debugging assertions into a
  * program. The @c NDEBUG @e compile-time parameter determines whether the
  * assumptions will be actually verified by the program at @e run-time.
  *
  * In presence of @c NDEBUG, the assertion statements will be ignored and
  * therefore will have no effect on the program, not even evaluating the
- * condition. Therefore expressions passed to @c e4c_assert must not contain
+ * condition. Therefore expressions passed to @c assert must not contain
  * @e side-effects, since they will not take place when debugging is disabled.
  *
  * In absence of @c NDEBUG, the assertion statements will verify that the
@@ -1577,9 +1577,15 @@
  *
  * @see     AssertionException
  */
-# define e4c_assert(_condition_) \
-	\
-	E4C_ASSERT(_condition_)
+# ifndef E4C_NOKEYWORDS
+# ifdef assert
+	/* macro assert is already defined (probably assert.h was included) */
+#	error "Please define E4C_NOKEYWORDS at compiler level " \
+"in order to prevent exceptions4c from defining the assert macro."
+# endif
+#	define assert(_condition_) \
+		E4C_ASSERT(_condition_)
+# endif
 
 /**
  * Throws an exception with a formatted message
@@ -2186,7 +2192,7 @@ E4C_DECLARE_EXCEPTION(IllegalArgumentException);
  * This exception cannot be caught whatsoever. The program (or current thread)
  * will be terminated, after the execution of all pending @c finally blocks.
  *
- * @see     e4c_assert
+ * @see     assert
  */
 E4C_DECLARE_EXCEPTION(AssertionException);
 
