@@ -1,6 +1,16 @@
 
 # include "testing.h"
 
+static int parse_exception(const e4c_exception * exception){
+
+	if(exception->type == &WildException){
+
+		return(123);
+	}
+
+	return(-123);
+}
+
 static void aux(void * pointer){
 	if(pointer == NULL){
 		ECHO(("____aux_before_THROW\n"));
@@ -12,7 +22,7 @@ static void aux(void * pointer){
 
 static int ext(void){
 
-	volatile const		e4c_exception * thrown_exception;
+	volatile int		status = 0;
 	volatile E4C_BOOL	is_ready1;
 	volatile E4C_BOOL	is_ready2;
 
@@ -27,7 +37,7 @@ static int ext(void){
 	ECHO(("__ext_before_REUSING_CONTEXT\n"));
 
 	{
-		e4c_reusing_context(thrown_exception){
+		e4c_reusing_context(status, E4C_ON_FAILURE(parse_exception) ){
 
 			ECHO(("__ext_before_TRY_block\n"));
 
@@ -58,24 +68,17 @@ static int ext(void){
 
 	if(is_ready1 != is_ready2) return(112233);
 
-	if(thrown_exception == NULL){
+	if(status == 0){
 
 		ECHO(("__ext_there_was_no_error\n"));
 
-		return(0);
-
 	}else{
 
-		ECHO(("__ext_there_was_an_error_%s\n", thrown_exception->name));
-
-		if(thrown_exception->type == &WildException){
-			return(123);
-		}else{
-			return(-123);
-		}
+		ECHO(("__ext_there_was_an_error\n"));
 
 	}
 
+	return(status);
 }
 
 DEFINE_TEST(
