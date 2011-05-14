@@ -4,7 +4,7 @@
  *
  * exceptions4c source code file
  *
- * @version		2.7
+ * @version		2.8
  * @author		Copyright (c) 2011 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
