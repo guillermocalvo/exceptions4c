@@ -54,11 +54,9 @@
 
 # define IS_TOP_FRAME(frame)			( frame->previous == NULL )
 
-# define CONTEXT_IS_READY				(E4C_CONTEXT != NULL)
-
 # define IS_UNCATCHABLE(exception)		(exception->type == NULL || exception->type == &AssertionException)
 
-# define INITIALIZE_ONCE				if(!is_initialized) _e4c_library_initialize()
+# define INITIALIZE_ONCE				if(!is_initialized){ _e4c_library_initialize(); }
 
 # define FOREACH(element, list)			for(element = list.first; element != NULL; element = element->next)
 
@@ -483,10 +481,13 @@ E4C_DEFINE_EXCEPTION(ProgramSignal2Exception,			"User-defined signal 2 received.
 
 static
 E4C_DEFINE_EXCEPTION(ExceptionSystemFatalError,			DESC_INVALID_STATE,					RuntimeException);
+
 static
 E4C_DEFINE_EXCEPTION(ContextAlreadyBegun,				DESC_ALREADY_BEGUN,					ExceptionSystemFatalError);
+
 static
 E4C_DEFINE_EXCEPTION(ContextHasNotBegunYet,				DESC_NOT_BEGUN_YET,					ExceptionSystemFatalError);
+
 static
 E4C_DEFINE_EXCEPTION(ContextNotEnded,					DESC_NOT_ENDED,						ExceptionSystemFatalError);
 
@@ -830,7 +831,7 @@ static void _e4c_library_handle_signal(int signal_number){
 
 	context = E4C_CONTEXT;
 
-	/* check if `handleSignal` was called before `e4c_context_begin` or `after e4c_context_end` (very unlikely) */
+	/* check if `handleSignal` was called before `e4c_context_begin` or after `e4c_context_end` (very unlikely) */
 	PREVENT_PROC(context == NULL, DESC_INVALID_CONTEXT, "_e4c_library_handle_signal");
 
 	/* check if the current frame is NULL (very unlikely) */
@@ -1325,7 +1326,7 @@ const e4c_signal_mapping * e4c_context_get_signal_mappings(void){
 
 E4C_BOOL e4c_context_is_ready(void){
 
-	return(CONTEXT_IS_READY);
+	return(E4C_CONTEXT != NULL);
 }
 
 /* FRAME
@@ -1381,7 +1382,7 @@ static E4C_INLINE e4c_frame * _e4c_frame_allocate(int line, const char * functio
 	e4c_frame * frame;
 
 	/* (using calloc instead of malloc so that jmp_buf is initialized to zero) */
-	frame = calloc( 1, sizeof(*frame) );
+	frame = calloc( (size_t)1, sizeof(*frame) );
 
 	if(frame == NULL){
 		MEMORY_ERROR(DESC_MALLOC_FRAME, line, function);
@@ -1830,7 +1831,7 @@ static E4C_INLINE e4c_exception * _e4c_exception_allocate(int line, const char *
 	e4c_exception * exception;
 
 	/* (using calloc instead of malloc so that the message is initialized to zero) */
-	exception = calloc( 1, sizeof(*exception) );
+	exception = calloc( (size_t)1, sizeof(*exception) );
 
 	if(exception == NULL){
 		MEMORY_ERROR(DESC_MALLOC_EXCEPTION, line, function);
