@@ -11,12 +11,12 @@ DEFINE_TEST(
 	"after_REUSING_CONTEXT_block",
 	"ContextNotEnded"
 ){
-	volatile const e4c_exception * thrown_exception;
+	volatile int status = 123;
 
 	ECHO(("before_REUSING_CONTEXT_block\n"));
 
 	{
-		e4c_reusing_context(thrown_exception){
+		e4c_reusing_context(status, -123){
 
 			ECHO(("inside_REUSING_CONTEXT_block\n"));
 
@@ -26,5 +26,5 @@ DEFINE_TEST(
 
 	ECHO(("after_REUSING_CONTEXT_block\n"));
 
-	return(thrown_exception == NULL ? 123 : -123);
+	return(status);
 }
