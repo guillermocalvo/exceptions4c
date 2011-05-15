@@ -66,28 +66,6 @@
 #	define VERBATIM_COPY(dst, src) (void)sprintf(dst, "%.*s", (int)E4C_EXCEPTION_MESSAGE_SIZE - 1, src)
 # endif
 
-# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
-	/* vsnprintf is available */
-#	define SET_MESSAGE(verbatim, format) \
-		(verbatim || format == NULL)
-		/* the exception message will be either copied verbatim or truncated */
-#	define FORMAT_MESSAGE(verbatim, dst, format) \
-		if( !SET_MESSAGE(verbatim, format) ){ \
-			va_list arguments_list; \
-			va_start(arguments_list, format); \
-			(void)vsnprintf(dst, (size_t)E4C_EXCEPTION_MESSAGE_SIZE, format, arguments_list); \
-			va_end(arguments_list); \
-		}
-		/* format the exception message (format can't be NULL) */
-# else
-	/* vsnprintf is not available */
-#	define SET_MESSAGE(copy, format)	E4C_TRUE
-		/* the exception message will be copied verbatim */
-#	define FORMAT_MESSAGE(copy, dst, format) \
-		(void)copy
-		/* ignore parameter */
-# endif
-
 # define DESC_MALLOC_EXCEPTION		"Could not create a new exception."
 # define DESC_MALLOC_FRAME			"Could not create a new exception frame."
 # define DESC_MALLOC_CONTEXT		"Could not create a new exception context."
@@ -730,9 +708,11 @@ _e4c_exception_type_extends(
  *         e4c_get_exception
  *
  *     PROTECTED
- *         e4c_exception_throw_
+ *         e4c_exception_throw_verbatim_
+ *         e4c_exception_throw_format_
  *
  *     PRIVATE
+ *         _e4c_exception_throw
  *         _e4c_print_exception
  *         _e4c_exception_allocate
  *         _e4c_exception_deallocate
@@ -740,6 +720,19 @@ _e4c_exception_type_extends(
  *         _e4c_exception_set_cause
  *
  */
+
+static E4C_INLINE
+e4c_exception *
+_e4c_exception_throw(
+	e4c_frame *					frame,
+	const e4c_exception_type *	exception_type,
+	const char *				file,
+	int							line,
+	const char *				function,
+	int							error_number,
+	E4C_BOOL					set_message,
+	const char *				message
+);
 
 static E4C_INLINE
 void
@@ -1671,10 +1664,10 @@ E4C_BOOL e4c_is_instance_of(const e4c_exception * instance, const e4c_exception_
 
 	if(instance == NULL){
 		/* the instance is NULL: maybe no exception was thrown */
-		e4c_exception_throw_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_is_instance_of", E4C_TRUE, "Null exception instance.");
+		e4c_exception_throw_verbatim_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_is_instance_of", "Null exception instance.");
 	}else if(exception_type == NULL){
 		/* the type is NULL */
-		e4c_exception_throw_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_is_instance_of", E4C_TRUE, "Null exception type.");
+		e4c_exception_throw_verbatim_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_is_instance_of", "Null exception type.");
 	}
 
 	if(instance->type == exception_type){
@@ -1721,7 +1714,7 @@ static E4C_INLINE void _e4c_print_exception_type(const e4c_exception_type * exce
 void e4c_print_exception_type(const e4c_exception_type * exception_type){
 
 	if(exception_type == NULL){
-		e4c_exception_throw_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_print_exception_type", E4C_TRUE, "Null exception type.");
+		e4c_exception_throw_verbatim_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_print_exception_type", "Null exception type.");
 	}
 
 	_e4c_print_exception_type(exception_type);
@@ -1748,12 +1741,38 @@ const e4c_exception * e4c_get_exception(void){
 	return(context->current_frame->thrown_exception);
 }
 
-void e4c_exception_throw_(const e4c_exception_type * exception_type, const char * file, int line, const char * function, E4C_BOOL verbatim, const char * message, ...){
+static E4C_INLINE e4c_exception * _e4c_exception_throw(e4c_frame * frame, const e4c_exception_type * exception_type, const char * file, int line, const char * function, int error_number, E4C_BOOL set_message, const char * message){
+
+	e4c_exception *		cause;
+	e4c_exception *		new_exception;
+
+	/* capture the cause of this exception */
+	cause = frame->thrown_exception;
+	frame->thrown_exception = NULL;
+
+	/* convert NULL exception type to NPE */
+	if(exception_type == NULL){
+		TODO: fix this
+		exception_type = &NullPointerException;
+	}
+
+	new_exception = _e4c_exception_allocate(__LINE__, "_e4c_exception_throw");
+
+	/* "instantiate" the specified exception */
+	_e4c_exception_initialize(new_exception, exception_type, set_message, message, file, line, function, error_number);
+
+	if(cause != NULL){
+		_e4c_exception_set_cause(new_exception, cause);
+	}
+
+	return(new_exception);
+}
+
+void e4c_exception_throw_verbatim_(const e4c_exception_type * exception_type, const char * file, int line, const char * function, const char * message){
 
 	int					error_number;
 	e4c_context *		context;
 	e4c_frame *			frame;
-	e4c_exception *		cause;
 	e4c_exception *		new_exception;
 
 	/* store the current error number up front */
@@ -1764,39 +1783,64 @@ void e4c_exception_throw_(const e4c_exception_type * exception_type, const char 
 
 	/* check if 'throw' was used before calling e4c_context_begin */
 	if(context == NULL){
-		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_exception_throw_: " DESC_NOT_BEGUN_YET, file, line, function);
+		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_exception_throw_verbatim_: " DESC_NOT_BEGUN_YET, file, line, function);
 	}
 
 	/* get the current frame */
 	frame = context->current_frame;
 
 	/* check if the current frame is NULL (unlikely) */
-	PREVENT_PROC(frame == NULL, DESC_INVALID_FRAME, "e4c_exception_throw_");
+	PREVENT_PROC(frame == NULL, DESC_INVALID_FRAME, "e4c_exception_throw_verbatim_");
 
-	/* capture the cause of this exception */
-	cause = frame->thrown_exception;
-	frame->thrown_exception = NULL;
-
-	/* convert NULL exception type to NPE */
-	if(exception_type == NULL){
-		exception_type = &NullPointerException;
-	}
-
-	new_exception = _e4c_exception_allocate(__LINE__, "e4c_exception_throw_");
-
-	/* "instantiate" the specified exception */
-	_e4c_exception_initialize(new_exception, exception_type, SET_MESSAGE(verbatim, message), message, file, line, function, error_number);
-
-	if(cause != NULL){
-		_e4c_exception_set_cause(new_exception, cause);
-	}
-
-	/* format the message (only if required *and* feasible) */
-	FORMAT_MESSAGE(verbatim, new_exception->message, message);
+	/* check context and frame; initialize exception and cause */
+	new_exception = _e4c_exception_throw(frame, exception_type, file, line, function, error_number, E4C_TRUE, message);
 
 	/* propagate the exception up the call stack */
 	_e4c_context_propagate(context, new_exception);
 }
+
+# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
+
+void e4c_exception_throw_format_(const e4c_exception_type * exception_type, const char * file, int line, const char * function, const char * format, ...){
+
+	int					error_number;
+	e4c_context *		context;
+	e4c_frame *			frame;
+	e4c_exception *		new_exception;
+
+	/* store the current error number up front */
+	error_number = errno;
+
+	/* get the current context */
+	context = E4C_CONTEXT;
+
+	/* check if 'throwf' was used before calling e4c_context_begin */
+	if(context == NULL){
+		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_exception_throw_format_: " DESC_NOT_BEGUN_YET, file, line, function);
+	}
+
+	/* get the current frame */
+	frame = context->current_frame;
+
+	/* check if the current frame is NULL (unlikely) */
+	PREVENT_PROC(frame == NULL, DESC_INVALID_FRAME, "e4c_exception_throw_format_");
+
+	/* check context and frame; initialize exception and cause */
+	new_exception = _e4c_exception_throw(frame, exception_type, file, line, function, error_number, (format == NULL), NULL);
+
+	/* format the message (only if feasible) */
+	if(format != NULL){
+		va_list arguments_list;
+		va_start(arguments_list, format);
+		(void)vsnprintf(new_exception->message, (size_t)E4C_EXCEPTION_MESSAGE_SIZE, format, arguments_list);
+		va_end(arguments_list);
+	}
+
+	/* propagate the exception up the call stack */
+	_e4c_context_propagate(context, new_exception);
+}
+
+# endif
 
 static E4C_INLINE void _e4c_exception_initialize(e4c_exception * exception, const e4c_exception_type * exception_type, E4C_BOOL set_message, const char * message, const char * file, int line, const char * function, int error_number){
 
@@ -1820,10 +1864,11 @@ static E4C_INLINE void _e4c_exception_initialize(e4c_exception * exception, cons
 			/* copy the default message for this type of exception */
 			VERBATIM_COPY(exception->message, exception_type->message);
 		}
-	}else{
-		/* truncate the message of this exception (for sanity) */
-		exception->message[0] = '\0';
 	}
+	/*
+	 * since the exception is allocated and then zero-initialized,
+	 * there's no need to truncate the message when !set_message.
+	 */
 }
 
 static E4C_INLINE e4c_exception * _e4c_exception_allocate(int line, const char * function){
@@ -1906,7 +1951,7 @@ static void _e4c_print_exception(const e4c_exception * exception){
 void e4c_print_exception(const e4c_exception * exception){
 
 	if(exception == NULL){
-		e4c_exception_throw_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_print_exception", E4C_TRUE, "Null exception.");
+		e4c_exception_throw_verbatim_(&NullPointerException, E4C_INFO_FILE_, E4C_INFO_LINE_, "e4c_print_exception", "Null exception.");
 	}
 
 	_e4c_print_exception(exception);
