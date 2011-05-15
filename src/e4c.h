@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 1)
+# define E4C_VERSION_(version)			version(2, 8, 2)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -296,7 +296,7 @@
 	else if( e4c_frame_get_stage_(E4C_INFO_) == e4c_finalizing_ )
 
 # define E4C_THROW(_exception_type_, _message_) \
-	e4c_exception_throw_(&_exception_type_, E4C_INFO_, E4C_TRUE, _message_ )
+	e4c_exception_throw_verbatim_(&_exception_type_, E4C_INFO_, _message_ )
 
 # define E4C_WITH(_resource_, _dispose_) \
 	E4C_FRAME_LOOP_(e4c_beginning_) \
@@ -347,22 +347,22 @@
 
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_THROWF(_exception_type_, _format_, ...) \
-		e4c_exception_throw_( \
-			&_exception_type_, E4C_INFO_, E4C_FALSE, _format_, __VA_ARGS__ \
+		e4c_exception_throw_format_( \
+			&_exception_type_, E4C_INFO_, _format_, __VA_ARGS__ \
 		)
 # endif
 
 # define E4C_RETHROW(_message_) \
-	e4c_exception_throw_( \
+	e4c_exception_throw_verbatim_( \
 		( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
-		E4C_INFO_, E4C_TRUE, _message_ \
+		E4C_INFO_, _message_ \
 	)
 
 # ifdef HAVE_C99_VARIADIC_MACROS
 #	define E4C_RETHROWF(_format_, ...) \
-		e4c_exception_throw_( \
+		e4c_exception_throw_format_( \
 			( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
-			E4C_INFO_, E4C_FALSE, _format_, __VA_ARGS__ \
+			E4C_INFO_, _format_, __VA_ARGS__ \
 		)
 # endif
 
@@ -3003,16 +3003,31 @@ e4c_frame_repeat_(
 
 extern
 void
-e4c_exception_throw_(
+e4c_exception_throw_verbatim_(
 	const e4c_exception_type *	exception_type,
 	const char *				file,
 	int							line,
 	const char *				function,
-	E4C_BOOL					verbatim,
-	const char *				message,
+	const char *				message
+)
+E4C_NORETURN;
+
+# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
+
+extern
+void
+e4c_exception_throw_format_(
+	const e4c_exception_type *	exception_type,
+	const char *				file,
+	int							line,
+	const char *				function,
+	const char *				format,
 	...
 )
 E4C_NORETURN;
+
+# endif
+
 
 
 # endif
