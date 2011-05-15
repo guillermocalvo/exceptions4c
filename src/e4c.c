@@ -485,6 +485,11 @@ E4C_DEFINE_EXCEPTION(ContextNotEnded,					DESC_NOT_ENDED,						ExceptionSystemFa
  *
  */
 
+long
+e4c_library_version(
+	void
+);
+
 static
 void
 _e4c_library_initialize(
@@ -588,6 +593,32 @@ _e4c_environment_get_current(
  *
  */
 
+void
+e4c_context_begin(
+	E4C_BOOL					handle_signals,
+	e4c_uncaught_handler		uncaught_handler
+);
+
+void
+e4c_context_end(
+	void
+);
+
+E4C_BOOL
+e4c_context_is_ready(
+	void
+);
+
+const e4c_signal_mapping *
+e4c_context_get_signal_mappings(
+	void
+);
+
+void
+e4c_context_set_signal_mappings(
+	const e4c_signal_mapping *	mappings
+);
+
 static
 void
 _e4c_context_propagate(
@@ -646,12 +677,46 @@ _e4c_context_get_current(
  *
  */
 
-static E4C_INLINE
+e4c_status
+e4c_get_status(
+	void
+);
+
+struct e4c_continuation_ *
+e4c_frame_first_stage_(
+	enum e4c_frame_stage_		stage,
+	const char *				file,
+	int							line,
+	const char *				function
+);
+
+E4C_BOOL
+e4c_frame_next_stage_(
+	void
+);
+
+enum e4c_frame_stage_
+e4c_frame_get_stage_(
+	const char *				file,
+	int							line,
+	const char *				function
+);
+
+E4C_BOOL
+e4c_frame_catch_(
+	const e4c_exception_type *	exception_type,
+	const char *				file,
+	int							line,
+	const char *				function
+);
+
 void
-_e4c_frame_initialize(
-	e4c_frame *					frame,
-	e4c_frame *					previous,
-	e4c_frame_stage				stage
+e4c_frame_repeat_(
+	int							max_repeat_attempts,
+	enum e4c_frame_stage_		stage,
+	const char *				file,
+	int							line,
+	const char *				function
 );
 
 static E4C_INLINE
@@ -667,6 +732,14 @@ _e4c_frame_deallocate(
 	e4c_frame *					frame
 );
 
+static E4C_INLINE
+void
+_e4c_frame_initialize(
+	e4c_frame *					frame,
+	e4c_frame *					previous,
+	e4c_frame_stage				stage
+);
+
 /*
  * EXCEPTION TYPE
  *
@@ -680,6 +753,17 @@ _e4c_frame_deallocate(
  *         _e4c_exception_type_extends
  *
  */
+
+void
+e4c_print_exception_type(
+	const e4c_exception_type *	exception_type
+);
+
+E4C_BOOL
+e4c_is_instance_of(
+	const e4c_exception *		instance,
+	const e4c_exception_type *	exception_type
+);
 
 static E4C_INLINE
 void
@@ -712,14 +796,82 @@ _e4c_exception_type_extends(
  *         e4c_exception_throw_format_
  *
  *     PRIVATE
- *         _e4c_exception_throw
- *         _e4c_print_exception
  *         _e4c_exception_allocate
  *         _e4c_exception_deallocate
  *         _e4c_exception_initialize
  *         _e4c_exception_set_cause
+ *         _e4c_exception_throw
+ *         _e4c_print_exception
  *
  */
+
+void
+e4c_print_exception(
+	const e4c_exception *		exception
+);
+
+const e4c_exception *
+e4c_get_exception(
+	void
+);
+
+void
+e4c_exception_throw_verbatim_(
+	const e4c_exception_type *	exception_type,
+	const char *				file,
+	int							line,
+	const char *				function,
+	const char *				message
+)
+E4C_NORETURN;
+
+# if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
+
+void
+e4c_exception_throw_format_(
+	const e4c_exception_type *	exception_type,
+	const char *				file,
+	int							line,
+	const char *				function,
+	const char *				format,
+	...
+)
+E4C_NORETURN;
+
+# endif
+
+static E4C_INLINE
+e4c_exception *
+_e4c_exception_allocate(
+	int							line,
+	const char *				function
+);
+
+static E4C_INLINE
+void
+_e4c_exception_deallocate(
+	e4c_exception *				exception
+);
+
+static E4C_INLINE
+void
+_e4c_exception_initialize(
+	e4c_exception *				exception,
+	const e4c_exception_type *	exception_type,
+	E4C_BOOL					set_message,
+	const char *				message,
+	const char *				file,
+	int							line,
+	const char *				function,
+	int							error_number
+);
+
+static E4C_INLINE
+void
+_e4c_exception_set_cause(
+	e4c_exception *				exception,
+	e4c_exception *				cause
+);
 
 static E4C_INLINE
 e4c_exception *
@@ -738,39 +890,6 @@ static E4C_INLINE
 void
 _e4c_print_exception(
 	const e4c_exception *		exception
-);
-
-static E4C_INLINE
-void
-_e4c_exception_initialize(
-	e4c_exception *				exception,
-	const e4c_exception_type *	exception_type,
-	E4C_BOOL					set_message,
-	const char *				message,
-	const char *				file,
-	int							line,
-	const char *				function,
-	int							error_number
-);
-
-static E4C_INLINE
-e4c_exception *
-_e4c_exception_allocate(
-	int							line,
-	const char *				function
-);
-
-static E4C_INLINE
-void
-_e4c_exception_deallocate(
-	e4c_exception *				exception
-);
-
-static E4C_INLINE
-void
-_e4c_exception_set_cause(
-	e4c_exception *				exception,
-	e4c_exception *				cause
 );
 
 
