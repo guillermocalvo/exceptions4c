@@ -1752,7 +1752,6 @@ static E4C_INLINE e4c_exception * _e4c_exception_throw(e4c_frame * frame, const 
 
 	/* convert NULL exception type to NPE */
 	if(exception_type == NULL){
-		TODO: fix this
 		exception_type = &NullPointerException;
 	}
 
