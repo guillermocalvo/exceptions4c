@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 6)
+# define E4C_VERSION_(version)			version(2, 8, 7)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -88,6 +88,9 @@
 #	error "Please define E4C_THREADSAFE at compiler level " \
 "in order to enable the multi-thread version of exceptions4c."
 # endif
+
+
+/*@-exportany@*/
 
 
 /* C99 features */
@@ -3305,6 +3308,9 @@ e4c_exception_throw_format_(
 E4C_NORETURN;
 
 # endif
+
+
+/*@=exportany@*/
 
 
 # endif
