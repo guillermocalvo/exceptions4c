@@ -60,7 +60,9 @@
 
 # define FOREACH(element, list)			for(element = list.first; element != NULL; element = element->next)
 
-# if defined(HAVE_C99_SNPRINTF) || defined(HAVE_SNPRINTF)
+# if	defined(HAVE_C99_SNPRINTF) \
+	||	defined(HAVE_SNPRINTF) \
+	||	defined(S_SPLINT_S)
 #	define VERBATIM_COPY(dst, src) (void)snprintf(dst, (size_t)E4C_EXCEPTION_MESSAGE_SIZE, "%s", src)
 # else
 #	define VERBATIM_COPY(dst, src) (void)sprintf(dst, "%.*s", (int)E4C_EXCEPTION_MESSAGE_SIZE - 1, src)
