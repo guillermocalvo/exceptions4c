@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 7)
+# define E4C_VERSION_(version)			version(2, 8, 8)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -263,21 +263,21 @@
 
 
 # ifdef E4C_THREADSAFE
-#	define E4C_VERSION_THREADSAFE_		( (int) 1 )
-#	define E4C_VERSION_THREADSAFE_STRING_ " (multi-thread)"
+#	define E4C_VERSION_THREADSAFE_			1
+#	define E4C_VERSION_THREADSAFE_STRING_	" (multi-thread)"
 # else
-#	define E4C_VERSION_THREADSAFE_		( (int) 0 )
-#	define E4C_VERSION_THREADSAFE_STRING_ " (single-thread)"
+#	define E4C_VERSION_THREADSAFE_			0
+#	define E4C_VERSION_THREADSAFE_STRING_	" (single-thread)"
 # endif
 
 
 # define E4C_VERSION_STRING_(_major_, _minor_, _revision_) \
 	#_major_ "." #_minor_ "." #_revision_ E4C_VERSION_THREADSAFE_STRING_
 # define E4C_VERSION_NUMBER_(_major_, _minor_, _revision_) ( \
-	( (long)E4C_VERSION_THREADSAFE_	* 10000000) +	\
-	( (long)_major_					* 1000000) +	\
-	( (long)_minor_					* 1000) +		\
-	( (long)_revision_				* 1)			\
+	( (long)E4C_VERSION_THREADSAFE_	* 10000000L) +	\
+	( (long)_major_					* 1000000L) +	\
+	( (long)_minor_					* 1000L) +		\
+	( (long)_revision_				* 1L)			\
 )
 # define E4C_VERSION_MAJOR_(_major_, _minor_, _revision_) ( (int)_major_ )
 # define E4C_VERSION_MINOR_(_major_, _minor_, _revision_) ( (int)_minor_ )
@@ -371,7 +371,11 @@
 
 # define E4C_RETHROW(_message_) \
 	e4c_exception_throw_verbatim_( \
-		( e4c_get_exception() == NULL ? NULL : e4c_get_exception()->type), \
+		( \
+			e4c_get_exception() == NULL \
+			? &NullPointerException \
+			: e4c_get_exception()->type \
+		), \
 		E4C_INFO_, _message_ \
 	)
 
@@ -2209,8 +2213,8 @@ struct e4c_continuation_{
 /**
  * The array of predefined signal mappings.
  */
-/*@unused@*/ /*@checkmod@*/ /*@notnull@*/
-extern const e4c_signal_mapping * e4c_default_signal_mappings;
+/*@unused@*/ /*@unchecked@*/ /*@notnull@*/
+extern const e4c_signal_mapping * const e4c_default_signal_mappings;
 
 /** @} */
 
@@ -2237,7 +2241,7 @@ extern const e4c_signal_mapping * e4c_default_signal_mappings;
  *          #IllegalArgumentException,
  *          #SignalException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(RuntimeException);
 
 /**
@@ -2249,7 +2253,7 @@ E4C_DECLARE_EXCEPTION(RuntimeException);
  * @par     Extends:
  *          #RuntimeException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(NotEnoughMemoryException);
 
 /**
@@ -2262,7 +2266,7 @@ E4C_DECLARE_EXCEPTION(NotEnoughMemoryException);
  * @par     Extends:
  *          #RuntimeException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(IllegalArgumentException);
 
 /**
@@ -2278,7 +2282,7 @@ E4C_DECLARE_EXCEPTION(IllegalArgumentException);
  *
  * @see     assert
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(AssertionException);
 
 /**
@@ -2317,7 +2321,7 @@ E4C_DECLARE_EXCEPTION(FileOpenException);
  *          #ControlSignalException,
  *          #ProgramSignalException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(SignalException);
 
 /**
@@ -2399,7 +2403,7 @@ E4C_DECLARE_EXCEPTION(IllegalInstructionException);
  * @par     Extends:
  *          #ErrorSignalException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(ArithmeticException);
 
 /**
@@ -2428,7 +2432,7 @@ E4C_DECLARE_EXCEPTION(BrokenPipeException);
  * @par     Direct known subexceptions:
  *          #NullPointerException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(BadPointerException);
 
 /**
@@ -2451,7 +2455,7 @@ E4C_DECLARE_EXCEPTION(BadPointerException);
  *
  * @see     IllegalArgumentException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(NullPointerException);
 
 /**
@@ -2540,7 +2544,7 @@ E4C_DECLARE_EXCEPTION(TerminationException);
  * @par     Extends:
  *          #ControlSignalException
  */
-/*@unused@*/
+/*@unused@*/ /*@unchecked@*/
 E4C_DECLARE_EXCEPTION(AbortException);
 
 /**
