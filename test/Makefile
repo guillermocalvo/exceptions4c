@@ -1,6 +1,12 @@
 
+RUN					= ALL_SUITES
+REPORT_FILE			= report.html
 CC                  = gcc
-CFLAGS              = -Wall -Wextra -ansi -pedantic
+CDEFINES			= -DE4C_NOKEYWORDS
+CFLAGS              = -Wall -Wextra -ansi -pedantic $(CDEFINES)
+SPLINT				= splint.exe
+SDEFINES			= -D_ISOC99_SOURCE
+SFLAGS				= -strict -namechecks -whileblock -forblock -elseifcomplete -stringliteralsmaller $(SDEFINES)
 BIN                 = e4c_test
 RM                  = rm -f
 WGET                = wget
@@ -47,6 +53,8 @@ run: all
 clean:
 	${RM} $(OBJ) $(BIN)
 
+splint: $(SRC)
+	$(SPLINT) $(SFLAGS) *.c
 
 $(BIN): $(OBJ)
 	$(CC) $(LINKOBJ) -o $(BIN)
@@ -57,7 +65,7 @@ e4c.o: e4c.c
 
 
 main.o: main.c
-	$(CC) -c main.c -o main.o $(CFLAGS)
+	$(CC) -c main.c -o main.o $(CFLAGS) -DRUN=$(RUN) -DREPORT_FILE="\"$(REPORT_FILE)"\"
 
 testing.o: testing.c
 	$(CC) -c testing.c -o testing.o $(CFLAGS)
