@@ -3,11 +3,17 @@
 # include "testing.h"
 
 
-static void set_null_z04(int * * pointer){
+static void set_null_z04(int * * pointer)
+/*@modifies
+	pointer
+@*/
+{
 
 	int * null_pointer = NULL;
 
+	/*@-boundsread@*/
 	memcpy(pointer, &null_pointer, sizeof(pointer) );
+	/*@=boundsread@*/
 }
 
 
@@ -34,7 +40,9 @@ DEFINE_REQUIREMENT(
 
 	ECHO(("before_NULL_POINTER\n"));
 
+	/*@-boundsread@*/
 	integer = *pointer;
+	/*@=boundsread@*/
 
 	ECHO(("after_NULL_POINTER_%d\n", integer));
 

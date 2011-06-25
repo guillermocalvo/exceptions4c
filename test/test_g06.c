@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"Abort exception",
 	"This test calls <code>abort</code>; the library signal handling is enabled; there is no <code>catch</code> block. The behavior of the program will no longer be undefined: it will terminate because of the uncaught exception <code>AbortException</code>.",
 	"This functionality relies on the <a href=\"#requirement_z09\"><strong>platform's ability to handle signal <code>SIGABRT</code></strong></a>.",
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"before_ABORT",
 	"AbortException"
 ){
@@ -20,6 +20,8 @@ DEFINE_TEST(
 
 	abort();
 
+	/*@-unreachable@*/
+
 	ECHO(("after_ABORT\n"));
 
 	ECHO(("before_CONTEXT_END\n"));
@@ -29,4 +31,6 @@ DEFINE_TEST(
 	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
+
+	/*@=unreachable@*/
 }

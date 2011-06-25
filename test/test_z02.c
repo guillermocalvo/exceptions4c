@@ -9,9 +9,11 @@ DEFINE_REQUIREMENT(
 	SEVERITY_CRITICAL,
 	"The test framework is unable to detect when a test returns <code>EXIT_FAILURE</code> exit code.",
 	EXIT_FAILURE,
-	NULL,
-	NULL
+	OUTPUT_WHATEVER,
+	ERROR_WHATEVER
 ){
+
+	ECHO(("before_return_EXIT_FAILURE\n"));
 
 	return(EXIT_FAILURE);
 }

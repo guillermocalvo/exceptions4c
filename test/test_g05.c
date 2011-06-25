@@ -2,9 +2,13 @@
 # include "testing.h"
 
 
-static int set_zero_g05(int dummy){
+static int set_zero_g05(int dummy)
+/*@*/
+{
 
-	if(dummy == 0) return(1);
+	if(dummy == 0){
+		return(1);
+	}
 
 	return(0);
 }
@@ -15,7 +19,7 @@ DEFINE_TEST(
 	"Division by zero exception",
 	"This test attempts to divide by zero; the library signal handling is enabled; there is no <code>catch</code> block. The behavior of the program will no longer be undefined: it will terminate because of the uncaught exception <code>ArithmeticException</code>.",
 	"This functionality relies on the <a href=\"#requirement_z08\"><strong>platform's ability to handle signal <code>SIGFPE</code></strong></a>.",
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"before_DIVISION_BY_ZERO",
 	"ArithmeticException"
 ){

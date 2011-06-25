@@ -16,7 +16,7 @@ DEFINE_TEST_LONG_DESCRIPTION(
 		"<li>the program is terminated.</li>"
 		"</ol>",
 	NULL,
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"inside_FINALLY_block",
 	"WildException"
 ){
@@ -35,7 +35,11 @@ DEFINE_TEST_LONG_DESCRIPTION(
 
 		E4C_THROW(WildException, "I'm going to be caught.");
 
+		/*@-unreachable@*/
+
 		ECHO(("after_THROW\n"));
+
+		/*@=unreachable@*/
 
 	}E4C_CATCH(WildException){
 
@@ -45,7 +49,11 @@ DEFINE_TEST_LONG_DESCRIPTION(
 
 		E4C_RETHROW("Nobody will catch me this time.");
 
+		/*@-unreachable@*/
+
 		ECHO(("after_RETHROW\n"));
+
+		/*@=unreachable@*/
 
 	}E4C_FINALLY{
 

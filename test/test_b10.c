@@ -2,7 +2,16 @@
 # include "testing.h"
 
 
-static void aux(void){
+static void aux(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("before_TRY_block\n"));
 

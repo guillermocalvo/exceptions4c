@@ -118,44 +118,99 @@ E4C_DEFINE_EXCEPTION(SiblingException, "This is a sibling exception.", ParentExc
 
 # ifdef PLATFORM_OPEN_REPORT
 
-	static void open_report(test_runner * runner){
+	static void open_report(/*@notnull@*/ test_runner * runner)
+	/*@globals
+		fileSystem,
+		internalState
+	@*/
+	/*@modifies
+		fileSystem,
+		internalState,
 
-		sprintf(runner->buffer, PLATFORM_OPEN_REPORT, runner->report);
+		runner->buffer
+	@*/
+	{
 
-		system(runner->buffer);
+		SAFE_SPRINTF(SAFE_ARRAY(runner->buffer), PLATFORM_OPEN_REPORT, runner->report);
+
+		(void)system(runner->buffer);
 	}
 
 # else
 
-	static void open_report(test_runner * runner){
+	static void open_report(/*@notnull@*/ test_runner * runner)
+	/*@globals
+		fileSystem,
+		internalState
+	@*/
+	/*@modifies
+		fileSystem,
+		internalState
+	@*/
+	{
 
 		printf("\tPlease read \"%s\" for further information.\n", runner->report);
 	}
 
 # endif
 
-static void calculate_total(statistics * stats){
+static void calculate_total(statistics * stats)
+/*@modifies
+	stats
+@*/
+{
 
 	stats->total = stats->passed + stats->warnings + stats->failed;
 }
 
-static int cannot_read(const char * file_path){
+static int cannot_read(const char * file_path)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	printf("Error: Cannot read file: %s\nPlease check the file system.\n", file_path);
+
 	return(EXIT_FAILURE);
 }
 
-static int cannot_write(const char * file_path){
+static int cannot_write(const char * file_path)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	printf("Error: Cannot write file: %s\nPlease check the file system.\n", file_path);
+
 	return(EXIT_FAILURE);
 }
 
-static const char * load_file(const char * file_path, char * store, int bytes){
+static /*@null@*/ /*@temp@*/ const char * load_file(const char * file_path, /*@returned@*/ char * store, size_t bytes)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	store
+@*/
+{
 
 	FILE *			file;
-	int				tmp				= ' ';
-	int				read			= 0;
+	int				tmp				= (int)' ';
+	size_t			read			= 0;
 	const char *	last_token		= NULL;
 	E4C_BOOL		new_token		= E4C_TRUE;
 	E4C_BOOL		looking_for_token = E4C_TRUE;
@@ -165,30 +220,42 @@ static const char * load_file(const char * file_path, char * store, int bytes){
 
 	file = fopen(file_path, "r");
 
-	if(file == NULL) exit( cannot_read(file_path) );
+	if(file == NULL){
+		exit( cannot_read(file_path) );
+	}
 
 	for(read = 0; read < bytes; read++){
 
 		tmp = getc(file);
 
-		if(tmp == EOF) break;
+		if(tmp == EOF){
+			break;
+		}
 
-		if(tmp == '<')			store[read] = '{';
-		else if(tmp == '>')		store[read] = '}';
-		else					store[read] = tmp;
+		/*@-boundswrite@*/
+		if(tmp == (int)'<'){
+			store[read] = '{';
+		}else if(tmp == (int)'>'){
+			store[read] = '}';
+		}else{
+			store[read] = (char)tmp;
+		}
+		/*@=boundswrite@*/
 
 		if(looking_for_token){
-			if(tmp == ':'){
+			if(tmp == (int)':'){
 # ifdef NDEBUG
 				ready_for_token	= E4C_TRUE;
 # else
 				looking_for_token = E4C_FALSE;
 # endif
-			}else if(tmp <= ' '){
+			}else if(tmp <= (int)' '){
 				new_token = E4C_TRUE;
 			}else if(new_token){
 				new_token = E4C_FALSE;
+				/*@-ptrarith@*/
 				last_token = store + read;
+				/*@=ptrarith@*/
 # ifdef NDEBUG
 				if(ready_for_token) looking_for_token = E4C_FALSE;
 # endif
@@ -196,8 +263,9 @@ static const char * load_file(const char * file_path, char * store, int bytes){
 		}
 	}
 
-	fclose(file);
+	(void)fclose(file);
 
+	/*@-boundswrite@*/
 	if(read < bytes){
 		store[read] = '\0';
 	}else{
@@ -206,11 +274,14 @@ static const char * load_file(const char * file_path, char * store, int bytes){
 		store[read - 3] = '.';
 		store[read - 4] = '.';
 	}
+	/*@=boundswrite@*/
 
 	return(last_token);
 }
 
-static E4C_BOOL is_unexpected_token(const char * expected_token, const char * token){
+static E4C_BOOL is_unexpected_token(/*@null@*/ const char * expected_token, /*@null@*/ const char * token)
+/*@*/
+{
 
 	int index;
 
@@ -223,41 +294,56 @@ static E4C_BOOL is_unexpected_token(const char * expected_token, const char * to
 	}
 
 	for(index = 0; expected_token[index] != '\0'; index++){
+		/*@-boundsread@*/
 		if( token[index] != expected_token[index] ){
 			return(E4C_TRUE);
 		}
+		/*@=boundsread@*/
 	}
-	
+
 	return(E4C_FALSE);
 }
 
-static const char * make_command_line(test_runner * runner){
+static void make_command_line(/*@notnull@*/ test_runner * runner)
+/*@modifies
+	runner->buffer
+@*/
+{
 
-	sprintf(
-		runner->buffer,
-		"%s %d %d > %s 2> %s",
+	SAFE_SPRINTF(
+		SAFE_ARRAY(runner->buffer),
+		"%s %u %u > %s 2> %s",
 		runner->file_path,
-		runner->suite_number,
-		runner->test_number,
+		(unsigned int)runner->suite_number,
+		(unsigned int)runner->test_number,
 		runner->out,
 		runner->err
 	);
-
-	return(runner->buffer);
 }
 
-static void run_test(test_runner * runner, unit_test * test){
+static void run_test(/*@notnull@*/ test_runner * runner, /*@notnull@*/ unit_test * test)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	const char *	command;
+	runner->buffer,
+	test
+@*/
+{
+
 	const char *	last_output;
 	const char *	last_error;
 	int				termination_status;
 
-	command = make_command_line(runner);
+	make_command_line(runner);
 
 	printf("	%s_%s: ", (test->is_requirement ? "requirement" : "unit_test"), test->code);
 
-	termination_status			= system(command);
+	termination_status			= system(runner->buffer);
 	test->found_exit_code		= GET_EXIT_CODE(termination_status);
 
 	last_output	= load_file( runner->out, test->found_output, sizeof(test->found_output) );
@@ -292,9 +378,21 @@ static void run_test(test_runner * runner, unit_test * test){
 	}
 }
 
-static void run_test_suite(test_runner * runner, test_suite * suite){
+static void run_test_suite(test_runner * runner, test_suite * suite)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	int				tests;
+	runner,
+	suite
+@*/
+{
+
+	size_t tests;
 
 	printf("%s %s...\n", (suite->is_requirement ? "Checking" : "Running test suite"), suite->title);
 
@@ -306,7 +404,9 @@ static void run_test_suite(test_runner * runner, test_suite * suite){
 
 	for(runner->test_number = 0; runner->test_number < tests; runner->test_number++){
 
+		/*@-boundsread@*/
 		unit_test * test = suite->tests->test[runner->test_number];
+		/*@=boundsread@*/
 
 		run_test(runner, test);
 
@@ -321,7 +421,7 @@ static void run_test_suite(test_runner * runner, test_suite * suite){
 					if(!test->is_requirement || suite->is_requirement){
 						suite->stats.passed++;
 					}
-					break;
+					/*@switchbreak@*/ break;
 
 				case STATUS_WARNING:
 					if(test->is_requirement){
@@ -330,7 +430,7 @@ static void run_test_suite(test_runner * runner, test_suite * suite){
 					if(!test->is_requirement || suite->is_requirement){
 						suite->stats.warnings++;
 					}
-					break;
+					/*@switchbreak@*/ break;
 
 				default: /* STATUS_FAILED */
 					if(test->is_requirement){
@@ -348,25 +448,48 @@ static void run_test_suite(test_runner * runner, test_suite * suite){
 	suite->status = (suite->stats.failed > 0 ? STATUS_FAILED : (suite->stats.warnings > 0 ? STATUS_WARNING : STATUS_PASSED) );
 }
 
-static void generate_report(test_runner * runner){
+static void generate_report(/*@notnull@*/ test_runner * runner)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	FILE * report;
 
 	report = fopen(runner->report, "w");
 
-	if(report == NULL) exit( cannot_write(runner->report) );
+	if(report == NULL){
+		exit( cannot_write(runner->report) );
+	}
 
 	print_html(runner, report);
 
-	fclose(report);
+	(void)fclose(report);
 }
 
-test_runner new_test_runner(const char * file_path, const char * out, const char * err, const char * report, test_suite_collection * suites){
+static test_runner new_test_runner(const char * file_path, const char * out, const char * err, const char * report, test_suite_collection * suites)
+/*@globals
+	internalState
+@*/
+/*@modifies
+	internalState
+@*/
+{
 
 	test_runner runner;
 	statistics empty_stats = {0, 0, 0, 0};
 
 	runner.file_path			= file_path;
+	runner.suite_number			= 0;
+	runner.test_number			= 0;
+
+	runner.buffer[0]			= '\0';
+
 	runner.out					= out;
 	runner.err					= err;
 	runner.report				= report;
@@ -379,7 +502,22 @@ test_runner new_test_runner(const char * file_path, const char * out, const char
 	return(runner);
 }
 
-int run_all_test_suites(test_runner * runner){
+static int run_all_test_suites(/*@notnull@*/ test_runner * runner)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	runner,
+	runner->buffer,
+	runner->suite_number,
+	runner->suites->suite,
+	runner->stats
+@*/
+{
 
 	const char * summary1;
 	const char * summary2;
@@ -388,7 +526,9 @@ int run_all_test_suites(test_runner * runner){
 
 	for(runner->suite_number = 0; runner->suite_number < runner->suites->count; runner->suite_number++){
 
+		/*@-boundsread@*/
 		test_suite * suite = runner->suites->suite[runner->suite_number];
+		/*@=boundsread@*/
 
 		run_test_suite(runner, suite);
 
@@ -398,11 +538,11 @@ int run_all_test_suites(test_runner * runner){
 
 				case STATUS_PASSED:
 					runner->stats.suites.passed++;
-					break;
+					/*@switchbreak@*/ break;
 
 				case STATUS_WARNING:
 					runner->stats.suites.warnings++;
-					break;
+					/*@switchbreak@*/ break;
 
 				default: /* STATUS_FAILED */
 					runner->stats.suites.failed++;
@@ -419,8 +559,8 @@ int run_all_test_suites(test_runner * runner){
 	calculate_total(&runner->stats.suites);
 
 	/* delete temporary files */
-	remove(runner->out);
-	remove(runner->err);
+	(void)remove(runner->out);
+	(void)remove(runner->err);
 
 	if(runner->report != NULL){
 
@@ -459,8 +599,8 @@ int run_all_test_suites(test_runner * runner){
 int parse_command_line(int argc, char * argv[], test_suite_collection * suite_collection, const char * report, const char * out, const char * err){
 
 	long			version;
-	int				suite_number;
-	int				test_number;
+	size_t			suite_number;
+	size_t			test_number;
 	test_suite *	suite;
 	unit_test *		test;
 
@@ -487,7 +627,9 @@ int parse_command_line(int argc, char * argv[], test_suite_collection * suite_co
 		printf("\n--------------------------------\n EXCEPTIONS4C TESTING FRAMEWORK \n--------------------------------\n\n");
 		printf("library version: %ld\n\n", version);
 
+		/*@-boundsread@*/
 		runner = new_test_runner(argv[0], out, err, report, suite_collection);
+		/*@=boundsread@*/
 
 		result = run_all_test_suites(&runner);
 
@@ -502,21 +644,28 @@ int parse_command_line(int argc, char * argv[], test_suite_collection * suite_co
 
 	/* run a specific test */
 
-	suite_number		= atoi(argv[1]);
-	test_number			= atoi(argv[2]);
+	/*@-boundsread@*/
+	suite_number		= (size_t)atoi(argv[1]);
+	test_number			= (size_t)atoi(argv[2]);
+	/*@=boundsread@*/
 
-	if(suite_number < 0 || suite_number >= suite_collection->count){
-		printf("Error: wrong test suite number (%d).\n", suite_number);
+	if(suite_number >= suite_collection->count){
+		printf("Error: wrong test suite number (%u).\n", (unsigned int)suite_number);
 		return(EXIT_FAILURE);
 	}
+
+	/*@-boundsread@*/
 	suite = suite_collection->suite[suite_number];
+	/*@=boundsread@*/
 
-	if(test_number < 0 || test_number >= suite->tests->count){
-		printf("Error: wrong unit test number (%d).\n", test_number);
+	if(test_number >= suite->tests->count){
+		printf("Error: wrong unit test number (%u).\n", (unsigned int)test_number);
 		return(EXIT_FAILURE);
 	}
 
+	/*@-boundsread@*/
 	test = suite->tests->test[test_number];
+	/*@=boundsread@*/
 
 	return( test->function() );
 }

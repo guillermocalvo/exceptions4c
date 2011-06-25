@@ -2,7 +2,16 @@
 # include "testing.h"
 
 
-static void aux(void){
+static void aux(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("before_SECOND_TRY_FINALLY_block\n"));
 
@@ -12,7 +21,11 @@ static void aux(void){
 
 		E4C_THROW(WildException, "Nobody will catch me.");
 
+		/*@-unreachable@*/
+
 		ECHO(("after_THROW\n"));
+
+		/*@=unreachable@*/
 
 	}E4C_FINALLY{
 
@@ -39,7 +52,7 @@ DEFINE_TEST_LONG_DESCRIPTION(
 		"<li>The program is terminated.</li>"
 		"</ol>",
 	NULL,
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"inside_SECOND_FINALLY_block____and_then____FIRST_FINALLY_block",
 	"WildException"
 ){

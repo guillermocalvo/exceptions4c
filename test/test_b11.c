@@ -12,7 +12,7 @@ DEFINE_TEST(
 	NULL
 ){
 
-	int is_executed = E4C_FALSE;
+	E4C_BOOL is_executed = E4C_FALSE;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
@@ -44,7 +44,7 @@ DEFINE_TEST(
 
 	ECHO(("after_CONTEXT_END\n"));
 
-	if(is_executed == E4C_TRUE){
+	if(is_executed){
 		ECHO(("USE_block_was_NOT_ignored\n"));
 	}else{
 		ECHO(("USE_block_was_ignored\n"));

@@ -3,13 +3,24 @@
 # include "testing.h"
 
 
-static void handler_z09(int signal_number){
+static void handler_z09(int signal_number)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("handler_%d\n", signal_number));
 
 	ECHO(("\nhandler_executed\n"));
 
+	/*@-exitarg@*/
 	exit(123);
+	/*@=exitarg@*/
 }
 
 DEFINE_REQUIREMENT(
@@ -23,9 +34,12 @@ DEFINE_REQUIREMENT(
 	ERROR_WHATEVER
 ){
 
+	void (*previous_handler)(int);
+
 	ECHO(("before_SIGNAL\n"));
 
-	if( signal(SIGABRT, handler_z09) == SIG_ERR ){
+	previous_handler = signal(SIGABRT, handler_z09);
+	if(previous_handler == SIG_ERR){
 		ECHO(("could_not_set_handler_%d\n", SIGABRT));
 	}else{
 		ECHO(("handler_was_set_%d\n", SIGABRT));
@@ -35,7 +49,11 @@ DEFINE_REQUIREMENT(
 
 	abort();
 
+	/*@-unreachable@*/
+
 	ECHO(("after_ABORT\n"));
 
 	return(EXIT_SUCCESS);
+
+	/*@=unreachable@*/
 }

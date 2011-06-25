@@ -2,7 +2,16 @@
 # include "testing.h"
 
 
-static void aux(void * pointer){
+static void aux(/*@null@*/ void * pointer)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 	if(pointer == NULL){
 		ECHO(("____aux_before_THROW\n"));
 		E4C_THROW(WildException, "Nobody will catch me.");
@@ -11,7 +20,16 @@ static void aux(void * pointer){
 	}
 }
 
-static int ext(void){
+static int ext(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	volatile const char *	error = NULL;
 	volatile E4C_BOOL		is_ready1;
@@ -57,7 +75,9 @@ static int ext(void){
 		ECHO(("__ext_the_context_IS_NOT_ready\n"));
 	}
 
-	if(is_ready1 != is_ready2) return(112233);
+	if( BOOL_NOT_EQUAL(is_ready1, is_ready2) ){
+		return(112233);
+	}
 
 	if(error == NULL){
 
@@ -79,7 +99,7 @@ DEFINE_TEST(
 	"A library (exception-aware client) does not catch an exception",
 	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-aware</em>, but the external function cannot simply rely on that. So the external function opens a <code>e4c_reusing_context</code> and then the existing exception context is <em>reused</em>. The external function does not catch an exception so it is propagated to the caller. The caller does not catch it either, so the uncaught exception terminates the program or thread.",
 	NULL,
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"____aux_before_THROW",
 	"WildException"
 ){

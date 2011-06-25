@@ -3,20 +3,35 @@
 # include "testing.h"
 
 
-static int set_zero_z11(int dummy){
+static int set_zero_z11(int dummy)
+/*@*/
+{
 
-	if(dummy == 0) return(1);
+	if(dummy == 0){
+		return(1);
+	}
 
 	return(0);
 }
 
-static void handler_z11(int signal_number){
+static void handler_z11(int signal_number)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("handler_%d\n", signal_number));
 
 	ECHO(("\nhandler_executed\n"));
 
+	/*@-exitarg@*/
 	exit(123);
+	/*@=exitarg@*/
 }
 
 
@@ -33,10 +48,12 @@ DEFINE_REQUIREMENT(
 
 	int		divisor			= 10;
 	int		integer			= 100;
+	void	(*previous_handler)(int);
 
 	ECHO(("before_SIGNAL\n"));
 
-	if( signal(SIGFPE, handler_z11) == SIG_ERR ){
+	previous_handler = signal(SIGFPE, handler_z11);
+	if(previous_handler == SIG_ERR){
 		ECHO(("could_not_set_handler_%d\n", SIGFPE));
 	}else{
 		ECHO(("handler_was_set_%d\n", SIGFPE));

@@ -20,6 +20,8 @@ DEFINE_TEST(
 
 	abort();
 
+	/*@-unreachable@*/
+
 	ECHO(("after_ABORT\n"));
 
 	ECHO(("before_CONTEXT_END\n"));
@@ -29,4 +31,6 @@ DEFINE_TEST(
 	ECHO(("after_CONTEXT_END\n"));
 
 	return(EXIT_SUCCESS);
+
+	/*@=unreachable@*/
 }

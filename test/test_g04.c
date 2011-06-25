@@ -3,11 +3,17 @@
 # include "testing.h"
 
 
-static void set_zero_g04(int * * pointer){
+static void set_zero_g04(int * * pointer)
+/*@modifies
+	pointer
+@*/
+{
 
 	int * null_pointer = NULL;
 
+	/*@-boundsread@*/
 	memcpy(pointer, &null_pointer, sizeof(pointer) );
+	/*@=boundsread@*/
 }
 
 
@@ -16,7 +22,7 @@ DEFINE_TEST(
 	"Bad pointer exception",
 	"This test attempts to dereference a null pointer; the library signal handling is enabled; there is no <code>catch</code> block. The behavior of the program will no longer be undefined: it will terminate because of the uncaught exception <code>BadPointerException</code>.",
 	"This functionality relies on the <a href=\"#requirement_z07\"><strong>platform's ability to handle signal <code>SIGSEGV</code></strong></a>.",
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"before_NULL_POINTER",
 	"BadPointerException"
 ){
@@ -37,7 +43,9 @@ DEFINE_TEST(
 
 	ECHO(("before_NULL_POINTER\n"));
 
+	/*@-boundsread@*/
 	integer = *pointer;
+	/*@=boundsread@*/
 
 	ECHO(("after_NULL_POINTER_%d\n", integer));
 

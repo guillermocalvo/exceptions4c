@@ -10,15 +10,21 @@
 
 
 # define PRINT_STATELESS_MACRO(report, macro) \
-		if(macro.is_defined) fprintf(report, "%s:%%20%s%%0A", macro.name, (macro.is_defined ? "defined" : "undefined") )
+		if( IS_DEFINED(macro) ){ \
+			fprintf(report, "%s:%%20%s%%0A", macro.name, ( IS_DEFINED(macro) ? "defined" : "undefined") ); \
+		}
 
 # define PRINT_STATEFUL_MACRO(report, macro) \
-		if(macro.is_defined) fprintf( report, "%s:%%20%s%%20(%ld)%%0A", macro.name, macro.description, macro.value )
+		if( IS_DEFINED(macro) ){ \
+			fprintf( report, "%s:%%20%s%%20(%ld)%%0A", macro.name, macro.description, macro.value ); \
+		}
 
 # define PRINT_UNDEFINED_MACRO(report, macro) \
-		if(!macro.is_defined) fprintf(report, "%%20%s", macro.name)
+		if( IS_NOT_DEFINED(macro) ){ \
+			fprintf(report, "%%20%s", macro.name); \
+		}
 
-# define SUMMARY_MAX_ITEMS 5
+# define SUMMARY_MAX_ITEMS (size_t)5
 
 # define MIN(x, y) (x < y ? x : y )
 # define ELIDED(x) (x > SUMMARY_MAX_ITEMS)
@@ -42,15 +48,26 @@
 	(is_requirement ? "requirement" : otherwise)
 
 
-static void print_stateful_macro(FILE * report, struct stateful_macro macro){
+static void print_stateful_macro(/*@notnull@*/ FILE * report, struct stateful_macro macro)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	if(macro.is_defined){
+	report
+@*/
+{
+
+	if( IS_DEFINED(macro) ){
 		fprintf(report,
 			"<div>"
 				"<div class=\"info image icon24\"></div>"
 				"<code>%s</code> is defined as <code>%ld</code>, i.e. <em>%s (%s)</em>"
 			"</div>",
-		macro.name, macro.value, macro.description, macro.detail);
+		macro.name, macro.value, macro.description, (macro.detail == NULL ? "" : macro.detail) );
 	}else{
 		fprintf(report,
 			"<div>"
@@ -61,78 +78,123 @@ static void print_stateful_macro(FILE * report, struct stateful_macro macro){
 	}
 }
 
-static void print_stateless_macro(FILE * report, struct stateless_macro macro){
+static void print_stateless_macro(/*@notnull@*/ FILE * report, struct stateless_macro macro)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report,
 		"<div>"
 			"<div class=\"info image icon24\"></div>"
 			"<code>%s</code> is%s defined, i.e. <em>%s</em>"
 		"</div>",
-	macro.name, (macro.is_defined ? "" : " not"), macro.detail);
+	macro.name, ( IS_DEFINED(macro) ? "" : " not"), (macro.detail == NULL ? "" : macro.detail) );
 }
 
-static void print_percentage(char * buffer, int fraction, int total){
+static void print_percentage(/*@out@*/ char * SAFE_BUFFER_ARG(buffer, size), size_t fraction, size_t total)
+/*@requires
+	maxSet(buffer) >= (size - 1)
+@*/
+/*@modifies
+	buffer
+@*/
+{
 
-	char *	dot_position	= NULL;
-	float	value			= (float)100 * fraction / total;
+	size_t value		= ( (size_t)10000 * fraction) / total;
+	size_t percentage	= value / 100;
+	size_t decimal		= value % 100;
 
-	sprintf(buffer, "%.2f", value);
+	if(decimal == 0){
 
-	while(*buffer != '\0'){
-		if(dot_position == NULL && *buffer == '.'){
-			dot_position = buffer;
-		}else if(dot_position != NULL && *buffer == '0'){
-			if(dot_position + 1 == buffer) buffer = dot_position;
-			break;
-		}
-		buffer++;
+		SAFE_SPRINTF(SAFE_BUFFER(buffer, size), "%u%%", (unsigned int)percentage);
+
+	}else{
+
+		SAFE_SPRINTF(SAFE_BUFFER(buffer, size), "%u.%02u%%", (unsigned int)percentage, (unsigned int)decimal);
+
 	}
 
-	buffer[0] = '%';
-	buffer[1] = '\0';
 }
 
-static int print_exit_code(char * buffer, int exit_code){
+static void print_exit_code(/*@out@*/ char * SAFE_BUFFER_ARG(buffer, size), int exit_code)
+/*@requires maxSet(buffer) >= (size - 1)@*/
+/*@modifies
+	buffer
+@*/
+{
 
 	if(exit_code == EXIT_SUCCESS){
-		return( sprintf(buffer, "EXIT_SUCCESS") );
-	}
 
-	if(exit_code == EXIT_FAILURE){
-		return( sprintf(buffer, "EXIT_FAILURE") );
-	}
+		SAFE_SPRINTF(SAFE_BUFFER(buffer, size), "EXIT_SUCCESS");
 
-	return( sprintf(buffer, "%d", exit_code) );
+	}else if(exit_code == EXIT_FAILURE){
+
+		SAFE_SPRINTF(SAFE_BUFFER(buffer, size), "EXIT_FAILURE");
+
+	}else{
+
+		SAFE_SPRINTF(SAFE_BUFFER(buffer, size), "%d", exit_code);
+	}
 }
 
-static void print_graph(FILE * report, statistics stats, const char * what){
+static void print_graph(/*@notnull@*/ FILE * report, statistics stats, /*@notnull@*/ const char * what)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	char		percent_passed[8];
-	char		percent_failed[8];
-	int			passed	= stats.passed;
-	int			total	= stats.total;
-	int			failed	= stats.failed + stats.warnings;
+	report
+@*/
+{
+
+	char	percent_passed[8];
+	char	percent_failed[8];
+	size_t	passed	= stats.passed;
+	size_t	total	= stats.total;
+	size_t	failed	= stats.failed + stats.warnings;
 
 	if(total > 0){
 
-		print_percentage(percent_passed, passed, total);
-		print_percentage(percent_failed, failed, total);
+		print_percentage(SAFE_BUFFER( percent_passed, sizeof(percent_passed) ), passed, total);
+		print_percentage(SAFE_BUFFER( percent_failed, sizeof(percent_failed) ), failed, total);
 
 		fprintf(report,
 			"<div class=\"paragraph\">"
-				"<div title=\"%d %s failed (%s)\" class=\"shadowed graph percent_failed\">"
-					"<div title=\"%d %s passed (%s)\" class=\"graph percent_passed\" style=\"width: %s;\"></div>"
+				"<div title=\"%u %s failed (%s)\" class=\"shadowed graph percent_failed\">"
+					"<div title=\"%u %s passed (%s)\" class=\"graph percent_passed\" style=\"width: %s;\"></div>"
 				"</div>"
 				"%s passed"
 			"</div>",
-			failed,			what,		percent_failed,
-			passed,			what,		percent_passed,		percent_passed,
+			(unsigned int)failed,			what,		percent_failed,
+			(unsigned int)passed,			what,		percent_passed,		percent_passed,
 			percent_passed
 		);
 	}
 }
 
-static void print_unit_test(test_suite * suite, unit_test * test, FILE * report){
+static void print_unit_test(/*@notnull@*/ const test_suite * suite, /*@notnull@*/ const unit_test * test, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	char	expected_value[128];
 	char	expected_stdin[128];
@@ -140,47 +202,48 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 	char	found[64];
 	char	expected[64];
 
-	print_exit_code(found, test->found_exit_code);
+	print_exit_code(SAFE_BUFFER( found, sizeof(found) ), test->found_exit_code);
 
 	if(test->expected_exit_code == EXIT_WHATEVER){
 
-		sprintf(expected_value, "<span class=\"console\">%s</span> <em>(any value is OK)</em>", found);
+		SAFE_SPRINTF(SAFE_ARRAY(expected_value), "<span class=\"console\">%s</span> <em>(any value is OK)</em>", found);
 
 	}else if(test->unexpected_exit_code){
 
-		print_exit_code(expected, test->expected_exit_code);
+		print_exit_code(SAFE_BUFFER( expected, sizeof(expected) ), test->expected_exit_code);
 
-		sprintf(expected_value, "<span class=\"console\">%s</span> (expecting <span class=\"console\">%s</span>)", found, expected);
+		SAFE_SPRINTF(SAFE_ARRAY(expected_value), "<span class=\"console\">%s</span> (expecting <span class=\"console\">%s</span>)", found, expected);
 
 	}else{
 
-		sprintf(expected_value, "Expecting <span class=\"console\">%s</span>", found);
+		SAFE_SPRINTF(SAFE_ARRAY(expected_value), "Expecting <span class=\"console\">%s</span>", found);
 	}
 
 	if(test->expected_output == OUTPUT_WHATEVER){
 
-		sprintf(expected_stdin, "<em>Any output is OK</em>");
+		SAFE_SPRINTF(SAFE_ARRAY(expected_stdin), "<em>Any output is OK</em>");
 
 	}else if(test->expected_output == NULL){
 
-		sprintf(expected_stdin, "Expecting no output");
+		SAFE_SPRINTF(SAFE_ARRAY(expected_stdin), "Expecting no output");
 
 	}else{
 
-		sprintf(expected_stdin, "Expecting <span class=\"console\">%s</span>", test->expected_output);
+		SAFE_SPRINTF(SAFE_ARRAY(expected_stdin), "Expecting <span class=\"console\">%s</span>", test->expected_output);
 	}
 
 	if(test->expected_error == ERROR_WHATEVER){
 
-		sprintf(expected_stderr, "<em>Anything is OK</em>");
+		SAFE_SPRINTF(SAFE_ARRAY(expected_stderr), "<em>Anything is OK</em>");
 
 	}else if(test->expected_error == NULL){
 
-		sprintf(expected_stderr, "Expecting no error");
+		SAFE_SPRINTF(SAFE_ARRAY(expected_stderr), "Expecting no error");
 
 	}else{
 
-		sprintf(expected_stderr, "Expecting <span class=\"console\">%s</span>", test->expected_error);
+		SAFE_SPRINTF(SAFE_ARRAY(expected_stderr), "Expecting <span class=\"console\">%s</span>", test->expected_error);
+
 	}
 
 	fprintf(report,
@@ -371,10 +434,10 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 				"</div>",
 	(test->unexpected_output ? "failed" : "passed"),
 	expected_stdin,
-	(*test->found_output ? "console" : "hidden"), test->found_output,
+	(*test->found_output != '\0' ? "console" : "hidden"), test->found_output,
 	(test->unexpected_error ? "failed" : "passed"),
 	expected_stderr,
-	(*test->found_error ? "console" : "hidden"), test->found_error,
+	(*test->found_error != '\0' ? "console" : "hidden"), test->found_error,
 	HUMAN_STATUS(test->status),
 	HUMAN_STATUS(test->status)
 	);
@@ -392,10 +455,21 @@ static void print_unit_test(test_suite * suite, unit_test * test, FILE * report)
 
 }
 
-static void print_test_suite(test_suite * suite, FILE * report){
+static void print_test_suite(/*@notnull@*/ const test_suite * suite, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	int tests;
-	int test_index;
+	report
+@*/
+{
+
+	size_t tests;
+	size_t test_index;
 
 	fprintf(report,
 		"<div>"
@@ -412,17 +486,17 @@ static void print_test_suite(test_suite * suite, FILE * report){
 
 			"<div class=\"paragraph\">"
 				"<div class=\"stats image icon24\"></div>"
-				"<strong>%d</strong> %s; <strong>%d</strong> passed; <strong>%d</strong> failed."
+				"<strong>%u</strong> %s; <strong>%u</strong> passed; <strong>%u</strong> failed."
 			"</div>",
 	HUMAN_TYPE(suite->is_requirement, "test_suite"),
 	HUMAN_STATUS(suite->status),
 	suite->title, suite->title,
 	suite->description1,
 	(suite->description2 == NULL ? "" : suite->description2),
-	suite->stats.total,
+	(unsigned int)suite->stats.total,
 	(suite->is_requirement ? "requirements" : "unit test"),
-	suite->stats.passed,
-	suite->stats.warnings +	suite->stats.failed);
+	(unsigned int)suite->stats.passed,
+	(unsigned int)(suite->stats.warnings +	suite->stats.failed) );
 
 	print_graph( report, suite->stats, (suite->is_requirement ? "requirement(s)" : "unit test(s)") );
 
@@ -439,7 +513,9 @@ static void print_test_suite(test_suite * suite, FILE * report){
 	tests = suite->tests->count;
 	for(test_index = 0; test_index < tests && test_index < SUMMARY_MAX_ITEMS; test_index++){
 
-		unit_test * test = suite->tests->test[test_index];
+		/*@-boundsread@*/
+		const unit_test * test = suite->tests->test[test_index];
+		/*@=boundsread@*/
 
 		fprintf(report,
 						"<div class=\"%s_%s image icon24\"></div>"
@@ -461,11 +537,13 @@ static void print_test_suite(test_suite * suite, FILE * report){
 
 	fprintf(report,
 		"<div id=\"div_%s_detailed\" class=\"%shidden details\">",
-	suite->title, tests >= 32 ? "_8_columns " : ( tests >= 16 ? "_4_columns " : ( tests >= 8 ? "_2_columns " : "" ) ) );
+	suite->title, tests >= (size_t)32 ? "_8_columns " : ( tests >= (size_t)16 ? "_4_columns " : ( tests >= (size_t)8 ? "_2_columns " : "" ) ) );
 
 	for(test_index = 0; test_index < tests; test_index++){
 
-		unit_test * test = suite->tests->test[test_index];
+		/*@-boundsread@*/
+		const unit_test * test = suite->tests->test[test_index];
+		/*@=boundsread@*/
 
 		fprintf(report,
 
@@ -490,9 +568,20 @@ static void print_test_suite(test_suite * suite, FILE * report){
 	);
 }
 
-static void print_test_suites(test_suite_collection * suites, FILE * report){
+static void print_test_suites(/*@notnull@*/ const test_suite_collection * suites, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	int index;
+	report
+@*/
+{
+
+	size_t index;
 
 	fprintf(report,
 		"<h2 class=\"shadowed\">Test Suites</h2>"
@@ -500,7 +589,9 @@ static void print_test_suites(test_suite_collection * suites, FILE * report){
 	);
 
 	for(index = 0; index < suites->count; index++){
+		/*@-boundsread@*/
 		print_test_suite(suites->suite[index], report);
+		/*@=boundsread@*/
 	}
 
 	fprintf(report,
@@ -508,10 +599,21 @@ static void print_test_suites(test_suite_collection * suites, FILE * report){
 	);
 }
 
-static void print_unit_tests(test_suite_collection * suites, FILE * report){
+static void print_unit_tests(/*@notnull@*/ const test_suite_collection * suites, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	int suite_index;
-	int test_index;
+	report
+@*/
+{
+
+	size_t suite_index;
+	size_t test_index;
 
 	fprintf(report,
 		"<h2 class=\"shadowed\">Unit Tests</h2>"
@@ -520,11 +622,15 @@ static void print_unit_tests(test_suite_collection * suites, FILE * report){
 
 	for(suite_index = 0; suite_index < suites->count; suite_index++){
 
-		test_suite * suite = suites->suite[suite_index];
+		/*@-boundsread@*/
+		const test_suite * suite = suites->suite[suite_index];
+		/*@=boundsread@*/
 
 		for(test_index = 0; test_index < suite->tests->count; test_index++){
 
-			unit_test * test = suite->tests->test[test_index];
+			/*@-boundsread@*/
+			const unit_test * test = suite->tests->test[test_index];
+			/*@=boundsread@*/
 
 			print_unit_test(suite, test, report);
 		}
@@ -535,7 +641,18 @@ static void print_unit_tests(test_suite_collection * suites, FILE * report){
 	);
 }
 
-static void print_overall_statistics(statistics requirement_stats, statistics suite_stats, FILE * report){
+static void print_overall_statistics(statistics requirement_stats, statistics suite_stats, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	time_t			now		= time(NULL);
 	const char *	date	= ctime(&now);
@@ -662,73 +779,73 @@ static void print_overall_statistics(statistics requirement_stats, statistics su
 	print_stateless_macro(report,	macros.e4c_nokeywords);
 	print_stateless_macro(report,	macros.e4c_threadsafe);
 
-	if(macros.reentrant.is_defined){
+	if( IS_DEFINED(macros.reentrant) ){
 		print_stateless_macro(report, macros.reentrant);
 	}
 
-	if(macros.thread_safe.is_defined || !macros.reentrant.is_defined){
+	if( IS_DEFINED(macros.thread_safe) || IS_NOT_DEFINED(macros.reentrant) ){
 		print_stateless_macro(report, macros.thread_safe);
 	}
 
 	print_stateless_macro(report, macros.ndebug);
 
-	if(!macros.stdc_version.is_defined){
+	if( IS_NOT_DEFINED(macros.stdc_version) ){
 		print_stateless_macro(report, macros.stdc);
 	}
 
-	if(macros.strict_ansi.is_defined){
+	if( IS_DEFINED(macros.strict_ansi) ){
 		print_stateless_macro(report, macros.strict_ansi);
 	}
 
-	if(macros.stdc_version.is_defined || !macros.stdc.is_defined){
+	if( IS_DEFINED(macros.stdc_version) ||  IS_NOT_DEFINED(macros.stdc) ){
 		print_stateful_macro(report, macros.stdc_version);
 	}
 
-	if(macros.isoc99_source.is_defined || ( !macros.gnu_source.is_defined && !macros.stdc_version.is_defined && !macros.stdc.is_defined) ){
+	if( IS_DEFINED(macros.isoc99_source) || (  IS_NOT_DEFINED(macros.gnu_source) &&  IS_NOT_DEFINED(macros.stdc_version) &&  IS_NOT_DEFINED(macros.stdc) ) ){
 		print_stateless_macro(report, macros.isoc99_source);
 	}
 
-	if(macros.cplusplus.is_defined){
+	if( IS_DEFINED(macros.cplusplus) ){
 		print_stateful_macro(report, macros.cplusplus);
 	}
 
-	if(macros.gnu_source.is_defined){
+	if( IS_DEFINED(macros.gnu_source) ){
 		print_stateless_macro(report, macros.gnu_source);
 	}
 
-	if(macros.posix_source.is_defined && !macros.posix_c_source.is_defined){
+	if( IS_DEFINED(macros.posix_source) &&  IS_NOT_DEFINED(macros.posix_c_source) ){
 		print_stateless_macro(report, macros.posix_source);
 	}
 
-	if(macros.posix_c_source.is_defined || !macros.posix_source.is_defined){
+	if( IS_DEFINED(macros.posix_c_source) ||  IS_NOT_DEFINED(macros.posix_source) ){
 		print_stateful_macro(report, macros.posix_c_source);
 	}
 
-	if(macros.posix_version.is_defined){
+	if( IS_DEFINED(macros.posix_version) ){
 		print_stateful_macro(report, macros.posix_version);
 	}
 
-	if(macros.posix_source.is_defined || macros.posix_c_source.is_defined || macros.posix_version.is_defined){
+	if( IS_DEFINED(macros.posix_source) || IS_DEFINED(macros.posix_c_source) || IS_DEFINED(macros.posix_version) ){
 		print_stateful_macro(report, macros.posix2_c_version);
 	}
 
-	if(!macros.xopen_source.is_defined && (macros.xopen_version.is_defined || macros.gnu_source.is_defined) ){
+	if( IS_NOT_DEFINED(macros.xopen_source) && ( IS_DEFINED(macros.xopen_version) || IS_DEFINED(macros.gnu_source) ) ){
 		print_stateful_macro(report, macros.xopen_version);
 	}
 
-	if(macros.xopen_source.is_defined && (!macros.xopen_version.is_defined && !macros.gnu_source.is_defined) ){
+	if( IS_DEFINED(macros.xopen_source) && (  IS_NOT_DEFINED(macros.xopen_version) &&  IS_NOT_DEFINED(macros.gnu_source) ) ){
 		print_stateful_macro(report, macros.xopen_source);
 	}
 
-	if(macros.xopen_source_extended.is_defined){
+	if( IS_DEFINED(macros.xopen_source_extended) ){
 		print_stateless_macro(report, macros.xopen_source_extended);
 	}
 
-	if(macros.bsd_source.is_defined || !macros.gnu_source.is_defined){
+	if( IS_DEFINED(macros.bsd_source)  ||  IS_NOT_DEFINED(macros.gnu_source) ){
 		print_stateless_macro(report, macros.bsd_source);
 	}
 
-	if(macros.svid_source.is_defined || !macros.gnu_source.is_defined){
+	if( IS_DEFINED(macros.svid_source) ||  IS_NOT_DEFINED(macros.gnu_source) ){
 		print_stateless_macro(report, macros.svid_source);
 	}
 
@@ -739,7 +856,18 @@ static void print_overall_statistics(statistics requirement_stats, statistics su
 	);
 }
 
-static void print_requirement(unit_test * test, FILE * report){
+static void print_requirement(/*@notnull@*/ const unit_test * test, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report,
 		"<div>"
@@ -752,12 +880,23 @@ static void print_requirement(unit_test * test, FILE * report){
 	);
 }
 
-static void print_requirements(statistics stats, test_suite_collection * suites, FILE * report){
+static void print_requirements(statistics stats, const test_suite_collection * suites, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	int				suite_index;
-	int				tests;
-	int				test_index;
-	unit_test *		test;
+	report
+@*/
+{
+
+	size_t				suite_index;
+	size_t				tests;
+	size_t				test_index;
+	const unit_test *	test;
 
 	fprintf(report,
 		"<div>"
@@ -769,9 +908,11 @@ static void print_requirements(statistics stats, test_suite_collection * suites,
 		"<div class=\"global_section\">"
 			"<div class=\"paragraph\">"
 				"<div class=\"stats image icon24\"></div>"
-				"<strong>%d</strong> requirements; <strong>%d</strong> passed; <strong>%d</strong> failed."
+				"<strong>%u</strong> requirements; <strong>%u</strong> passed; <strong>%u</strong> failed."
 			"</div>",
-	stats.total, stats.passed, stats.warnings + stats.failed);
+	(unsigned int)stats.total,
+	(unsigned int)stats.passed,
+	(unsigned int)(stats.warnings + stats.failed) );
 
 			print_graph(report, stats, "requirement(s)");
 
@@ -795,13 +936,17 @@ static void print_requirements(statistics stats, test_suite_collection * suites,
 
 	for(suite_index = 0; suite_index < suites->count; suite_index++){
 
-		test_suite * suite = suites->suite[suite_index];
+		/*@-boundsread@*/
+		const test_suite * suite = suites->suite[suite_index];
+		/*@=boundsread@*/
 
 		tests = suite->tests->count;
 
 		for(test_index = 0; test_index < tests; test_index++){
 
+			/*@-boundsread@*/
 			test = suite->tests->test[test_index];
+			/*@=boundsread@*/
 
 			if(test->is_requirement){
 				print_requirement(test, report);
@@ -822,9 +967,20 @@ static void print_requirements(statistics stats, test_suite_collection * suites,
 	*/
 }
 
-static void print_test_suite_statistics(statistics stats, test_suite_collection * suites, FILE * report){
+static void print_test_suite_statistics(statistics stats, const test_suite_collection * suites, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	int index;
+	report
+@*/
+{
+
+	size_t index;
 
 	fprintf(report,
 		"<div>"
@@ -836,9 +992,11 @@ static void print_test_suite_statistics(statistics stats, test_suite_collection 
 		"<div class=\"global_section\">"
 			"<div class=\"paragraph\">"
 				"<div class=\"stats image icon24\"></div>"
-				"<strong>%d</strong> test suites; <strong>%d</strong> passed; <strong>%d</strong> failed."
+				"<strong>%u</strong> test suites; <strong>%u</strong> passed; <strong>%u</strong> failed."
 			"</div>",
-	stats.total, stats.passed, stats.warnings + stats.failed);
+	(unsigned int)stats.total,
+	(unsigned int)stats.passed,
+	(unsigned int)(stats.warnings + stats.failed) );
 
 			print_graph(report, stats, "test suite(s)");
 
@@ -854,17 +1012,22 @@ static void print_test_suite_statistics(statistics stats, test_suite_collection 
 
 	for(index = 0; index < suites->count && index < SUMMARY_MAX_ITEMS; index++){
 
-		test_suite * suite = suites->suite[index];
+		/*@-boundsread@*/
+		const test_suite * suite = suites->suite[index];
+		/*@=boundsread@*/
 
 		if(!suite->is_requirement){
 
 			fprintf(report,
 							"<div class=\"test_suite_%s image icon24\"></div>"
-							"<a href=\"#test_suite_%s\" title=\"%s suite contains %d unit tests\">"
+							"<a href=\"#test_suite_%s\" title=\"%s suite contains %u unit tests\">"
 								"%s"
 							"</a>%s",
 			HUMAN_STATUS(suite->status),
-			suite->title, suite->title, suite->tests->count, suite->title,
+			suite->title,
+			suite->title,
+			(unsigned int)suite->tests->count,
+			suite->title,
 			AFTER_SUMMARY_ITEM(index, suites->count)
 			);
 		}
@@ -874,23 +1037,27 @@ static void print_test_suite_statistics(statistics stats, test_suite_collection 
 					"</div>"
 				"</div>"
 				"<div id=\"suite_list_detailed\" class=\"%shidden details\">",
-	suites->count >= 32 ? "_8_columns " : ( suites->count >= 16 ? "_4_columns " : ( suites->count >= 8 ? "_2_columns " : "" ) ) );
+	suites->count >= (size_t)32 ? "_8_columns " : ( suites->count >= (size_t)16 ? "_4_columns " : ( suites->count >= (size_t)8 ? "_2_columns " : "" ) ) );
 
 	for(index = 0; index < suites->count; index++){
 
-		test_suite * suite = suites->suite[index];
+		/*@-boundsread@*/
+		const test_suite * suite = suites->suite[index];
+		/*@=boundsread@*/
 
 		if(!suite->is_requirement){
 			fprintf(report,
-						"<div title=\"%s suite contains %d unit tests\">"
+						"<div title=\"%s suite contains %u unit tests\">"
 							"<div class=\"test_suite_%s image icon24\"></div>"
 							"<a href=\"#test_suite_%s\">"
 								"%s"
 							"</a>"
 						"</div>",
-			suite->title, suite->tests->count,
+			suite->title,
+			(unsigned int)suite->tests->count,
 			HUMAN_STATUS(suite->status),
-			suite->title, suite->title);
+			suite->title,
+			suite->title);
 		}
 	}
 
@@ -901,11 +1068,22 @@ static void print_test_suite_statistics(statistics stats, test_suite_collection 
 	);
 }
 
-static void print_unit_test_statistics(statistics test_stats, test_suite_collection * suites, FILE * report){
+static void print_unit_test_statistics(statistics test_stats, const test_suite_collection * suites, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
 
-	int suite_index;
-	int test_index;
-	int index;
+	report
+@*/
+{
+
+	size_t suite_index;
+	size_t test_index;
+	size_t index;
 
 	fprintf(report,
 		"<div>"
@@ -917,9 +1095,11 @@ static void print_unit_test_statistics(statistics test_stats, test_suite_collect
 		"<div class=\"global_section\">"
 			"<div class=\"paragraph\">"
 				"<div class=\"stats image icon24\"></div>"
-				"<strong>%d</strong> unit tests; <strong>%d</strong> passed; <strong>%d</strong> failed."
+				"<strong>%u</strong> unit tests; <strong>%u</strong> passed; <strong>%u</strong> failed."
 			"</div>",
-	test_stats.total, test_stats.passed, test_stats.warnings + test_stats.failed);
+	(unsigned int)test_stats.total,
+	(unsigned int)test_stats.passed,
+	(unsigned int)(test_stats.warnings + test_stats.failed) );
 
 			print_graph(report, test_stats, "unit test(s)");
 
@@ -935,12 +1115,16 @@ static void print_unit_test_statistics(statistics test_stats, test_suite_collect
 
 	for(index = 0, suite_index = 0; index < SUMMARY_MAX_ITEMS && suite_index < suites->count; suite_index++){
 
-		test_suite *	suite	= suites->suite[suite_index];
-		int				tests	= suite->tests->count;
+		/*@-boundsread@*/
+		const test_suite *	suite	= suites->suite[suite_index];
+		/*@=boundsread@*/
+		size_t				tests	= suite->tests->count;
 
 		for(test_index = 0; index < SUMMARY_MAX_ITEMS && test_index < tests; test_index++, index++){
 
-			unit_test * test = suite->tests->test[test_index];
+			/*@-boundsread@*/
+			const unit_test * test = suite->tests->test[test_index];
+			/*@=boundsread@*/
 
 			if(!test->is_requirement){
 
@@ -961,16 +1145,20 @@ static void print_unit_test_statistics(statistics test_stats, test_suite_collect
 					"</div>"
 				"</div>"
 				"<div id=\"test_list_detailed\" class=\"%shidden details\">",
-	test_stats.total >= 32 ? "_8_columns " : ( test_stats.total >= 16 ? "_4_columns " : ( test_stats.total >= 8 ? "_2_columns " : "" ) )	);
+	test_stats.total >= (size_t)32 ? "_8_columns " : ( test_stats.total >= (size_t)16 ? "_4_columns " : ( test_stats.total >= (size_t)8 ? "_2_columns " : "" ) )	);
 
 	for(suite_index = 0; suite_index < suites->count; suite_index++){
 
-		test_suite *	suite	= suites->suite[suite_index];
-		int				tests	= suite->tests->count;
+		/*@-boundsread@*/
+		const test_suite *	suite	= suites->suite[suite_index];
+		/*@=boundsread@*/
+		size_t				tests	= suite->tests->count;
 
 		for(test_index = 0; test_index < tests; test_index++, index++){
 
-			unit_test * test = suite->tests->test[test_index];
+			/*@-boundsread@*/
+			const unit_test * test = suite->tests->test[test_index];
+			/*@=boundsread@*/
 
 			if(!test->is_requirement){
 				fprintf(report,
@@ -994,7 +1182,18 @@ static void print_unit_test_statistics(statistics test_stats, test_suite_collect
 	);
 }
 
-static void print_statistics(statistics requirement_stats, statistics suite_stats, statistics test_stats, test_suite_collection * suites, FILE * report){
+static void print_statistics(statistics requirement_stats, statistics suite_stats, statistics test_stats, const test_suite_collection * suites, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report,
 		"<h2 class=\"shadowed\">Global Statistics</h2>"
@@ -1020,7 +1219,18 @@ static void print_statistics(statistics requirement_stats, statistics suite_stat
 	);
 }
 
-static void print_content(test_runner * runner, FILE * report){
+static void print_content(/*@notnull@*/ const test_runner * runner, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report, "<div id=\"content\">");
 
@@ -1031,7 +1241,18 @@ static void print_content(test_runner * runner, FILE * report){
 	fprintf(report, "</div>");
 }
 
-static void print_header(FILE * report){
+static void print_header(/*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report,
 		"<div id=\"header\">"
@@ -1049,7 +1270,18 @@ static void print_header(FILE * report){
 	);
 }
 
-static void print_footer(FILE * report){
+static void print_footer(/*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	time_t			now		= time(NULL);
 	struct tm *		date	= localtime(&now);
@@ -1065,7 +1297,18 @@ static void print_footer(FILE * report){
 	);
 }
 
-static void print_body(test_runner * runner, FILE * report){
+static void print_body(/*@notnull@*/ const test_runner * runner, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report, "<body>");
 
@@ -1076,7 +1319,18 @@ static void print_body(test_runner * runner, FILE * report){
 	fprintf(report, "</body>");
 }
 
-static void print_stylesheet(FILE * report){
+static void print_stylesheet(/*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report,
 		"<style type=\"text/css\">"
@@ -1427,7 +1681,18 @@ static void print_stylesheet(FILE * report){
 	);
 }
 
-static void print_javascript(FILE * report){
+static void print_javascript(/*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report,
 		"<script type=\"text/javascript\">"
@@ -1444,7 +1709,18 @@ static void print_javascript(FILE * report){
 	);
 }
 
-static void print_head(FILE * report){
+static void print_head(/*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+{
 
 	fprintf(report, "<head>");
 
@@ -1459,7 +1735,7 @@ static void print_head(FILE * report){
 	fprintf(report, "</head>");
 }
 
-void print_html(test_runner * runner, FILE * report){
+void print_html(/*@notnull@*/ const test_runner * runner, /*@notnull@*/ FILE * report){
 
 	fprintf(report,
 		"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"

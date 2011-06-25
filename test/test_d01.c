@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"Uncaught exception",
 	"This test <strong>throws an exception</strong>; there is no <code>catch</code> block to handle it.",
 	NULL,
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"before_THROW",
 	"WildException"
 ){
@@ -20,6 +20,8 @@ DEFINE_TEST(
 
 	E4C_THROW(WildException, "Nobody will catch me.");
 
+	/*@-unreachable@*/
+
 	ECHO(("after_THROW\n"));
 
 	ECHO(("before_CONTEXT_END\n"));
@@ -31,4 +33,6 @@ DEFINE_TEST(
 	ECHO(("before_EXIT_main\n"));
 
 	return(123);
+
+	/*@=unreachable@*/
 }

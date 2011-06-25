@@ -2,7 +2,16 @@
 # include "testing.h"
 
 
-static void aux(void * pointer){
+static void aux(/*@null@*/ void * pointer)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 	if(pointer == NULL){
 		ECHO(("____aux_before_THROW\n"));
 		E4C_THROW(TamedException, "The external function will catch me.");
@@ -11,7 +20,16 @@ static void aux(void * pointer){
 	}
 }
 
-static int ext(void){
+static int ext(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	volatile const char *	error = NULL;
 	volatile E4C_BOOL		is_ready1;
@@ -66,7 +84,9 @@ static int ext(void){
 		ECHO(("__ext_the_context_IS_NOT_ready\n"));
 	}
 
-	if(is_ready1 != is_ready2) return(112233);
+	if( BOOL_NOT_EQUAL(is_ready1, is_ready2) ){
+		return(112233);
+	}
 
 	if(error == NULL){
 

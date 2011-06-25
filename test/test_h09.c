@@ -2,7 +2,16 @@
 # include "testing.h"
 
 
-static void aux(void * pointer){
+static void aux(void * pointer)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 	if(pointer == NULL){
 		ECHO(("______aux_before_THROW\n"));
 		E4C_THROW(WildException, "I'm not going to be thrown.");
@@ -11,7 +20,16 @@ static void aux(void * pointer){
 	}
 }
 
-static int ext2(void * pointer){
+static int ext2(void * pointer)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	volatile const char *	error = NULL;
 	volatile E4C_BOOL		is_ready1;
@@ -53,7 +71,9 @@ static int ext2(void * pointer){
 		ECHO(("____ext2_the_context_IS_NOT_ready\n"));
 	}
 
-	if(is_ready1 != is_ready2) return(112233);
+	if( BOOL_NOT_EQUAL(is_ready1, is_ready2) ){
+		return(112233);
+	}
 
 	if(error == NULL){
 
@@ -70,7 +90,16 @@ static int ext2(void * pointer){
 
 }
 
-static int ext1(void){
+static int ext1(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	volatile const char *	error = NULL;
 	volatile E4C_BOOL		is_ready1;
@@ -94,7 +123,7 @@ static int ext1(void){
 
 			E4C_TRY{
 
-				int number;
+				int number = 123;
 
 				ECHO(("__ext1_before_CALL_FUNCTION_ext2\n"));
 
@@ -123,7 +152,9 @@ static int ext1(void){
 		ECHO(("__ext1_the_context_IS_NOT_ready\n"));
 	}
 
-	if(is_ready1 != is_ready2) return(112233);
+	if( BOOL_NOT_EQUAL(is_ready1, is_ready2) ){
+		return(112233);
+	}
 
 	if(error == NULL){
 

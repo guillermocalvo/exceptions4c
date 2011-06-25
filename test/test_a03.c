@@ -19,7 +19,7 @@ DEFINE_TEST(
 	ECHO(("before_WITH_block\n"));
 
 	E4C_WITH(buffer, deallocate_buffer){
-		buffer = malloc(256);
+		buffer = malloc( (size_t)256 );
 		ECHO(("inside_WITH_block\n"));
 	}E4C_USE{
 		ECHO(("inside_USE_block\n"));

@@ -24,7 +24,11 @@ DEFINE_TEST(
 
 	E4C_THROW(WildException, "Actually, I can't throw an exception anymore.");
 
+	/*@-unreachable@*/
+
 	ECHO(("after_THROW\n"));
 
 	return(EXIT_SUCCESS);
+
+	/*@=unreachable@*/
 }

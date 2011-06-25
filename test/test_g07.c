@@ -3,11 +3,17 @@
 # include "testing.h"
 
 
-static void set_null_g07(int * * pointer){
+static void set_null_g07(int * * pointer)
+/*@modifies
+	pointer
+@*/
+{
 
 	int * null_pointer = NULL;
 
+	/*@-boundsread@*/
 	memcpy(pointer, &null_pointer, sizeof(pointer) );
+	/*@=boundsread@*/
 }
 
 
@@ -43,7 +49,9 @@ DEFINE_TEST(
 
 		ECHO(("before_NULL_POINTER\n"));
 
+		/*@-boundsread@*/
 		integer = *pointer;
+		/*@=boundsread@*/
 
 		ECHO(("after_NULL_POINTER_%d\n", integer));
 
@@ -69,7 +77,7 @@ DEFINE_TEST(
 		fprintf(stderr, "\nthe_signal_WAS_NOT_CAUGHT\n");
 	}
 
-	fflush(stderr);
+	(void)fflush(stderr);
 
 	return(EXIT_SUCCESS);
 }

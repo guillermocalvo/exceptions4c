@@ -17,7 +17,11 @@ DEFINE_REQUIREMENT(
 
 	abort();
 
+	/*@-unreachable@*/
+
 	ECHO(("after_ABORT\n"));
 
 	return(EXIT_SUCCESS);
+
+	/*@=unreachable@*/
 }

@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW TEST_SUITE(f, "Caught", "\
 \
 This suite of tests checks the behavior of the library when an exception is \
@@ -23,3 +25,5 @@ block).\
 			TEST(f07) \
 
 END_SUITE
+
+/*@=exportheadervar@*/

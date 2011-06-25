@@ -16,8 +16,12 @@ DEFINE_TEST(
 
 	E4C_THROW(NullPointerException, "Actually, I can't throw an exception yet.");
 
+	/*@-unreachable@*/
+
 	ECHO(("after_THROW\n"));
 
 	return(EXIT_SUCCESS);
+
+	/*@=unreachable@*/
 }
 

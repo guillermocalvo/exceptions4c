@@ -16,7 +16,7 @@ DEFINE_TEST(
 
 	ECHO(("before_USING_MEMORY_block\n"));
 
-	e4c_using_memory(buffer, 256){
+	e4c_using_memory(buffer, (size_t)256){
 		ECHO(("inside_USING_MEMORY_block\n"));
 	}
 

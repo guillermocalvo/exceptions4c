@@ -21,7 +21,17 @@ Library parameters:
 Unit testing parameters:
 
 	RUN
-		Can be defined with the name of the suite collection to run.
+		Can be defined with the name of the suite collection to run:
+			* ALL_SUITES
+			* SUITE_BEGINNING
+			* SUITE_CONSISTENCY
+			* SUITE_ENDING
+			* SUITE_UNCAUGHT
+			* SUITE_FINALLY
+			* SUITE_CAUGHT
+			* SUITE_SIGNALS
+			* SUITE_INTEGRATION
+			* PLATFORM_REQUIREMENTS
 		Default value: ALL_SUITES
 
 	REPORT_FILE
@@ -37,22 +47,9 @@ Unit testing parameters:
 	TMP_ERR_FILE
 		Can be defined with the name of the temporary file to use for stderr.
 		Default value: "err.tmp"
-		The file will be delted when all the tests are executed.
+		The file will be deleted when all the tests are executed.
 
 */
-
-
-extern test_suite_collection
-	ALL_SUITES,
-	SUITE_BEGINNING,
-	SUITE_CONSISTENCY,
-	SUITE_ENDING,
-	SUITE_UNCAUGHT,
-	SUITE_FINALLY,
-	SUITE_CAUGHT,
-	SUITE_SIGNALS,
-	SUITE_INTEGRATION,
-	PLATFORM_REQUIREMENTS;
 
 
 # ifndef RUN
@@ -72,7 +69,16 @@ extern test_suite_collection
 # endif
 
 
-int main(int argc, char * argv[]){
+int main(int argc, char * argv[])
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	return( parse_command_line(argc, argv, &RUN, REPORT_FILE, TMP_OUT_FILE, TMP_ERR_FILE) );
 }
