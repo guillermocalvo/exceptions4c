@@ -433,7 +433,7 @@ static const e4c_signal_mapping e4c_default_signal_mappings_array[] = {
 };
 
 /** pointer to the default signal mapping */
-const e4c_signal_mapping * e4c_default_signal_mappings = &e4c_default_signal_mappings_array[0];
+const e4c_signal_mapping * const e4c_default_signal_mappings = &e4c_default_signal_mappings_array[0];
 
 E4C_DEFINE_EXCEPTION(AssertionException,				"Assertion failed.",				AssertionException);
 
