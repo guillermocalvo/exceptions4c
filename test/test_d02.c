@@ -2,13 +2,26 @@
 # include "testing.h"
 
 
-static void aux(void){
+static void aux(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("before_THROW\n"));
 
 	E4C_THROW(WildException, "Nobody will catch me.");
 
+	/*@-unreachable@*/
+
 	ECHO(("after_THROW\n"));
+
+	/*@=unreachable@*/
 }
 
 
@@ -17,7 +30,7 @@ DEFINE_TEST(
 	"Uncaught exception thrown from another function",
 	"This test <strong>calls a function which throws an exception</strong>; there is no <code>catch</code> block to handle it.",
 	NULL,
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"before_THROW",
 	"WildException"
 ){

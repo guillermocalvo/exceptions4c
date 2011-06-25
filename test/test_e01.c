@@ -14,7 +14,7 @@ DEFINE_TEST(
 		"<li>The program is terminated.</li>"
 		"</ol>",
 	NULL,
-	( E4C_VERSION_THREADSAFE ? EXIT_WHATEVER : EXIT_FAILURE ),
+	IF_NOT_THREADSAFE(EXIT_FAILURE),
 	"inside_FINALLY_block",
 	"WildException"
 ){
@@ -31,7 +31,11 @@ DEFINE_TEST(
 
 		E4C_THROW(WildException, "Nobody will catch me.");
 
+		/*@-unreachable@*/
+
 		ECHO(("after_THROW\n"));
+
+		/*@=unreachable@*/
 
 	}E4C_FINALLY{
 

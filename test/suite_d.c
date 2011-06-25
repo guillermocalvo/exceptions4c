@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW TEST_SUITE_LONG_DESCRIPTION(d, "Uncaught", "\
 \
 This suite of tests checks the behavior of the library when an exception is \
@@ -25,3 +27,5 @@ Depending on whether the library is in thread-unsafe or thread-safe mode.\
 			TEST(d05) \
 
 END_SUITE
+
+/*@=exportheadervar@*/

@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW REQUIREMENT_SUITE(z, "PlatformRequirements", "\
 \
 <div class=\"paragraph\"> \
@@ -29,3 +31,5 @@ functionality on this specific platform. \
 			TEST(z12) \
 
 END_SUITE
+
+/*@=exportheadervar@*/

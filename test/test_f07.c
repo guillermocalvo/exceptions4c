@@ -2,7 +2,16 @@
 # include "testing.h"
 
 
-static void aux5(void){
+static void aux5(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("inside_aux5\n"));
 
@@ -10,10 +19,25 @@ static void aux5(void){
 
 	E4C_THROW(TamedException, "I'm going to be caught.");
 
+	/*@-unreachable@*/
+
 	ECHO(("before_EXIT_aux5\n"));
+
+	/*@=unreachable@*/
 }
 
-static void aux4(void){
+static void aux4(void)
+/*@globals
+	fileSystem,
+	internalState,
+
+	ProgramSignalException
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("inside_aux4\n"));
 
@@ -30,7 +54,18 @@ static void aux4(void){
 	ECHO(("before_EXIT_aux4\n"));
 }
 
-static void aux3(void){
+static void aux3(void)
+/*@globals
+	fileSystem,
+	internalState,
+
+	ProgramSignalException
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("inside_aux3\n"));
 
@@ -39,7 +74,18 @@ static void aux3(void){
 	ECHO(("before_EXIT_aux3\n"));
 }
 
-static void aux2(void){
+static void aux2(void)
+/*@globals
+	fileSystem,
+	internalState,
+
+	ProgramSignalException
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("inside_aux2\n"));
 
@@ -53,7 +99,18 @@ static void aux2(void){
 }
 
 
-static void aux1(void){
+static void aux1(void)
+/*@globals
+	fileSystem,
+	internalState,
+
+	ProgramSignalException
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	ECHO(("inside_aux1\n"));
 
@@ -62,6 +119,7 @@ static void aux1(void){
 	ECHO(("before_EXIT_aux1\n"));
 }
 
+/*@-globs@*/ /* ProgramSignalException */
 DEFINE_TEST(
 	f07,
 	"Catching an exception thrown deep down the call stack",
@@ -113,3 +171,4 @@ DEFINE_TEST(
 
 	return(EXIT_SUCCESS);
 }
+/*@=globs@*/ /* ProgramSignalException */

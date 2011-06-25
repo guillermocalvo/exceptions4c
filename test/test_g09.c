@@ -26,7 +26,11 @@ DEFINE_TEST(
 
 		abort();
 
+		/*@-unreachable@*/
+
 		ECHO(("after_ABORT\n"));
+
+		/*@=unreachable@*/
 
 	}E4C_CATCH(AbortException){
 
@@ -49,8 +53,8 @@ DEFINE_TEST(
 	}else{
 		fprintf(stderr, "\nthe_signal_WAS_NOT_CAUGHT\n");
 	}
-	
-	fflush(stderr);
+
+	(void)fflush(stderr);
 
 	return(EXIT_SUCCESS);
 

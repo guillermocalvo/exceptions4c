@@ -1,10 +1,30 @@
 
 # ifndef HTML_H
 
-# include "testing.h"
-
 # define HTML_H
 
-extern void print_html(test_runner * runner, FILE * report);
+
+# include "testing.h"
+
+
+/*@-exportany@*/
+
+
+extern void print_html(/*@notnull@*/ const test_runner * runner, /*@notnull@*/ FILE * report)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState,
+
+	report
+@*/
+;
+
+
+/*@=exportany@*/
+
 
 # endif

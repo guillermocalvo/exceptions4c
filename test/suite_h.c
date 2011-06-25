@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW TEST_SUITE(h, "Integration", "\
 \
 This suite of tests checks the behavior of the library when \
@@ -25,3 +27,5 @@ exceptions to the caller, some others will return a status code. \
 			TEST(h11) \
 
 END_SUITE
+
+/*@=exportheadervar@*/

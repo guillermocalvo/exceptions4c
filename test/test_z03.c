@@ -9,9 +9,11 @@ DEFINE_REQUIREMENT(
 	SEVERITY_CRITICAL,
 	"The test framework is unable to detect when a test returns <code>123</code> exit code.",
 	123,
-	NULL,
-	NULL
+	OUTPUT_WHATEVER,
+	ERROR_WHATEVER
 ){
+
+	ECHO(("before_return_123\n"));
 
 	return(123);
 }

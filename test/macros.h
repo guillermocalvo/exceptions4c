@@ -4,21 +4,32 @@
 # define MACROS_H
 
 
-# define IS_DEFINED			1
-# define IS_NOT_DEFINED		0
+/*@-exportany@*/
+
+
+# define MACRO_DEFINED			1
+# define MACRO_NOT_DEFINED		0
+
+# define IS_DEFINED(macro)		( macro.is_defined == MACRO_DEFINED )
+# define IS_NOT_DEFINED(macro)	( macro.is_defined == MACRO_NOT_DEFINED )
 
 
 struct stateless_macro{
+	/*@observer@*/
 	const char *	name;
 	int				is_defined;
+	/*@observer@*/ /*@null@*/
 	const char *	detail;
 };
 
 struct stateful_macro{
+	/*@observer@*/
 	const char *	name;
 	int				is_defined;
 	long			value;
+	/*@observer@*/
 	const char *	description;
+	/*@observer@*/ /*@null@*/
 	const char *	detail;
 };
 
@@ -47,8 +58,11 @@ struct macro_collection{
 	struct stateful_macro	xopen_version;
 };
 
-
+/*@unchecked@*/
 extern struct macro_collection macros;
+
+
+/*@=exportany@*/
 
 
 # endif

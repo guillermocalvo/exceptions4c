@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW TEST_SUITE_LONG_DESCRIPTION(b, "Consistency", "\
 \
 This suite of tests checks the behavior of the library when it is used in an \
@@ -35,3 +37,5 @@ signal the misuse to the client.\
 			TEST(b14) \
 
 END_SUITE
+
+/*@=exportheadervar@*/

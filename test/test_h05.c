@@ -1,7 +1,9 @@
 
 # include "testing.h"
 
-static int parse_exception(const e4c_exception * exception){
+static int parse_exception(const e4c_exception * exception)
+/*@*/
+{
 
 	if(exception->type == &WildException){
 
@@ -11,7 +13,16 @@ static int parse_exception(const e4c_exception * exception){
 	return(-123);
 }
 
-static void aux(void * pointer){
+static void aux(/*@null@*/ void * pointer)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 	if(pointer == NULL){
 		ECHO(("____aux_before_THROW\n"));
 		E4C_THROW(WildException, "The REUSING_CONTEXT block will mute me.");
@@ -20,7 +31,16 @@ static void aux(void * pointer){
 	}
 }
 
-static int ext(void){
+static int ext(void)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+{
 
 	volatile int		status = 0;
 	volatile E4C_BOOL	is_ready1;
@@ -66,7 +86,9 @@ static int ext(void){
 		ECHO(("__ext_the_context_IS_NOT_ready\n"));
 	}
 
-	if(is_ready1 != is_ready2) return(112233);
+	if( BOOL_NOT_EQUAL(is_ready1, is_ready2) ){
+		return(112233);
+	}
 
 	if(status == 0){
 

@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW SUITE_COLLECTION(ALL_SUITES)
 # define COLLECTION(RUN_SUITE) \
 	RUN_SUITE(a) \
@@ -14,3 +16,5 @@
 	RUN_SUITE(z) \
 
 END_SUITE_COLLECTION
+
+/*@=exportheadervar@*/

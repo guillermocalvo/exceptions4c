@@ -2,9 +2,13 @@
 # include "testing.h"
 
 
-static int set_zero_g08(int dummy){
+static int set_zero_g08(int dummy)
+/*@*/
+{
 
-	if(dummy == 0) return(1);
+	if(dummy == 0){
+		return(1);
+	}
 
 	return(0);
 }
@@ -68,7 +72,7 @@ DEFINE_TEST(
 		fprintf(stderr, "\nthe_signal_WAS_NOT_CAUGHT\n");
 	}
 
-	fflush(stderr);
+	(void)fflush(stderr);
 
 	return(EXIT_SUCCESS);
 

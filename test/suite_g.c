@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW TEST_SUITE(g, "Signals", "\
 \
 This suite of tests checks the behavior of the library when the program \
@@ -24,3 +26,5 @@ others won't.\
 			TEST(g09) \
 
 END_SUITE
+
+/*@=exportheadervar@*/

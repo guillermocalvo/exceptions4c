@@ -6,9 +6,17 @@
 # include <stdio.h>
 # include "e4c.h"
 
+/*@-exportany@*/
+
 # define EXIT_WHATEVER			54321
 # define ERROR_WHATEVER			(void *)54321
 # define OUTPUT_WHATEVER		(void *)54321
+
+# if E4C_VERSION_THREADSAFE == 1
+#	define IF_NOT_THREADSAFE(EXIT_CODE) EXIT_WHATEVER
+# else
+#	define IF_NOT_THREADSAFE(EXIT_CODE) EXIT_CODE
+# endif
 
 # define SEVERITY_CRITICAL		E4C_TRUE
 # define SEVERITY_NOT_CRITICAL	E4C_FALSE
@@ -20,6 +28,22 @@
 # define STATUS_WARNING			1
 # define STATUS_FAILED			2
 
+# define BOOL_EQUAL(x, y)		( (x) ? (y) : !(x) )
+# define BOOL_NOT_EQUAL(x, y)	( (x) ? !(y) : (x) )
+
+# if	defined(HAVE_C99_SNPRINTF) \
+	||	defined(HAVE_SNPRINTF) \
+	||	defined(S_SPLINT_S)
+#	define SAFE_SPRINTF						(void)snprintf
+#	define SAFE_BUFFER_ARG(buffer, size)	buffer, size_t size
+#	define SAFE_BUFFER(buffer, size)		(buffer), (size)
+#	define SAFE_ARRAY(buffer)				(buffer), sizeof(buffer)
+# else
+#	define SAFE_SPRINTF						(void)sprintf
+#	define SAFE_BUFFER_ARG(buffer, size)	buffer
+#	define SAFE_BUFFER(buffer, size)		(buffer)
+#	define SAFE_ARRAY(buffer)				(buffer)
+# endif
 
 /*
 	TESTS
@@ -27,7 +51,15 @@
 */
 
 # define DEFINE_UNIT_TEST(IS_REQUIREMENT, CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
-	int test_##CODE##_function(void); \
+	static int test_##CODE##_function(void) \
+	/*@globals \
+		fileSystem, \
+		internalState \
+	@*/ \
+	/*@modifies \
+		fileSystem, \
+		internalState \
+	@*/; \
 	\
 	unit_test test_##CODE = { \
 		/* is_requirement */		IS_REQUIREMENT, \
@@ -42,14 +74,15 @@
 		/* expected_output */		OUT, \
 		/* expected_error */		ERR, \
 		/* found_exit_code */		0, \
-		/* found_output */			{ 0 }, \
-		/* found_error */			{ 0 }, \
-		/* unexpected_exit_code */	0, \
-		/* unexpected_output */		0, \
-		/* unexpected_error */		0, \
+		/* found_output */			/*@-initallelements@*/ { '\0' }, /*@=initallelements@*/ \
+		/* found_error */			/*@-initallelements@*/ { '\0' }, /*@=initallelements@*/ \
+		/* unexpected_exit_code */	E4C_FALSE, \
+		/* unexpected_output */		E4C_FALSE, \
+		/* unexpected_error */		E4C_FALSE, \
 		/* status */				0 \
 	}; \
-	int test_##CODE##_function(void)
+	\
+	static int test_##CODE##_function(void)
 
 # define DEFINE_TEST(CODE, TITLE, DESCRIPTION, AT_FAILURE, EXIT_CODE, OUT, ERR) \
 	DEFINE_UNIT_TEST(TYPE_UNIT_TEST, CODE, TITLE, DESCRIPTION, NULL, SEVERITY_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
@@ -63,18 +96,23 @@
 # define DEFINE_REQUIREMENT_LONG_DESCRIPTION(CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
 	DEFINE_UNIT_TEST(TYPE_REQUIREMENT, CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
 
-
+/*@unchecked@*/
 E4C_DECLARE_EXCEPTION(WildException);
+/*@unchecked@*/
 E4C_DECLARE_EXCEPTION(TamedException);
 
+/*@unchecked@*/
 E4C_DECLARE_EXCEPTION(ChildException);
+/*@unchecked@*/
 E4C_DECLARE_EXCEPTION(SiblingException);
+/*@unchecked@*/
 E4C_DECLARE_EXCEPTION(ParentException);
+/*@unchecked@*/
 E4C_DECLARE_EXCEPTION(GrandparentException);
 
 # define ECHO(args) \
-	printf args; \
-	fflush(stdout);
+	(void)printf args; \
+	(void)fflush(stdout);
 
 /*
 	SUITES
@@ -93,7 +131,8 @@ E4C_DECLARE_EXCEPTION(GrandparentException);
 	\
 	}; \
 	\
-	static test_collection test_collection_##SUITE_CODE = { \
+	/*@unused@*/ \
+	test_collection test_collection_##SUITE_CODE = { \
 		/* test */	test_array_##SUITE_CODE, \
 		/* count*/	sizeof(test_array_##SUITE_CODE) / sizeof(test_array_##SUITE_CODE[0]) \
 	}; \
@@ -133,8 +172,13 @@ E4C_DECLARE_EXCEPTION(GrandparentException);
 	________________________________________________________________
 */
 
-# define SUITE_DECLARATION(ID) extern test_suite suite_##ID;
-# define SUITE_ENUMERATION(ID) &suite_##ID,
+# define SUITE_DECLARATION(ID) \
+	/*@-redecl@*/ \
+	extern test_suite suite_##ID; \
+	/*@=redecl@*/
+
+# define SUITE_ENUMERATION(ID) \
+	&suite_##ID,
 
 # define SUITE_COLLECTION(COLLECTION_NAME) \
 	\
@@ -144,6 +188,7 @@ E4C_DECLARE_EXCEPTION(GrandparentException);
 		COLLECTION(SUITE_ENUMERATION) \
 	}; \
 	\
+	/*@unused@*/ \
 	test_suite_collection COLLECTION_NAME = { \
 		/* suite */ COLLECTION_NAME##_suites, \
 		/* count */ sizeof(COLLECTION_NAME##_suites) / sizeof(COLLECTION_NAME##_suites[0]) \
@@ -165,24 +210,31 @@ typedef struct statistics_struts			statistics;
 
 struct statistics_struts{
 
-	int						total;
-	int						passed;
-	int						warnings;
-	int						failed;
+	size_t					total;
+	size_t					passed;
+	size_t					warnings;
+	size_t					failed;
 };
 
 struct unit_test_struct{
 
 	E4C_BOOL				is_requirement;
+	/*@observer@*/
 	const char *			code;
+	/*@observer@*/
 	const char *			title;
+	/*@observer@*/
 	const char *			description1;
+	/*@observer@*/ /*@null@*/
 	const char *			description2;
 	E4C_BOOL				is_critical;
+	/*@observer@*/ /*@null@*/
 	const char *			at_failure;
 	test_function			function;
 	int						expected_exit_code;
+	/*@observer@*/ /*@null@*/
 	const char *			expected_output;
+	/*@observer@*/ /*@null@*/
 	const char *			expected_error;
 	int						found_exit_code;
 	char					found_output[640];
@@ -196,36 +248,48 @@ struct unit_test_struct{
 struct test_suite_struct{
 
 	E4C_BOOL				is_requirement;
+	/*@observer@*/
 	const char *			title;
+	/*@observer@*/
 	const char *			description1;
+	/*@observer@*/ /*@null@*/
 	const char *			description2;
+	/*@shared@*/
 	test_collection *		tests;
 	statistics				stats;
 	int						status;
 };
 
 struct test_collection_struct{
+
+	/*@shared@*/
 	unit_test * *			test;
-	int						count;
+	const size_t			count;
 };
 
 struct test_suite_collection_struct{
 
+	/*@shared@*/
 	test_suite * *			suite;
-	int						count;
+	const size_t			count;
 };
 
 struct test_runner_struct{
 
+	/*@observer@*/
 	const char *			file_path;
-	int						suite_number;
-	int						test_number;
+	size_t					suite_number;
+	size_t					test_number;
 	char					buffer[1024];
 
+	/*@observer@*/
 	const char *			out;
+	/*@observer@*/
 	const char *			err;
+	/*@observer@*/
 	const char *			report;
 
+	/*@shared@*/
 	test_suite_collection *	suites;
 
 	struct{
@@ -238,10 +302,37 @@ struct test_runner_struct{
 extern int parse_command_line(
 	int						argc,
 	char *					argv[],
+	/*@shared@*/
 	test_suite_collection *	suite_collection,
 	const char *			report,
 	const char *			out,
 	const char *			err
-);
+)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/
+;
+
+/*@unchecked@*/
+extern test_suite_collection
+	ALL_SUITES,
+	SUITE_BEGINNING,
+	SUITE_CONSISTENCY,
+	SUITE_ENDING,
+	SUITE_UNCAUGHT,
+	SUITE_FINALLY,
+	SUITE_CAUGHT,
+	SUITE_SIGNALS,
+	SUITE_INTEGRATION,
+	PLATFORM_REQUIREMENTS;
+
+
+/*@=exportany@*/
+
 
 # endif

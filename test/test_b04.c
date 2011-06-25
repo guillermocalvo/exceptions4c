@@ -1,16 +1,22 @@
 
 # include "testing.h"
 
-static void * e4c_acquire_buffer(size_t bytes){
+
+static /*@only@*/ /*@null@*/ void * e4c_acquire_buffer(size_t bytes)
+/*@*/
+{
 
 	void * buffer;
 
-	buffer = malloc(bytes);
+	buffer = calloc( (size_t)1, bytes );
 
 	return(buffer);
 }
 
-static void e4c_dispose_buffer(void * buffer, E4C_BOOL failed){
+static void e4c_dispose_buffer(/*@only@*/ void * buffer, E4C_BOOL failed)
+/*@releases buffer@*/
+/*@*/
+{
 
 	if(failed){
 
@@ -45,7 +51,7 @@ DEFINE_TEST(
 
 	ECHO(("before_USING_block\n"));
 
-	E4C_USING(buffer, tmp, (256) ){
+	E4C_USING(buffer, tmp, ( (size_t)256 ) ){
 
 		ECHO(("inside_USING_block\n"));
 

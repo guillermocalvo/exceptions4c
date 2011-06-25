@@ -2,9 +2,13 @@
 # include "testing.h"
 
 
-static int set_zero_z05(int dummy){
+static int set_zero_z05(int dummy)
+/*@*/
+{
 
-	if(dummy == 0) return(1);
+	if(dummy == 0){
+		return(1);
+	}
 
 	return(0);
 }

@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+/*@-exportheadervar@*/
+
 # define NEW TEST_SUITE(c, "Ending", "\
 \
 This suite of tests checks the behavior of the library when it is used \
@@ -16,3 +18,5 @@ client.\
 			TEST(c02) \
 
 END_SUITE
+
+/*@=exportheadervar@*/

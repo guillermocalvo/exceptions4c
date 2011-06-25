@@ -28,7 +28,7 @@ DEFINE_TEST(
 
 	E4C_WITH(buffer, deallocate_buffer){
 
-		buffer = malloc(256);
+		buffer = malloc( (size_t)256 );
 
 		ECHO(("inside_WITH_block\n"));
 

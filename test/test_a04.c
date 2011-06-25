@@ -19,7 +19,7 @@ DEFINE_TEST(
 
 	ECHO(("before_USING_block\n"));
 
-	E4C_USING(buffer, tmp, (256) ){
+	E4C_USING(buffer, tmp, ( (size_t)256 ) ){
 		ECHO(("inside_USING_block\n"));
 	}
 
