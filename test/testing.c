@@ -1,4 +1,3 @@
-
 # include <stdio.h>
 # include <string.h>
 # include <time.h>
@@ -388,6 +387,7 @@ static void run_test_suite(test_runner * runner, test_suite * suite)
 	internalState,
 
 	runner,
+	runner->buffer,
 	suite
 @*/
 {
