@@ -9,7 +9,7 @@
 	||	defined(macintosh) \
 	||	defined(Macintosh) \
 )
-# define MAC
+#	define MAC
 # endif
 
 # if !defined(LINUX) && ( \
@@ -25,7 +25,7 @@
 	||	defined(__gnu_linux) \
 	||	defined(__gnu_linux__) \
 )
-# define LINUX
+#	define LINUX
 # endif
 
 # if !defined(WINDOWS) && ( \
@@ -45,7 +45,7 @@
 	||	defined(__WIN32) \
 	||	defined(__WIN32__) \
 )
-# define WINDOWS
+#	define WINDOWS
 # endif
 
 # if !defined(MSDOS) && ( \
@@ -80,17 +80,17 @@
 	If the platform is well known not to have that header, then we won't include
 	it (unless HAVE_SYS_WAIT_H is defined).
 
-    We will also hide this include from Splint to prevent configuration issues
-    related to header inclusion paths.
+	We will also hide this include from Splint to prevent configuration issues
+	related to header inclusion paths.
 */
 # ifndef GET_EXIT_CODE
-#    if !defined(HAVE_SYS_WAIT_H) && ( \
-            defined(WINDOWS) \
-        ||    defined(MSDOS) \
-        ||    defined(S_SPLINT_S) \
-    )
-#        define GET_EXIT_CODE(status) (status)
-#    else
+#	if !defined(HAVE_SYS_WAIT_H) && ( \
+			defined(WINDOWS) \
+		||	defined(MSDOS) \
+		||	defined(S_SPLINT_S) \
+	)
+#		define GET_EXIT_CODE(status) (status)
+#	else
 /*
 		In case your platform does not have <sys/wait.h>, please define
 		GET_EXIT_CODE at compile time.
