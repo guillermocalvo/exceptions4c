@@ -441,7 +441,7 @@ E4C_DEFINE_EXCEPTION(AssertionException,				"Assertion failed.",				AssertionExc
 
 E4C_DEFINE_EXCEPTION(RuntimeException,					"Runtime exception.",				RuntimeException);
 E4C_DEFINE_EXCEPTION(NotEnoughMemoryException,			"Not enough memory.",				RuntimeException);
-E4C_DEFINE_EXCEPTION(FileOpenException,					"Couldn't open file.",				RuntimeException);
+E4C_DEFINE_EXCEPTION(InputOutputException,				"Input/output exception.",			RuntimeException);
 E4C_DEFINE_EXCEPTION(IllegalArgumentException,			"Illegal argument.",				RuntimeException);
 
 E4C_DEFINE_EXCEPTION(SignalException,					"Signal received.",					RuntimeException);

@@ -9,8 +9,8 @@
  *
  * @section e4c_h exceptions4c header file
  *
- * This header file needs to be included from in order to be able to use any of
- * the keywords of the the exception handling system:
+ * This header file needs to be included in order to be able to use any of the
+ * exception handling system keywords:
  *
  * @li @c #try
  * @li @c #catch
@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 10)
+# define E4C_VERSION_(version)			version(2, 8, 11)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -793,7 +793,6 @@
  *
  * @see     use
  * @see     using
- * @see     e4c_using_if_not_null
  * @see     e4c_using_memory
  * @see     e4c_using_file
  */
@@ -849,7 +848,6 @@
  * can also precede @c catch and @c finally blocks.
  *
  * @see     with
- * @see     e4c_using_if_not_null
  * @see     e4c_using_memory
  * @see     e4c_using_file
  */
@@ -944,149 +942,6 @@
  * Binds the disposal of memory to the standard function fclose
  */
 # define e4c_dispose_file(_file_, _failed_) fclose(_file_)
-
-/**
- * @name Convenience macros for acquiring and disposing resources
- *
- * These macros let you acquire and dispose different kinds of resources
- * according to the <em>dispose pattern</em>.
- *
- * @{
- */
-
-/**
- * Introduces a block of code with automatic acquisition and disposal of a
- * memory buffer
- *
- * @param   _buffer_
- *          The buffer to be acquired, used and then disposed
- * @param   _bytes_
- *          The amount of memory to be allocated (in bytes)
- *
- * This macro lets you acquire and dispose memory according to the
- * <em>dispose pattern</em>:
- *
- * @code
- * void * buffer;
- *
- * e4c_using_memory(buffer, 1024){
- *     // implicit: buffer = malloc(1024);
- *     memset(buffer, 0, 1024);
- *     // implicit: free(buffer);
- * }
- * @endcode
- *
- * If @c malloc returns @c NULL then the exception @c NotEnoughMemoryException
- * will be automatically thrown.
- *
- */
-# define e4c_using_memory(_buffer_, _bytes_) \
-	e4c_using_if_not_null(memory, _buffer_, (_bytes_), \
-	NotEnoughMemoryException, "Could not allocate memory for '" #_buffer_ "'.")
-
-/**
- * Introduces a block of code with automatic acquisition and disposal of a
- * file stream
- *
- * @param   _file_
- *          The file to be acquired, used and then disposed
- * @param   _path_
- *          The path of the file to be opened
- * @param   _mode_
- *          The access mode for the file
- *
- * This macro lets you acquire and dispose (open and close) files according to
- * the <em>dispose pattern</em>:
- *
- * @code
- * FILE * file;
- *
- * e4c_using_file(file, "log.txt", "a"){
- *     // implicit: file = fopen("log.txt", "a");
- *     fputs("hello, world!\n", file);
- *     // implicit: fclose(file);
- * }
- * @endcode
- *
- * If @c fopen returns @c NULL then the exception @c #FileOpenException will be
- * automatically thrown.
- *
- * The specific cause of the error can be determined by checking the
- * @c error_number of the thrown exception (it captures the value of @c errno).
- *
- */
-# define e4c_using_file(_file_, _path_, _mode_) \
-	e4c_using_if_not_null( file, _file_, (_path_, _mode_), \
-		FileOpenException, "Could not open file: " #_path_)
-
-/**
- * Introduces a block of code with automatic disposal of a resource and
- * acquisition, under certain condition
- *
- * @param   _type_
- *          The type of the resource
- * @param   _resource_
- *          The resource to be acquired, used and then disposed
- * @param   _args_
- *          A list of arguments to be passed to the acquisition function
- * @param   _cond_
- *          The condition which has to be satisfied in order to consider the
- *          acquisition @e complete
- * @param   _exception_
- *          The exception to be thrown if the acquisition function does not
- *          satisfy the specified condition
- * @param   _msg_
- *          The exception message
- *
- * This macro will attempt the acquisition of the resource and then will check
- * the given condition. If the condition evaluates to @c false, then the
- * specified exception will be thrown, and therefore, the disposal of the
- * resource will not take place.
- *
- * This is a convenience macro for reusing legacy C standard functions which
- * don't throw exceptions when the acquisition fails. For example:
- *
- * @code
- * # define e4c_acquire_memory malloc
- * # define e4c_dispose_memory(_memory_, _failed_) free(_memory_)
- * # define e4c_using_memory(_resource_, _bytes_) \
- *          e4c_using_if(memory, _resource_, ( _bytes_ ), _resource_ != NULL, \
- *          NotEnoughMemoryException )
- * @endcode
- *
- * @see     using
- */
-# define e4c_using_if(_type_, _resource_, _args_, _cond_, _exception_, _msg_) \
-	E4C_WITH(_resource_, e4c_dispose_##_type_){ \
-		_resource_ = e4c_acquire_##_type_ _args_; \
-		if( !(_cond_) ){ \
-			E4C_THROW(_exception_, _msg_); \
-		} \
-	}E4C_USE
-
-/**
- * Introduces a block of code with automatic disposal of a resource and
- * acquisition, preventing null pointers
- *
- * @param   _type_
- *          The type of the resource
- * @param   _resource_
- *          The resource to be acquired, used and then disposed
- * @param   _args_
- *          A list of arguments to be passed to the acquisition function
- * @param   _exception_
- *          The exception to be thrown if the acquisition function yields a
- *          @c NULL pointer
- * @param   _msg_
- *          The exception message
- *
- * @see     e4c_using_if
- */
-# define e4c_using_if_not_null(_type_, _resource_, _args_, _exception_, _msg_) \
-	e4c_using_if(_type_, _resource_, _args_, _resource_ != NULL, \
-		_exception_, _msg_)
-
-/** @} */
 
 /**
  * @name Integration macros
@@ -1418,7 +1273,7 @@
  * @param   _handler_
  *          The name of the parser function to be called
  *
- * This is a handy way to call a function when a @e4c_reusing_context block
+ * This is a handy way to call a function when a @c #e4c_reusing_context block
  * fails. This function will be passed the current thrown exception; it is
  * expected to parse it and return a proper status value.
  *
@@ -1880,9 +1735,9 @@
  *     <li>@c #RuntimeException</li>
  *     <ul>
  *         <li>@c #NotEnoughMemoryException</li>
+ *         <li>@c #AssertionException</li>
  *         <li>@c #IllegalArgumentException</li>
- *         <li>@c #FileOpenException</li>
- *         <li>@c #IllegalArgumentException</li>
+ *         <li>@c #InputOutputException</li>
  *         <li>@c #SignalException</li>
  *         <ul>
  *             <li>@c #SignalAlarmException</li>
@@ -2237,8 +2092,9 @@ extern const e4c_signal_mapping * const e4c_default_signal_mappings;
  *
  * @par     Direct known subexceptions:
  *          #NotEnoughMemoryException,
- *          #FileOpenException,
+ *          #AssertionException,
  *          #IllegalArgumentException,
+ *          #InputOutputException,
  *          #SignalException
  */
 /*@unused@*/
@@ -2255,6 +2111,21 @@ E4C_DECLARE_EXCEPTION(RuntimeException);
  */
 /*@unused@*/
 E4C_DECLARE_EXCEPTION(NotEnoughMemoryException);
+
+/**
+ * This exception is thrown when an input/output error occurs
+ *
+ * @c InputOutputException is the general type of exceptions produced by failed
+ * or interrupted I/O operations.
+ *
+ * @par     Extends:
+ *          #RuntimeException
+ *
+ * @par     Direct known subexceptions:
+ *          #FileException
+ */
+/*@unused@*/
+E4C_DECLARE_EXCEPTION(InputOutputException);
 
 /**
  * This exception is thrown when a function is passed an illegal or
@@ -2284,23 +2155,6 @@ E4C_DECLARE_EXCEPTION(IllegalArgumentException);
  */
 /*@unused@*/
 E4C_DECLARE_EXCEPTION(AssertionException);
-
-/**
- * This exception is thrown when a file cannot be opened
- *
- * @c FileOpenException is thrown by @c #e4c_using_file when @c fopen returns
- * @c NULL for whatever reason.
- *
- * @note
- * The specific cause of the error can be determined by checking the
- * @c error_number of the exception; it captures the value of @c errno at the
- * time the exception was thrown (right after @c fopen).
- *
- * @par     Extends:
- *          #RuntimeException
- */
-/*@unused@*/
-E4C_DECLARE_EXCEPTION(FileOpenException);
 
 /**
  * This exception is the common supertype of all signal exceptions
