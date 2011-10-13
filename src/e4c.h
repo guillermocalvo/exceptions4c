@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 9)
+# define E4C_VERSION_(version)			version(2, 8, 10)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -2213,7 +2213,7 @@ struct e4c_continuation_{
 /**
  * The array of predefined signal mappings.
  */
-/*@unused@*/ /*@unchecked@*/ /*@notnull@*/
+/*@unused@*/ /*@notnull@*/
 extern const e4c_signal_mapping * const e4c_default_signal_mappings;
 
 /** @} */
@@ -2241,7 +2241,7 @@ extern const e4c_signal_mapping * const e4c_default_signal_mappings;
  *          #IllegalArgumentException,
  *          #SignalException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(RuntimeException);
 
 /**
@@ -2253,7 +2253,7 @@ E4C_DECLARE_EXCEPTION(RuntimeException);
  * @par     Extends:
  *          #RuntimeException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(NotEnoughMemoryException);
 
 /**
@@ -2266,7 +2266,7 @@ E4C_DECLARE_EXCEPTION(NotEnoughMemoryException);
  * @par     Extends:
  *          #RuntimeException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(IllegalArgumentException);
 
 /**
@@ -2282,7 +2282,7 @@ E4C_DECLARE_EXCEPTION(IllegalArgumentException);
  *
  * @see     assert
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(AssertionException);
 
 /**
@@ -2321,7 +2321,7 @@ E4C_DECLARE_EXCEPTION(FileOpenException);
  *          #ControlSignalException,
  *          #ProgramSignalException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(SignalException);
 
 /**
@@ -2403,7 +2403,7 @@ E4C_DECLARE_EXCEPTION(IllegalInstructionException);
  * @par     Extends:
  *          #ErrorSignalException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(ArithmeticException);
 
 /**
@@ -2432,7 +2432,7 @@ E4C_DECLARE_EXCEPTION(BrokenPipeException);
  * @par     Direct known subexceptions:
  *          #NullPointerException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(BadPointerException);
 
 /**
@@ -2455,7 +2455,7 @@ E4C_DECLARE_EXCEPTION(BadPointerException);
  *
  * @see     IllegalArgumentException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(NullPointerException);
 
 /**
@@ -2544,7 +2544,7 @@ E4C_DECLARE_EXCEPTION(TerminationException);
  * @par     Extends:
  *          #ControlSignalException
  */
-/*@unused@*/ /*@unchecked@*/
+/*@unused@*/
 E4C_DECLARE_EXCEPTION(AbortException);
 
 /**
