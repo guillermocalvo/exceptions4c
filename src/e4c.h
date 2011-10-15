@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 14)
+# define E4C_VERSION_(version)			version(2, 8, 15)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -174,7 +174,7 @@
 #		define E4C_FUNCTION_NAME_		__func__
 
 #	elif defined(__GNUC__)
-#		if __GNUC__ >= 2
+#		if !defined(__OPTIMIZE__) && (__GNUC__ >= 2)
 #			define E4C_FUNCTION_NAME_	__extension__ __FUNCTION__
 #		else
 #			define E4C_FUNCTION_NAME_	NULL
