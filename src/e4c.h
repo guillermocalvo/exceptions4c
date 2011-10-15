@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 12)
+# define E4C_VERSION_(version)			version(2, 8, 13)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -1612,9 +1612,9 @@
  *
  * @param   _name_
  *          Name of the new exception
- * @param   _message_
+ * @param   _default_message_
  *          Default message of the new exception
- * @param   _super_
+ * @param   _supertype_
  *          Supertype of the new exception
  *
  * This macro allocates a new, @c const exception.
@@ -1623,12 +1623,12 @@
  * @see     RuntimeException
  * @see     E4C_DECLARE_EXCEPTION
  */
-# define E4C_DEFINE_EXCEPTION(_name_, _message_, _super_) \
+# define E4C_DEFINE_EXCEPTION(_name_, _default_message_, _supertype_) \
 	\
 	const e4c_exception_type _name_ = { \
 		#_name_, \
-		_message_, \
-		&_super_ \
+		_default_message_, \
+		&_supertype_ \
 	}
 
 /**
@@ -1704,8 +1704,8 @@
  * E4C_DEFINE_EXCEPTION(StackUnderflowException, "Stack underflow", StackException);
  * @endcode
  *
- * When defining types of exceptions, they are given a name, a default message
- * and a supertype to organize them into a @e pseudo-hierarchy.
+ * When defining types of exceptions, they are given a @e name, a <em>default
+ * message</em> and a @e supertype to organize them into a @e pseudo-hierarchy.
  *
  * Exceptions are usually defined as global objects. There is a set of
  * predefined exceptions built into the framework, and @c #RuntimeException is
@@ -1772,11 +1772,11 @@ struct e4c_exception_type_{
 
 	/** The default message of this exception type */
 	/*@observer@*/
-	const char						message[E4C_EXCEPTION_MESSAGE_SIZE];
+	const char						default_message[E4C_EXCEPTION_MESSAGE_SIZE];
 
 	/** The supertype of this exception type */
 	/*@shared@*/ /*@notnull@*/
-	const e4c_exception_type *		super;
+	const e4c_exception_type *		supertype;
 };
 
 /**
