@@ -3216,12 +3216,12 @@ static E4C_INLINE E4C_BOOL _e4c_exception_type_extends(const e4c_exception_type 
 		has "no parent" whatsoever, then we can determine that it does not
 		extend the specified "parent"
 	*/
-	if(child->super == child || child->super == NULL){
+	if(child->supertype == child || child->supertype == NULL){
 		return(E4C_FALSE);
 	}
 
 	/* otherwise, we will keep looking for a common ancestor */
-	return( _e4c_exception_type_extends(child->super, parent) );
+	return( _e4c_exception_type_extends(child->supertype, parent) );
 }
 
 E4C_BOOL e4c_is_instance_of(const e4c_exception * instance, const e4c_exception_type * exception_type){
@@ -3238,25 +3238,25 @@ E4C_BOOL e4c_is_instance_of(const e4c_exception * instance, const e4c_exception_
 		return(E4C_TRUE);
 	}
 
-	if(instance->type->super == NULL || instance->type->super == instance->type){
-		/* if this exception has no other super type... */
+	if(instance->type->supertype == NULL || instance->type->supertype == instance->type){
+		/* if this exception has no other supertype... */
 		return(E4C_FALSE);
 	}
 
-	return( _e4c_exception_type_extends(instance->type->super, exception_type) );
+	return( _e4c_exception_type_extends(instance->type->supertype, exception_type) );
 }
 
 static E4C_INLINE int _e4c_print_exception_type_node(const e4c_exception_type * exception_type){
 
 	int deep = -1;
 
-	if(exception_type->super == NULL || exception_type->super == exception_type){
+	if(exception_type->supertype == NULL || exception_type->supertype == exception_type){
 
 		fprintf(stderr, "    %s\n", exception_type->name);
 
 	}else{
 
-		deep = _e4c_print_exception_type_node(exception_type->super);
+		deep = _e4c_print_exception_type_node(exception_type->supertype);
 
 		fprintf(stderr, "    %*s |\n    %*s +--%s\n", deep * 4, "", deep * 4, "", exception_type->name);
 	}
@@ -3437,7 +3437,7 @@ static E4C_INLINE void _e4c_exception_initialize(e4c_exception * exception, cons
 			VERBATIM_COPY(exception->message, message);
 		}else{
 			/* copy the default message for this type of exception */
-			VERBATIM_COPY(exception->message, exception_type->message);
+			VERBATIM_COPY(exception->message, exception_type->default_message);
 		}
 	}
 	/*
