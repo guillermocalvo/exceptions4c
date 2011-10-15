@@ -34,23 +34,36 @@
 # include "e4c.h"
 
 
+/*
+ * __NO_INLINE__
+ * can be defined in order to prevent function inlining
+ */
 # ifdef __NO_INLINE__
 #	define E4C_INLINE
+
 # elif defined(_ISOC99_SOURCE) \
 	|| defined(_GNU_SOURCE) \
 	|| ( defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) )
 #	define E4C_INLINE inline
-# elif ( defined(__GNUC__) && (__GNUC__ >= 2) )
+
+# elif defined(__GNUC__) && !defined(__OPTIMIZE__) && (__GNUC__ >= 2)
 #	define E4C_INLINE __extension__ inline
+
 # else
 #	define E4C_INLINE
 # endif
 
+
+/*
+ * HAVE_POSIX_SIGSETJMP (or HAVE_SIGSETJMP)
+ * can be defined in order to use `siglongjmp` rather than `longjmp`
+ */
 # if defined(HAVE_POSIX_SIGSETJMP) || defined(HAVE_SIGSETJMP)
 #	define E4C_CONTINUE(continuation)	siglongjmp(continuation.buffer, 1)
 # else
 #	define E4C_CONTINUE(continuation)	longjmp(continuation.buffer, 1)
 # endif
+
 
 # define IS_TOP_FRAME(frame)			( frame->previous == NULL )
 
