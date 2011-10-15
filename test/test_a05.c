@@ -1,5 +1,6 @@
 
 # include "testing.h"
+# include "e4c_rsc.h"
 
 
 DEFINE_TEST(

@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 11)
+# define E4C_VERSION_(version)			version(2, 8, 12)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -922,26 +922,6 @@
 # endif
 
 /** @} */
-
-/*
- * Binds the acquisition of memory to the standard function malloc
- */
-# define e4c_acquire_memory malloc
-
-/*
- * Binds the disposal of memory to the standard function malloc
- */
-# define e4c_dispose_memory(_buffer_, _failed_) free(_buffer_)
-
-/*
- * Binds the acquisition of file to the standard function fopen
- */
-# define e4c_acquire_file fopen
-
-/*
- * Binds the disposal of memory to the standard function fclose
- */
-# define e4c_dispose_file(_file_, _failed_) fclose(_file_)
 
 /**
  * @name Integration macros

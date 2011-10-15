@@ -27,6 +27,10 @@
  */
 
 
+# include "e4c.h"
+# include "e4c_rsc.h"
+
+
 E4C_DEFINE_EXCEPTION(MemoryAllocationException,			"Couldn't allocate memory.",		NotEnoughMemoryException);
 E4C_DEFINE_EXCEPTION(FileException,						"File exception.",					InputOutputException);
 E4C_DEFINE_EXCEPTION(FileOpenException,					"Couldn't open file.",				FileException);
