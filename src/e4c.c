@@ -2382,6 +2382,9 @@ static void _e4c_library_finalize(void){
 	/* check for critical error */
 	if(fatal_error_flag){
 
+		/* clear fatal error flag to prevent from looping */
+		fatal_error_flag = E4C_FALSE;
+
 		fprintf(stderr, MSG_AT_EXIT_ERROR);
 		/* force failure exit status */
 		exit(EXIT_FAILURE);
@@ -2450,9 +2453,10 @@ static void _e4c_library_handle_signal(int signal_number){
 				INTERNAL_ERROR(DESC_SIGERR_HANDLE, "_e4c_library_handle_signal");
 			}
 
-			/* throw the appropriate exception to the current context */
-			new_exception = _e4c_exception_allocate(__LINE__, "_e4c_library_handle_signal");
-			_e4c_exception_initialize(new_exception, mapping->exception_type, E4C_TRUE, NULL, signal_name, signal_number, "_e4c_library_handle_signal", errno);
+			/* check context and frame; initialize exception and cause */
+			new_exception = _e4c_exception_throw(context->current_frame, mapping->exception_type, signal_name, signal_number, "_e4c_library_handle_signal", errno, E4C_TRUE, NULL);
+
+			/* propagate the exception up the call stack */
 			_e4c_context_propagate(context, new_exception);
 		}
 
@@ -2848,17 +2852,24 @@ static void _e4c_context_set_signal_handlers(e4c_context * context, const e4c_si
 static void _e4c_context_at_uncaught_exception(e4c_context * context){
 
 	/* assert: context != NULL */
+	/* assert: context->current_frame != NULL */
 
-	e4c_uncaught_handler handler;
+	e4c_exception *			exception;
+	e4c_uncaught_handler	handler;
 
-	handler	= context->uncaught_handler;
+	handler		= context->uncaught_handler;
+	exception	= context->current_frame->thrown_exception;
 
 	if(handler != NULL){
 		/* TODO: find the proper way to make Splint happy */
 		/*@-noeffectuncon@*/
-		handler(context->current_frame->thrown_exception);
+		handler(exception);
 		/*@=noeffectuncon@*/
 	}
+
+	/* just because the program is about to stop */
+	/* doesn't mean we don't need to clean up ;) */
+	_e4c_exception_deallocate(exception);
 
 	e4c_context_end();
 
