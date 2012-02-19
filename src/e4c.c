@@ -2854,22 +2854,16 @@ static void _e4c_context_at_uncaught_exception(e4c_context * context){
 	/* assert: context != NULL */
 	/* assert: context->current_frame != NULL */
 
-	e4c_exception *			exception;
-	e4c_uncaught_handler	handler;
+	e4c_uncaught_handler handler;
 
 	handler		= context->uncaught_handler;
-	exception	= context->current_frame->thrown_exception;
 
 	if(handler != NULL){
 		/* TODO: find the proper way to make Splint happy */
 		/*@-noeffectuncon@*/
-		handler(exception);
+		handler(context->current_frame->thrown_exception);
 		/*@=noeffectuncon@*/
 	}
-
-	/* just because the program is about to stop */
-	/* doesn't mean we don't need to clean up ;) */
-	_e4c_exception_deallocate(exception);
 
 	e4c_context_end();
 
