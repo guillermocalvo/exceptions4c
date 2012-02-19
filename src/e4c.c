@@ -73,6 +73,8 @@
 
 # define FOREACH(element, list)			for(element = list.first; element != NULL; element = element->next)
 
+# define ref_count						_
+
 # if	defined(HAVE_C99_SNPRINTF) \
 	||	defined(HAVE_SNPRINTF) \
 	||	defined(S_SPLINT_S)
@@ -3325,12 +3327,7 @@ const e4c_exception * e4c_get_exception(void){
 
 static E4C_INLINE e4c_exception * _e4c_exception_throw(e4c_frame * frame, const e4c_exception_type * exception_type, const char * file, int line, const char * function, int error_number, E4C_BOOL set_message, const char * message){
 
-	e4c_exception *		cause;
 	e4c_exception *		new_exception;
-
-	/* capture the cause of this exception */
-	cause = frame->thrown_exception;
-	frame->thrown_exception = NULL;
 
 	/* convert NULL exception type to NPE */
 	if(exception_type == NULL){
@@ -3354,8 +3351,13 @@ static E4C_INLINE e4c_exception * _e4c_exception_throw(e4c_frame * frame, const 
 	/* "instantiate" the specified exception */
 	_e4c_exception_initialize(new_exception, exception_type, set_message, message, file, line, function, error_number);
 
-	if(cause != NULL){
-		_e4c_exception_set_cause(new_exception, cause);
+	/* capture the cause of this exception */
+	while(frame != NULL){
+		if(frame->thrown_exception != NULL){
+			_e4c_exception_set_cause(new_exception, frame->thrown_exception);
+			break;
+		}
+		frame = frame->previous;
 	}
 
 	return(new_exception);
@@ -3440,6 +3442,7 @@ static E4C_INLINE void _e4c_exception_initialize(e4c_exception * exception, cons
 	/* assert: exception != NULL */
 	/* assert: exception_type != NULL */
 
+	exception->ref_count	= 1;
 	exception->name			= exception_type->name;
 	exception->file			= file;
 	exception->line			= line;
@@ -3483,10 +3486,15 @@ static E4C_INLINE void _e4c_exception_deallocate(e4c_exception * exception){
 
 	if(exception != NULL){
 
-		_e4c_exception_deallocate(exception->cause);
-		exception->cause = NULL;
+		exception->ref_count--;
 
-		free(exception);
+		if(exception->ref_count <= 0){
+
+			_e4c_exception_deallocate(exception->cause);
+			exception->cause = NULL;
+
+			free(exception);
+		}
 	}
 }
 
@@ -3495,7 +3503,9 @@ static E4C_INLINE void _e4c_exception_set_cause(e4c_exception * exception, e4c_e
 	/* assert: exception != NULL */
 	/* assert: cause != NULL */
 
-	exception->cause		= cause;
+	exception->cause = cause;
+
+	cause->ref_count++;
 }
 
 static void _e4c_print_exception(const e4c_exception * exception){

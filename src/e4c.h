@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 17)
+# define E4C_VERSION_(version)			version(2, 8, 18)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -1965,6 +1965,9 @@ struct e4c_exception_type_{
  */
 typedef struct e4c_exception_ e4c_exception;
 struct e4c_exception_{
+
+	/* This field is reserved for internal use only; do not modify it! */
+	int								_;
 
 	/** The name of this exception */
 	/*@observer@*/ /*@notnull@*/
