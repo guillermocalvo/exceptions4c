@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 18)
+# define E4C_VERSION_(version)			version(2, 8, 19)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -517,7 +517,7 @@
  *     ...
  * }catch(RuntimeException){
  *     const e4c_exception * exception = e4c_get_exception();
- *     if( e4c_is_instance_of(exception, SignalException.type) ){
+ *     if( e4c_is_instance_of(exception, &SignalException) ){
  *         // the exception type is SignalException or any subtype
  *     }
  * }
@@ -531,7 +531,7 @@
  *     ...
  * }catch(RuntimeException){
  *     const e4c_exception * exception = e4c_get_exception();
- *     if(exception->type == NotEnoughMemoryException.type){
+ *     if(exception->type == &NotEnoughMemoryException){
  *         // the exception type is precisely NotEnoughMemoryException
  *     }
  * }
@@ -2941,9 +2941,9 @@ e4c_get_status(
  *    ...
  * }catch(RuntimeException){
  *    const e4c_exception * exception = e4c_get_exception();
- *    if( e4c_is_instance_of(exception, SignalException.type) ){
+ *    if( e4c_is_instance_of(exception, &SignalException) ){
  *        ...
- *    }else if(exception->type == NotEnoughMemoryException.type){
+ *    }else if(exception->type == &NotEnoughMemoryException){
  *        ...
  *    }
  * }
@@ -3047,9 +3047,9 @@ e4c_library_version(
  *    ...
  * }catch(RuntimeException){
  *    const e4c_exception * exception = e4c_get_exception();
- *    if( e4c_is_instance_of(exception, SignalException.type) ){
+ *    if( e4c_is_instance_of(exception, &SignalException) ){
  *        ...
- *    }else if(exception->type == NotEnoughMemoryException.type){
+ *    }else if(exception->type == &NotEnoughMemoryException){
  *        ...
  *    }
  * }
