@@ -4,8 +4,8 @@
  *
  * exceptions4c header file
  *
- * @version     2.8
- * @author      Copyright (c) 2011 Guillermo Calvo
+ * @version     2.9
+ * @author      Copyright (c) 2012 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
  *
@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 8, 19)
+# define E4C_VERSION_(version)			version(2, 9, 0)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -335,7 +335,7 @@
 	volatile E4C_BOOL		E4C_AUTO_(DONE)		= E4C_FALSE; \
 	\
 	if( E4C_AUTO_(BEGIN) ){ \
-		e4c_context_begin(E4C_FALSE, NULL); \
+		e4c_context_begin(E4C_FALSE); \
 		E4C_TRY{ \
 			goto E4C_AUTO_(PAYLOAD); \
 			E4C_AUTO_(CLEANUP): \
@@ -354,10 +354,10 @@
 			goto E4C_AUTO_(CLEANUP); \
 		}else
 
-# define E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_) \
+# define E4C_USING_CONTEXT(_handle_signals_) \
 	\
 	for( \
-		e4c_context_begin( (_handle_signals_), (_uncaught_handler_) ); \
+		e4c_context_begin(_handle_signals_); \
 		e4c_context_is_ready(); \
 		e4c_context_end() \
 	)
@@ -1515,8 +1515,6 @@
  * @param   _handle_signals_
  *          If @c true, the signal handling system will be set up with the
  *          default mapping.
- * @param   _uncaught_handler_ If not @c NULL, this function will be called in
- *          the event of an uncaught exception.
  *
  * This macro begins a new exception context to be used by the code block right
  * next to it. When the code completes, @c #e4c_context_end will be called
@@ -1529,12 +1527,12 @@
  * @code
  *
  * // block 1
- * e4c_context_begin (E4C_TRUE, NULL);
+ * e4c_context_begin(E4C_TRUE);
  * // ...
  * e4c_context_end();
  *
  * // block 2
- * e4c_using_context(E4C_TRUE, NULL){
+ * e4c_using_context(E4C_TRUE){
  *     // ...
  * }
  * @endcode
@@ -1558,8 +1556,8 @@
  * @see     #e4c_context_end
  * @see     #e4c_reusing_context
  */
-# define e4c_using_context(_handle_signals_, _uncaught_handler_) \
-	E4C_USING_CONTEXT(_handle_signals_, _uncaught_handler_)
+# define e4c_using_context(_handle_signals_) \
+	E4C_USING_CONTEXT(_handle_signals_)
 
 /**
  * Expresses a program assertion
@@ -1940,16 +1938,18 @@ struct e4c_exception_type_{
  *
  * Exceptions provide information regarding the exceptional situation, such as:
  *
- * @li The exception @e name and @e type
- * @li An @e ad-hoc message (as opposed to the @e default one)
- * @li The exact point of the program where it was thrown (source code @e file,
- *          @e line and <em>function name</em>, if available)
+ * @li The exception @c name
+ * @li An @e ad-hoc @c message (as opposed to the @e default one)
+ * @li The exact point of the program where it was thrown (source code @c file,
+ *          @c line and @c function name, if available)
  * @li The value of the standard error code @c errno at the time the exception
  *          was thrown
- * @li The @e cause of the exception, which is the previous exception (if any),
- *          when the exception was thrown from a @c #catch or @c #finally block
- * @li The specific, @e run-time type of the exception, convenient when handling
- *          an abstract type of exceptions in a @c #catch block
+ * @li The @c cause of the exception, which is the previous exception (if any),
+ *          when the exception was thrown
+ * @li The specific @c type of the exception, convenient when handling an
+ *          abstract type of exceptions from a @c #catch block
+ * @li Optional, @e user-defined, @c custom_data, which can be initialized and
+ *          finalized throught context @e handlers
  *
  * @note
  * @b Any exception can be caught by a block introduced by
@@ -1960,13 +1960,14 @@ struct e4c_exception_type_{
  * @see     #throw
  * @see     #catch
  * @see     #e4c_get_exception
+ * @see     #e4c_context_set_handlers
  * @see     #RuntimeException
  * @see     #AssertionException
  */
 typedef struct e4c_exception_ e4c_exception;
 struct e4c_exception_{
 
-	/* This field is reserved for internal use only; do not modify it! */
+	/* This field is undocumented on purpose and reserved for internal use */
 	int								_;
 
 	/** The name of this exception */
@@ -1998,6 +1999,10 @@ struct e4c_exception_{
 	/** The cause of this exception */
 	/*@only@*/ /*@null@*/
 	e4c_exception *					cause;
+
+	/** Custom data associated to this exception */
+	/*@shared@*/ /*@null@*/
+	void *							custom_data;
 };
 
 /**
@@ -2014,7 +2019,7 @@ struct e4c_exception_{
  * divisions by zero. Then the program would clean up and continue normally:
  *
  * @code
- * e4c_using_context(true, e4c_print_exception){
+ * e4c_using_context(E4C_TRUE){
  *     int * pointer = NULL;
  *     try{
  *         int oops = *pointer;
@@ -2065,7 +2070,7 @@ struct e4c_exception_{
  * exceptions.
  *
  * @code
- * e4c_using_context(false, e4c_print_exception){
+ * e4c_using_context(E4C_FALSE){
  *
  *     e4c_context_set_signal_mappings(my_signal_mappings);
  *     ...
@@ -2150,35 +2155,181 @@ typedef enum e4c_status_ e4c_status;
  * @param   exception
  *          The uncaught exception
  *
- * These functions are specified when a new exception context is begun:
+ * This handler can be set through the function @c #e4c_context_set_handlers:
  *
  * @code
  * void my_uncaught_handler(const e4c_exception * exception){
  *
- *    printf("Error: %s (%s)\n", exception->name, exception->message);
+ *     printf("Error: %s (%s)\n", exception->name, exception->message);
  * }
  *
  * int main(int argc, char * argv[]){
- *     e4c_using_context(E4C_TRUE, my_uncaught_handler){
+ *
+ *     e4c_using_context(E4C_TRUE){
+ *
+ *         e4c_context_set_handlers(my_uncaught_handler, NULL, NULL, NULL);
  *         // ...
  *     }
  * }
  * @endcode
  *
- * There exists a convenience function to be used as the default <em>uncaught
- * handler</em>, called @c #e4c_print_exception. This function simply prints
- * information regarding the exception to @c stderr.
+ * There exists a convenience function @c #e4c_print_exception which is used as
+ * the default <em>uncaught handler</em>, unless otherwise specified. It simply
+ * prints information regarding the exception to @c stderr.
  *
  * @warning
  * These functions are not allowed to try and recover the current exception
  * context. Moreover, the program (or current thread) will terminate right after
  * the function returns.
  *
- * @see     #e4c_context_begin
- * @see     #e4c_using_context
+ * @see     #e4c_context_set_handlers
+ * @see     #e4c_initialize_handler
+ * @see     #e4c_finalize_handler
  * @see     #e4c_print_exception
  */
 typedef void (*e4c_uncaught_handler)(const e4c_exception * exception)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+*/
+;
+
+/**
+ * Represents a function which will be executed whenever a new exception is
+ * thrown.
+ *
+ * @param   exception
+ *          The newly thrown exception
+ *
+ * When this handler is set, it will be called any time a new exception is
+ * created. The @c void pointer returned by this function will be assigned to
+ * the exception's @e custom_data. This data can be accessed later on, for
+ * example, from a @c catch block, or an <em>uncaught handler</em>, for any
+ * specific purpose.
+ *
+ * This handler can be set through the function @c #e4c_context_set_handlers:
+ *
+ * @code
+ * void * my_initialize_handler(const e4c_exception * e){
+ *
+ *     if( e4c_is_instance_of(e, &SignalException) ){
+ *         printf("Program received signal %s (%d)!\n", e->file, e->line);
+ *     }
+ *
+ *     return(NULL);
+ * }
+ *
+ * int main(int argc, char * argv[]){
+ *
+ *     e4c_using_context(E4C_TRUE){
+ *
+ *         e4c_context_set_handlers(NULL, NULL, my_initialize_handler, NULL);
+ *         // ...
+ *     }
+ * }
+ * @endcode
+ *
+ * By the time this handler is called, the exception already has been assigned
+ * the initial value specified fot @c custom_data, so the handler may make use
+ * of it:
+ *
+ * @code
+ * void * log_handler(const e4c_exception * e){
+ *
+ *     printf("LOG: Exception thrown at module '%s'\n", e->custom_data);
+ *
+ *     return(NULL);
+ * }
+ *
+ * int main(int argc, char * argv[]){
+ *
+ *     e4c_using_context(E4C_TRUE){
+ *
+ *         e4c_context_set_handlers(NULL, "FOO", log_handler, NULL);
+ *         // ...
+ *     }
+ *
+ *     e4c_using_context(E4C_TRUE){
+ *
+ *         e4c_context_set_handlers(NULL, "BAR", log_handler, NULL);
+ *         // ...
+ *     }
+ * }
+ * @endcode
+ *
+ * @see     #e4c_context_set_handlers
+ * @see     #e4c_exception
+ * @see     #e4c_finalize_handler
+ * @see     #e4c_uncaught_handler
+ * @see     #e4c_print_exception
+ */
+typedef void * (*e4c_initialize_handler)(const e4c_exception * exception)
+/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+*/
+;
+
+/**
+ * Represents a function which will be executed whenever an exception is
+ * destroyed.
+ *
+ * @param   custom_data
+ *          The "custom data" of the exception to be discarded
+ *
+ * When this handler is set, it will be called any time an exception is
+ * discarded. It will be passed the <em>custom_data</em> of the exception, so
+ * it can dispose resources previously acquired by the
+ * <em>initialize handler</em>.
+ *
+ * This handler can be set through the function @c #e4c_context_set_handlers:
+ *
+ * @code
+ * void * initialize_data(const e4c_exception * exception){
+ *
+ *     const char * custom_data = malloc(1024);
+ *
+ *     if(custom_data != NULL){
+ *         if( e4c_is_instance_of(exception, &SignalException) ){
+ *             strcpy(custom_data, "SIGNAL ERROR");
+ *         }else{
+ *             strcpy(custom_data, "RUNTIME ERROR");
+ *         }
+ *     }
+ *
+ *     return(custom_data);
+ * }
+ *
+ * void * finalize_data(void * custom_data){
+ *
+ *     free(custom_data);
+ * }
+ *
+ * int main(int argc, char * argv[]){
+ *
+ *     e4c_using_context(E4C_TRUE){
+ *
+ *         e4c_context_set_handlers(NULL, NULL, initialize_data, finalize_data);
+ *         ...
+ *     }
+ * }
+ * @endcode
+ *
+ * @see     #e4c_context_set_handlers
+ * @see     #e4c_exception
+ * @see     #e4c_finalize_handler
+ * @see     #e4c_uncaught_handler
+ * @see     #e4c_print_exception
+ */
+typedef void (*e4c_finalize_handler)(void * custom_data)
 /*@globals
 	fileSystem,
 	internalState
@@ -2313,9 +2464,6 @@ E4C_DECLARE_EXCEPTION(AssertionException);
  *
  * @par     Extends:
  *          #RuntimeException
- *
- * @par     Direct known subexceptions:
- *          #FileException
  */
 /*@unused@*/
 E4C_DECLARE_EXCEPTION(InputOutputException);
@@ -2724,9 +2872,6 @@ e4c_context_is_ready(
  * @param   handle_signals
  *          If @c true, the signal handling system will be set up with the
  *          default mapping.
- * @param   uncaught_handler
- *          If not @c NULL, this function will be called in the event of an
- *          uncaught exception.
  *
  * This function begins the current exception context to be used by the program
  * (or current thread), until @c #e4c_context_end is called.
@@ -2744,13 +2889,10 @@ e4c_context_is_ready(
  * function might be undefined for a multithreaded program, so use the signal
  * handling system with caution.
  *
- * In addition, a handling function can be specified to be called in the event
- * of an uncaught exception. This function will be called before exiting the
- * program or thread.
- *
- * There exists a convenience function to be used as the default <em>uncaught
- * handler</em>, called @c #e4c_print_exception. This function simply prints
- * information regarding the exception to @c stderr.
+ * The convenience function @c #e4c_print_exception will be used as the default
+ * <em>uncaught handler</em>. It will be called in the event of an uncaught
+ * exception, before exiting the program or thread. This handler can be set
+ * through the function @c #e4c_context_set_handlers.
  *
  * @pre     Once @c #e4c_context_begin is called, the program (or thread)
  *          @b must call @c #e4c_context_end before exiting.
@@ -2766,13 +2908,12 @@ e4c_context_is_ready(
  * @see     #e4c_reusing_context
  * @see     #e4c_uncaught_handler
  * @see     #e4c_print_exception
+ * @see     #e4c_context_set_handlers
  */
 /*@unused@*/ extern
 void
 e4c_context_begin(
-	E4C_BOOL					handle_signals,
-	/*@shared@*/ /*@null@*/
-	e4c_uncaught_handler		uncaught_handler
+	E4C_BOOL					handle_signals
 )
 /*@globals
 	fileSystem,
@@ -2818,6 +2959,71 @@ e4c_context_end(
 ;
 
 /**
+ * Sets the optional handlers of an exception context
+ *
+ * @param   uncaught_handler
+ *          The function to be executed in the event of an uncaught exception
+ * @param   custom_data
+ *          The initial value assigned to the custom_data of a new exception
+ * @param   initialize_handler
+ *          The function to be executed whenever a new exception is thrown
+ * @param   finalize_handler
+ *          The function to be executed whenever an exception is destroyed
+ *
+ * These handlers are a means of customizing the behavior of the exception
+ * system. For example, you can specify what needs to be done when a thrown
+ * exception is not caught (and thus, the program or thread is about to end) by
+ * calling @c #e4c_context_set_handlers with the @c #e4c_uncaught_handler
+ * function of your choice.
+ *
+ * You can also control the @ref e4c_exception::custom_data "custom data"
+ * attached to any new exception (whether it is caught or not) by specifying any
+ * or all of these:
+ *
+ * @li The initial value to be assigned to the @c custom_data
+ * @li The funtion to @e initialize the @c custom_data
+ * @li The funtion to @e finalize the @c custom_data
+ *
+ * When these handlers are defined, they will be called anytime an exception is
+ * uncaught, created or destroyed. You can use them to meet your specific needs.
+ * For example, you could...
+ *
+ * @li ...send an e-mail whenever an exception is uncaught
+ * @li ...log any thrown exception to a file
+ * @li ...capture the call stack in order to print it later on
+ * @li ...go for something completely different ;)
+ *
+ * @pre     A program (or thread) @b must begin an exception context prior to
+ *          calling @c #e4c_context_set_handlers. Such programming error will
+ *          lead to an abrupt exit of the program (or thread).
+ *
+ * @see     #e4c_uncaught_handler
+ * @see     #e4c_initialize_handler
+ * @see     #e4c_finalize_handler
+ * @see     #e4c_exception
+ * @see     #e4c_print_exception
+ */
+/*@unused@*/ extern
+void
+e4c_context_set_handlers(
+	/*@dependent@*/ /*@null@*/
+	e4c_uncaught_handler uncaught_handler,
+	/*@dependent@*/ /*@null@*/
+	void * custom_data,
+	/*@dependent@*/ /*@null@*/
+	e4c_initialize_handler initialize_handler,
+	/*@dependent@*/ /*@null@*/
+	e4c_finalize_handler finalize_handler
+)/*@globals
+	fileSystem,
+	internalState
+@*/
+/*@modifies
+	fileSystem,
+	internalState
+@*/;
+
+/**
  * Assigns the specified signal mappings to the exception context
  *
  * @param   mappings
@@ -2844,7 +3050,7 @@ e4c_context_end(
 void
 e4c_context_set_signal_mappings(
 	/*@dependent@*/ /*@null@*/
-	const e4c_signal_mapping *	mappings
+	const e4c_signal_mapping * mappings
 )
 /*@globals
 	fileSystem,
