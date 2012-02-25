@@ -4,8 +4,8 @@
  *
  * exceptions4c automatic resource handling source code file
  *
- * @version		1.0
- * @author		Copyright (c) 2011 Guillermo Calvo
+ * @version		1.1
+ * @author		Copyright (c) 2012 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
