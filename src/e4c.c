@@ -4,8 +4,8 @@
  *
  * exceptions4c source code file
  *
- * @version		2.8
- * @author		Copyright (c) 2011 Guillermo Calvo
+ * @version		2.9
+ * @author		Copyright (c) 2012 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -341,6 +341,12 @@ struct e4c_context_{
 	const e4c_signal_mapping *	signal_mappings;
 	/*@shared@*/ /*@null@*/
 	e4c_uncaught_handler		uncaught_handler;
+	/*@shared@*/ /*@null@*/
+	void *						custom_data;
+	/*@shared@*/ /*@null@*/
+	e4c_initialize_handler		initialize_handler;
+	/*@shared@*/ /*@null@*/
+	e4c_finalize_handler		finalize_handler;
 };
 
 # ifdef E4C_THREADSAFE
@@ -392,7 +398,7 @@ MUTEX_DEFINE(environment_collection_mutex)
 /** main exception context of the program */
 static
 e4c_context
-main_context = {NULL, NULL, NULL};
+main_context = { NULL, NULL, NULL, NULL, NULL, NULL };
 
 /** pointer to the current exception context */
 static
@@ -881,6 +887,7 @@ _e4c_environment_get_current(
  *         e4c_context_is_ready
  *         e4c_context_get_signal_mappings
  *         e4c_context_set_signal_mappings
+ *         e4c_context_set_handlers
  *
  *     PRIVATE
  *         _e4c_context_initialize
@@ -894,9 +901,7 @@ _e4c_environment_get_current(
 /*@-redecl@*/
 void
 e4c_context_begin(
-	E4C_BOOL					handle_signals,
-	/*@shared@*/ /*@null@*/
-	e4c_uncaught_handler		uncaught_handler
+	E4C_BOOL					handle_signals
 )
 # ifdef E4C_THREADSAFE
 /*@globals
@@ -1075,6 +1080,62 @@ void
 e4c_context_set_signal_mappings(
 	/*@in@*/ /*@dependent@*/ /*@null@*/
 	const e4c_signal_mapping *	mappings
+)
+# ifdef E4C_THREADSAFE
+/*@globals
+	fileSystem,
+
+	environment_collection,
+	environment_collection_mutex,
+	fatal_error_flag,
+	is_initialized,
+	is_initialized_mutex,
+
+	ContextHasNotBegunYet,
+	ExceptionSystemFatalError
+@*/
+/*@modifies
+	fileSystem,
+
+	environment_collection,
+	environment_collection_mutex,
+	fatal_error_flag,
+	is_initialized,
+	is_initialized_mutex
+@*/
+# else
+/*@globals
+	fileSystem,
+
+	current_context,
+	fatal_error_flag,
+	is_initialized,
+
+	ContextHasNotBegunYet,
+	ExceptionSystemFatalError
+@*/
+/*@modifies
+	fileSystem,
+
+	current_context->signal_mappings,
+	fatal_error_flag,
+	is_initialized
+@*/
+# endif
+;
+/*@=redecl@*/
+
+/*@-redecl@*/
+void
+e4c_context_set_handlers(
+	/*@dependent@*/ /*@null@*/
+	e4c_uncaught_handler uncaught_handler,
+	/*@dependent@*/ /*@null@*/
+	void * custom_data,
+	/*@dependent@*/ /*@null@*/
+	e4c_initialize_handler initialize_handler,
+	/*@dependent@*/ /*@null@*/
+	e4c_finalize_handler finalize_handler
 )
 # ifdef E4C_THREADSAFE
 /*@globals
@@ -1737,7 +1798,9 @@ static E4C_INLINE
 void
 _e4c_frame_deallocate(
 	/*@only@*/ /*@null@*/
-	e4c_frame *					frame
+	e4c_frame *					frame,
+	/*@shared@*/ /*@null@*/
+	e4c_finalize_handler 		finalizer_handler
 )
 /*@releases
 	frame
@@ -2223,7 +2286,9 @@ static E4C_INLINE
 void
 _e4c_exception_deallocate(
 	/*@only@*/ /*@null@*/
-	e4c_exception *				exception
+	e4c_exception *				exception,
+	/*@shared@*/ /*@null@*/
+	e4c_finalize_handler		finalizer_handler
 )
 /*@releases
 	exception
@@ -2458,6 +2523,13 @@ static void _e4c_library_handle_signal(int signal_number){
 			/* check context and frame; initialize exception and cause */
 			new_exception = _e4c_exception_throw(context->current_frame, mapping->exception_type, signal_name, signal_number, "_e4c_library_handle_signal", errno, E4C_TRUE, NULL);
 
+			/* set initial value for custom data */
+			new_exception->custom_data = context->custom_data;
+			/* initialize custom data */
+			if(context->initialize_handler != NULL){
+				new_exception->custom_data = context->initialize_handler(new_exception);
+			}
+
 			/* propagate the exception up the call stack */
 			_e4c_context_propagate(context, new_exception);
 		}
@@ -2612,6 +2684,9 @@ static E4C_INLINE void _e4c_context_initialize(e4c_context * context, e4c_uncaug
 
 	context->uncaught_handler	= uncaught_handler;
 	context->signal_mappings	= NULL;
+	context->custom_data		= NULL;
+	context->initialize_handler	= NULL;
+	context->finalize_handler	= NULL;
 	context->current_frame		= _e4c_frame_allocate(__LINE__, "_e4c_context_initialize");
 
 	_e4c_frame_initialize(context->current_frame, NULL, e4c_done_);
@@ -2631,7 +2706,7 @@ static void _e4c_context_propagate(e4c_context * context, e4c_exception * except
 	frame->uncaught			= E4C_TRUE;
 
 	/* deallocate previously thrown exception */
-	_e4c_exception_deallocate(frame->thrown_exception);
+	_e4c_exception_deallocate(frame->thrown_exception, context->finalize_handler);
 
 	/* update current thrown exception */
 	frame->thrown_exception	= exception;
@@ -2664,7 +2739,7 @@ static E4C_INLINE e4c_context * _e4c_context_get_current(void){
 }
 
 /* e4c_context_begin (multi-thread) */
-void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_handler){
+void e4c_context_begin(E4C_BOOL handle_signals){
 
 	e4c_environment * environment;
 
@@ -2682,7 +2757,7 @@ void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_ha
 	environment	= _e4c_environment_allocate(__LINE__, "e4c_context_begin");
 
 	/* initialize the new environment */
-	_e4c_environment_initialize(environment, uncaught_handler);
+	_e4c_environment_initialize(environment, e4c_print_exception);
 
 	/* add the new environment to the collection */
 	_e4c_environment_add(environment);
@@ -2734,7 +2809,7 @@ void e4c_context_end(void){
 # else
 
 /* e4c_context_begin (single-thread) */
-void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_handler){
+void e4c_context_begin(E4C_BOOL handle_signals){
 
 	INITIALIZE_ONCE;
 
@@ -2748,7 +2823,7 @@ void e4c_context_begin(E4C_BOOL handle_signals, e4c_uncaught_handler uncaught_ha
 	PREVENT_PROC(main_context.current_frame != NULL, DESC_INVALID_STATE, "e4c_context_begin");
 
 	/* initialize context, register uncaught handler */
-	_e4c_context_initialize(&main_context, uncaught_handler);
+	_e4c_context_initialize(&main_context, e4c_print_exception);
 
 	if(handle_signals){
 		_e4c_context_set_signal_handlers(&main_context, e4c_default_signal_mappings);
@@ -2787,7 +2862,7 @@ void e4c_context_end(void){
 	_e4c_context_set_signal_handlers(context, NULL);
 
 	/* deallocate the current, top frame */
-	_e4c_frame_deallocate(frame);
+	_e4c_frame_deallocate(frame, context->finalize_handler);
 
 	/* deactivate the top frame (for sanity) */
 	current_context->current_frame = NULL;
@@ -2870,6 +2945,23 @@ static void _e4c_context_at_uncaught_exception(e4c_context * context){
 	e4c_context_end();
 
 	STOP_EXECUTION;
+}
+
+void e4c_context_set_handlers(e4c_uncaught_handler uncaught_handler, void * custom_data, e4c_initialize_handler initialize_handler, e4c_finalize_handler finalize_handler){
+
+	e4c_context * context;
+
+	context = E4C_CONTEXT;
+
+	/* check if `e4c_context_set_handlers` was called before calling `e4c_context_begin` */
+	if(context == NULL){
+		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_context_set_handlers: " DESC_NOT_BEGUN_YET, NULL, 0, NULL);
+	}
+
+	context->uncaught_handler	= uncaught_handler;
+	context->custom_data		= custom_data;
+	context->initialize_handler	= initialize_handler;
+	context->finalize_handler	= finalize_handler;
 }
 
 void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings){
@@ -2969,16 +3061,16 @@ static E4C_INLINE e4c_frame * _e4c_frame_allocate(int line, const char * functio
 	return(frame);
 }
 
-static E4C_INLINE void _e4c_frame_deallocate(e4c_frame * frame){
+static E4C_INLINE void _e4c_frame_deallocate(e4c_frame * frame, e4c_finalize_handler finalize_handler){
 
 	if(frame != NULL){
 
 		/* delete previous frame */
-		_e4c_frame_deallocate(frame->previous);
+		_e4c_frame_deallocate(frame->previous, finalize_handler);
 		frame->previous = NULL;
 
 		/* delete thrown exception */
-		_e4c_exception_deallocate(frame->thrown_exception);
+		_e4c_exception_deallocate(frame->thrown_exception, finalize_handler);
 		frame->thrown_exception = NULL;
 
 		free(frame);
@@ -3087,7 +3179,7 @@ E4C_BOOL e4c_frame_next_stage_(void){
 
 	/* deallocate caught exception */
 	if(frame->thrown_exception != NULL && !frame->uncaught){
-		_e4c_exception_deallocate(frame->thrown_exception);
+		_e4c_exception_deallocate(frame->thrown_exception, context->finalize_handler);
 		frame->thrown_exception = NULL;
 	}
 
@@ -3101,7 +3193,7 @@ E4C_BOOL e4c_frame_next_stage_(void){
 	frame->thrown_exception = NULL;
 
 	/* delete the current frame */
-	_e4c_frame_deallocate(frame);
+	_e4c_frame_deallocate(frame, context->finalize_handler);
 
 	/* promote the previous frame to the current one */
 	context->current_frame = previous;
@@ -3180,7 +3272,7 @@ void e4c_frame_repeat_(int max_repeat_attempts, e4c_frame_stage stage, const cha
 	}
 
 	/* deallocate previously thrown exception */
-	_e4c_exception_deallocate(frame->thrown_exception);
+	_e4c_exception_deallocate(frame->thrown_exception, context->finalize_handler);
 
 	/* reset exception information */
 	frame->thrown_exception	= NULL;
@@ -3390,6 +3482,13 @@ void e4c_exception_throw_verbatim_(const e4c_exception_type * exception_type, co
 	/* check context and frame; initialize exception and cause */
 	new_exception = _e4c_exception_throw(frame, exception_type, file, line, function, error_number, E4C_TRUE, message);
 
+	/* set initial value for custom data */
+	new_exception->custom_data = context->custom_data;
+	/* initialize custom data */
+	if(context->initialize_handler != NULL){
+		new_exception->custom_data = context->initialize_handler(new_exception);
+	}
+
 	/* propagate the exception up the call stack */
 	_e4c_context_propagate(context, new_exception);
 }
@@ -3429,6 +3528,13 @@ void e4c_exception_throw_format_(const e4c_exception_type * exception_type, cons
 		va_start(arguments_list, format);
 		(void)vsnprintf(new_exception->message, (size_t)E4C_EXCEPTION_MESSAGE_SIZE, format, arguments_list);
 		va_end(arguments_list);
+	}
+
+	/* set initial value for custom data */
+	new_exception->custom_data = context->custom_data;
+	/* initialize custom data */
+	if(context->initialize_handler != NULL){
+		new_exception->custom_data = context->initialize_handler(new_exception);
 	}
 
 	/* propagate the exception up the call stack */
@@ -3482,7 +3588,7 @@ static E4C_INLINE e4c_exception * _e4c_exception_allocate(int line, const char *
 	return(exception);
 }
 
-static E4C_INLINE void _e4c_exception_deallocate(e4c_exception * exception){
+static E4C_INLINE void _e4c_exception_deallocate(e4c_exception * exception, e4c_finalize_handler finalize_handler){
 
 	if(exception != NULL){
 
@@ -3490,8 +3596,11 @@ static E4C_INLINE void _e4c_exception_deallocate(e4c_exception * exception){
 
 		if(exception->ref_count <= 0){
 
-			_e4c_exception_deallocate(exception->cause);
-			exception->cause = NULL;
+			_e4c_exception_deallocate(exception->cause, finalize_handler);
+
+			if(finalize_handler != NULL){
+				finalize_handler(exception->custom_data);
+			}
 
 			free(exception);
 		}
