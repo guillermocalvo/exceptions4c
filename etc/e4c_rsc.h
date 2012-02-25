@@ -4,8 +4,8 @@
  *
  * exceptions4c automatic resource handling header file
  *
- * @version     1.0
- * @author      Copyright (c) 2011 Guillermo Calvo
+ * @version     1.1
+ * @author      Copyright (c) 2012 Guillermo Calvo
  *
  * @section e4c_rsc_h exceptions4c automatic resource handling header file
  *
@@ -39,7 +39,7 @@
 
 
 # ifndef EXCEPTIONS4C
-#	error "Please include e4c.h before including e4c_rsc.h."
+#	include "e4c.h"
 # endif
 
 
@@ -240,7 +240,7 @@ E4C_DECLARE_EXCEPTION(FileException);
  * @c NULL for whatever reason.
  *
  * @par     Extends:
- *          #FileException
+ *          FileException
  */
 /*@unused@*/
 E4C_DECLARE_EXCEPTION(FileOpenException);
@@ -252,7 +252,7 @@ E4C_DECLARE_EXCEPTION(FileOpenException);
  * return @c zero for whatever reason.
  *
  * @par     Extends:
- *          #FileException
+ *          FileException
  */
 /*@unused@*/
 E4C_DECLARE_EXCEPTION(FileCloseException);
@@ -276,7 +276,7 @@ E4C_DECLARE_EXCEPTION(MutexException);
  * @c NULL for whatever reason.
  *
  * @par     Extends:
- *          #MutexException
+ *          MutexException
  */
 /*@unused@*/
 E4C_DECLARE_EXCEPTION(MutexLockException);
@@ -288,7 +288,7 @@ E4C_DECLARE_EXCEPTION(MutexLockException);
  * not return @c zero for whatever reason.
  *
  * @par     Extends:
- *          #MutexException
+ *          MutexException
  */
 /*@unused@*/
 E4C_DECLARE_EXCEPTION(MutexUnlockException);
