@@ -10,8 +10,8 @@
  *
  * @section e4c exceptions4c
  *
- * @version 2.8
- * @author Copyright (c) 2011 Guillermo Calvo
+ * @version 2.9
+ * @author Copyright (c) 2012 Guillermo Calvo
  * @see http://code.google.com/p/exceptions4c/
  *
  * @section home An exception handling framework for C
@@ -19,7 +19,7 @@
  * <strong>Bring the power of exceptions to your C applications with this tiny,
  * portable exception handling framework!</strong>
  *
- * This library provides you a simple set of keywords (@e macros, actually)
+ * This library provides you with a simple set of keywords (@e macros, actually)
  * which map the semantics of exception handling you're probably already used
  * to:
  *
@@ -28,7 +28,7 @@
  * @li @c #finally
  * @li @c #throw
  *
- * You can write @c #try / @c #catch / @c #finally blocks just as if you were
+ * You can write @c #try... @c #catch... @c #finally blocks just as if you were
  * coding in Java:
  *
  * @code
@@ -133,7 +133,7 @@
  *
  * Whether you are developing a standalone application, or an external library
  * that provides services to independent programs, you can integrate
- * @c exceptions4c in your code very easily.
+ * @b exceptions4c in your code very easily.
  *
  * The system provides a mechanism for implicit initialization and finalization
  * of the exception framework, so that it is safe to use @c #try, @c #catch,
@@ -143,11 +143,11 @@
  * @section portability Portability
  *
  * This library should compile in any ANSI C compiler. It uses nothing but
- * standard C functions. In order to use @c exceptions4c you have to drop the
+ * standard C functions. In order to use @b exceptions4c you have to drop the
  * two files (<code>e4c.h</code> and <code>e4c.c</code>) in your project and
  * remember to include the header file from your code.
  *
- * In case your application uses threads, @c exceptions4c relies on @c pthreads,
+ * In case your application uses threads, @b exceptions4c relies on @b pthreads,
  * the @b POSIX application programming interface for writing multithreaded
  * applications. This @e API is available for most operating systems and
  * platforms.
