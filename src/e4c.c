@@ -380,6 +380,11 @@ static volatile
 E4C_BOOL
 is_initialized = E4C_FALSE;
 
+/** flag to determine if the exception system is finalized */
+static volatile
+E4C_BOOL
+is_finalized = E4C_FALSE;
+
 # ifdef E4C_THREADSAFE
 
 /** collection of environments (one per thread) */
@@ -2434,6 +2439,13 @@ static void _e4c_library_initialize(void){
 
 static void _e4c_library_finalize(void){
 
+	/* check flag to prevent from looping */
+	if(!is_finalized){
+		return;
+	}
+
+	is_finalized = E4C_TRUE;
+
 	/* check for dangling context */
 	if(!fatal_error_flag && DANGLING_CONTEXT){
 
@@ -2448,10 +2460,7 @@ static void _e4c_library_finalize(void){
 
 	/* check for critical error */
 	if(fatal_error_flag){
-
-		/* clear fatal error flag to prevent from looping */
-		fatal_error_flag = E4C_FALSE;
-
+		/* print fatal error message */
 		fprintf(stderr, MSG_AT_EXIT_ERROR);
 		/* force failure exit status */
 		exit(EXIT_FAILURE);
