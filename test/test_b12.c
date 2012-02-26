@@ -14,7 +14,7 @@ DEFINE_TEST(
 
 	ECHO(("before_USING_CONTEXT_block\n"));
 
-	e4c_using_context(E4C_TRUE, e4c_print_exception){
+	e4c_using_context(E4C_TRUE){
 
 		ECHO(("inside_USING_CONTEXT_block\n"));
 
