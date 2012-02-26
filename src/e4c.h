@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 9, 0)
+# define E4C_VERSION_(version)			version(2, 9, 1)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
