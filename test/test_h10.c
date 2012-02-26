@@ -176,7 +176,7 @@ DEFINE_TEST_LONG_DESCRIPTION(
 
 	ECHO(("before_USING_CONTEXT\n"));
 
-	e4c_using_context(E4C_TRUE, e4c_print_exception){
+	e4c_using_context(E4C_TRUE){
 
 		ECHO(("before_TRY_block\n"));
 

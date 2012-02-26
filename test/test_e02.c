@@ -59,7 +59,7 @@ DEFINE_TEST_LONG_DESCRIPTION(
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(E4C_TRUE, e4c_print_exception);
+	e4c_context_begin(E4C_TRUE);
 
 	ECHO(("before_FIRST_TRY_FINALLY_block\n"));
 
