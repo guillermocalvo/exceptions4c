@@ -543,6 +543,7 @@ _e4c_library_initialize(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -552,6 +553,7 @@ _e4c_library_initialize(
 	fileSystem,
 	internalState,
 
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -559,11 +561,13 @@ _e4c_library_initialize(
 /*@globals
 	internalState,
 
+	is_finalized,
 	is_initialized
 @*/
 /*@modifies
 	internalState,
 
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -580,13 +584,15 @@ _e4c_library_finalize(
 
 	environment_collection,
 	fatal_error_flag,
+	is_finalized,
 
 	ContextNotEnded
 @*/
 /*@modifies
 	fileSystem,
 
-	fatal_error_flag
+	fatal_error_flag,
+	is_finalized
 @*/
 # else
 /*@globals
@@ -594,13 +600,15 @@ _e4c_library_finalize(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 
 	ContextNotEnded
 @*/
 /*@modifies
 	fileSystem,
 
-	fatal_error_flag
+	fatal_error_flag,
+	is_finalized,
 @*/
 # endif
 ;
@@ -2431,7 +2439,8 @@ static void _e4c_library_initialize(void){
 		if(!is_initialized){
 
 			/* registers the function _e4c_library_finalize to be called when the program exits */
-			is_initialized = ( atexit(_e4c_library_finalize) == 0 );
+			is_initialized	= ( atexit(_e4c_library_finalize) == 0 );
+			is_finalized	= !is_initialized;
 		}
 
 	MUTEX_UNLOCK(is_initialized_mutex, "_e4c_library_initialize")
@@ -2440,7 +2449,7 @@ static void _e4c_library_initialize(void){
 static void _e4c_library_finalize(void){
 
 	/* check flag to prevent from looping */
-	if(!is_finalized){
+	if(is_finalized){
 		return;
 	}
 
