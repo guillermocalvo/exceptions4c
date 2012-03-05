@@ -23,11 +23,10 @@
  */
 
 /*
- * e4c_rsc.c is undocumented on purpose (everything is documented in e4c_rsc.h)
+ * this file is undocumented on purpose (everything is documented in the header)
  */
 
 
-# include "e4c.h"
 # include "e4c_rsc.h"
 
 

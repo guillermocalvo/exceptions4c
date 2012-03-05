@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 9, 1)
+# define E4C_VERSION_(version)			version(2, 9, 2)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -3298,8 +3298,9 @@ e4c_is_instance_of(
  *          The uncaught exception
  *
  * This is a convenience function for showing an error message through the
- * standard error output. It can be passed to @c #e4c_context_begin or
- * @c #e4c_using_context as the handler for uncaught exceptions.
+ * standard error output. It can be passed to @c #e4c_context_set_handlers as
+ * the handler for uncaught exceptions, and will be used, by default, unless
+ * otherwise set up.
  *
  * In absence of @c NDEBUG, this function prints as much information regarding
  * the exception as it is available, whereas in presence of @c NDEBUG, only the
