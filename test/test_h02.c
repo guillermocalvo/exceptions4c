@@ -5,7 +5,10 @@
 static void aux(void * pointer)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	NotEnoughMemoryException,
+	NullPointerException
 @*/
 /*@modifies
 	fileSystem,
@@ -23,7 +26,14 @@ static void aux(void * pointer)
 static int ext(void)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	e4c_default_signal_mappings,
+
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
+	RuntimeException
 @*/
 /*@modifies
 	fileSystem,

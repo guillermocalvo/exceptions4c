@@ -608,7 +608,7 @@ _e4c_library_finalize(
 	fileSystem,
 
 	fatal_error_flag,
-	is_finalized,
+	is_finalized
 @*/
 # endif
 ;
@@ -626,12 +626,14 @@ _e4c_library_handle_signal(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
 	ExceptionSystemFatalError,
 	ContextHasNotBegunYet,
-	NotEnoughMemoryException
+	NotEnoughMemoryException,
+	NullPointerException
 @*/
 /*@modifies
 	fileSystem,
@@ -644,17 +646,20 @@ _e4c_library_handle_signal(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ExceptionSystemFatalError,
 	ContextHasNotBegunYet,
-	NotEnoughMemoryException
+	NotEnoughMemoryException,
+	NullPointerException
 @*/
 /*@modifies
 	fileSystem,
 	internalState,
 
-	current_context->current_frame
+	current_context->current_frame,
+	current_context->custom_data
 @*/
 # endif
 ;
@@ -679,6 +684,7 @@ _e4c_library_fatal_error(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -689,6 +695,7 @@ _e4c_library_fatal_error(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -698,6 +705,7 @@ _e4c_library_fatal_error(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 
 @*/
@@ -706,6 +714,7 @@ _e4c_library_fatal_error(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -738,6 +747,7 @@ _e4c_environment_allocate(
 	fileSystem,
 	internalState,
 
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 	fatal_error_flag,
@@ -750,6 +760,7 @@ _e4c_environment_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -782,6 +793,7 @@ _e4c_environment_initialize(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -810,6 +822,7 @@ _e4c_environment_add(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -822,6 +835,7 @@ _e4c_environment_add(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -843,6 +857,7 @@ _e4c_environment_remove(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -855,6 +870,7 @@ _e4c_environment_remove(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -873,6 +889,7 @@ _e4c_environment_get_current(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -884,6 +901,7 @@ _e4c_environment_get_current(
 
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -922,6 +940,7 @@ e4c_context_begin(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -932,6 +951,7 @@ e4c_context_begin(
 /*@modifies
 	environment_collection,
 	environment_collection_mutex,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 	fatal_error_flag
@@ -941,6 +961,7 @@ e4c_context_begin(
 	current_context,
 	e4c_default_signal_mappings,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	main_context,
 
@@ -951,6 +972,7 @@ e4c_context_begin(
 /*@modifies
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	main_context
 @*/
@@ -970,6 +992,7 @@ e4c_context_end(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -982,6 +1005,7 @@ e4c_context_end(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -991,6 +1015,7 @@ e4c_context_end(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1001,6 +1026,7 @@ e4c_context_end(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1019,6 +1045,7 @@ e4c_context_is_ready(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1029,6 +1056,7 @@ e4c_context_is_ready(
 
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1053,6 +1081,7 @@ e4c_context_get_signal_mappings(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1065,6 +1094,7 @@ e4c_context_get_signal_mappings(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1074,6 +1104,7 @@ e4c_context_get_signal_mappings(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet
@@ -1082,6 +1113,7 @@ e4c_context_get_signal_mappings(
 	fileSystem,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1101,6 +1133,7 @@ e4c_context_set_signal_mappings(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1113,6 +1146,7 @@ e4c_context_set_signal_mappings(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1122,6 +1156,7 @@ e4c_context_set_signal_mappings(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1132,6 +1167,7 @@ e4c_context_set_signal_mappings(
 
 	current_context->signal_mappings,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1157,6 +1193,7 @@ e4c_context_set_handlers(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1169,6 +1206,7 @@ e4c_context_set_handlers(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1178,16 +1216,20 @@ e4c_context_set_handlers(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
-	ContextHasNotBegunYet,
-	ExceptionSystemFatalError
+	ContextHasNotBegunYet
 @*/
 /*@modifies
 	fileSystem,
 
-	current_context->signal_mappings,
+	current_context->custom_data,
+	current_context->finalize_handler,
+	current_context->initialize_handler,
+	current_context->uncaught_handler,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1208,6 +1250,7 @@ _e4c_context_initialize(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1226,6 +1269,7 @@ _e4c_context_initialize(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	NotEnoughMemoryException
@@ -1253,6 +1297,7 @@ _e4c_context_set_signal_handlers(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1263,6 +1308,7 @@ _e4c_context_set_signal_handlers(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1274,6 +1320,7 @@ _e4c_context_set_signal_handlers(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ExceptionSystemFatalError
@@ -1283,6 +1330,7 @@ _e4c_context_set_signal_handlers(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	context->signal_mappings
@@ -1305,6 +1353,7 @@ _e4c_context_at_uncaught_exception(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1318,6 +1367,7 @@ _e4c_context_at_uncaught_exception(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1328,6 +1378,7 @@ _e4c_context_at_uncaught_exception(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1339,6 +1390,7 @@ _e4c_context_at_uncaught_exception(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1361,6 +1413,7 @@ _e4c_context_propagate(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1374,6 +1427,7 @@ _e4c_context_propagate(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1387,6 +1441,7 @@ _e4c_context_propagate(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1397,6 +1452,7 @@ _e4c_context_propagate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	context->current_frame,
@@ -1420,6 +1476,7 @@ _e4c_context_get_current(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1431,6 +1488,7 @@ _e4c_context_get_current(
 
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1470,6 +1528,7 @@ e4c_get_status(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1481,6 +1540,7 @@ e4c_get_status(
 
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1490,6 +1550,7 @@ e4c_get_status(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1499,6 +1560,7 @@ e4c_get_status(
 	fileSystem,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1523,6 +1585,7 @@ e4c_frame_first_stage_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1535,6 +1598,7 @@ e4c_frame_first_stage_(
 
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1544,6 +1608,7 @@ e4c_frame_first_stage_(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1555,6 +1620,7 @@ e4c_frame_first_stage_(
 
 	current_context->current_frame,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1571,6 +1637,7 @@ e4c_frame_next_stage_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1582,6 +1649,7 @@ e4c_frame_next_stage_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1589,6 +1657,7 @@ e4c_frame_next_stage_(
 /*@globals
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	AssertionException,
@@ -1598,6 +1667,7 @@ e4c_frame_next_stage_(
 /*@modifies
 	current_context->current_frame,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1620,6 +1690,7 @@ e4c_frame_get_stage_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1631,6 +1702,7 @@ e4c_frame_get_stage_(
 
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1640,6 +1712,7 @@ e4c_frame_get_stage_(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1649,6 +1722,7 @@ e4c_frame_get_stage_(
 	fileSystem,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1673,6 +1747,7 @@ e4c_frame_catch_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1685,6 +1760,7 @@ e4c_frame_catch_(
 
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1694,6 +1770,7 @@ e4c_frame_catch_(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1705,6 +1782,7 @@ e4c_frame_catch_(
 
 	current_context->current_frame,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1727,6 +1805,7 @@ e4c_frame_repeat_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1737,6 +1816,7 @@ e4c_frame_repeat_(
 /*@modifies
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1744,6 +1824,7 @@ e4c_frame_repeat_(
 /*@globals
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	AssertionException,
@@ -1752,6 +1833,7 @@ e4c_frame_repeat_(
 @*/
 /*@modifies
 	current_context->current_frame,
+	is_finalized,
 	is_initialized,
 	fatal_error_flag
 @*/
@@ -1773,6 +1855,7 @@ _e4c_frame_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1784,6 +1867,7 @@ _e4c_frame_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -1793,6 +1877,7 @@ _e4c_frame_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	NotEnoughMemoryException
@@ -1802,6 +1887,7 @@ _e4c_frame_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -1813,7 +1899,7 @@ _e4c_frame_deallocate(
 	/*@only@*/ /*@null@*/
 	e4c_frame *					frame,
 	/*@shared@*/ /*@null@*/
-	e4c_finalize_handler 		finalizer_handler
+	e4c_finalize_handler 		finalize_handler
 )
 /*@releases
 	frame
@@ -1865,6 +1951,7 @@ e4c_print_exception_type(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1884,6 +1971,7 @@ e4c_print_exception_type(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -1915,6 +2003,7 @@ e4c_is_instance_of(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -1934,6 +2023,7 @@ e4c_is_instance_of(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -2025,6 +2115,7 @@ e4c_print_exception(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -2039,6 +2130,7 @@ e4c_print_exception(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -2048,6 +2140,7 @@ e4c_print_exception(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -2060,6 +2153,7 @@ e4c_print_exception(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -2079,6 +2173,7 @@ e4c_get_exception(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -2091,6 +2186,7 @@ e4c_get_exception(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -2100,6 +2196,7 @@ e4c_get_exception(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -2110,6 +2207,7 @@ e4c_get_exception(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -2137,6 +2235,7 @@ e4c_exception_throw_verbatim_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -2151,6 +2250,7 @@ e4c_exception_throw_verbatim_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -2160,6 +2260,7 @@ e4c_exception_throw_verbatim_(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -2173,6 +2274,7 @@ e4c_exception_throw_verbatim_(
 	current_context,
 	current_context->current_frame,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -2203,6 +2305,7 @@ e4c_exception_throw_format_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -2217,6 +2320,7 @@ e4c_exception_throw_format_(
 	environment_collection,
 	environment_collection_mutex,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -2226,6 +2330,7 @@ e4c_exception_throw_format_(
 
 	current_context,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	ContextHasNotBegunYet,
@@ -2239,6 +2344,7 @@ e4c_exception_throw_format_(
 	current_context,
 	current_context->current_frame,
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -2261,6 +2367,7 @@ _e4c_exception_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -2272,6 +2379,7 @@ _e4c_exception_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex
 @*/
@@ -2281,6 +2389,7 @@ _e4c_exception_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	NotEnoughMemoryException
@@ -2290,6 +2399,7 @@ _e4c_exception_allocate(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized
 @*/
 # endif
@@ -2301,7 +2411,7 @@ _e4c_exception_deallocate(
 	/*@only@*/ /*@null@*/
 	e4c_exception *				exception,
 	/*@shared@*/ /*@null@*/
-	e4c_finalize_handler		finalizer_handler
+	e4c_finalize_handler		finalize_handler
 )
 /*@releases
 	exception
@@ -2345,7 +2455,8 @@ _e4c_exception_set_cause(
 /*@requires isnull exception->cause@*/
 /*@ensures notnull exception->cause@*/
 /*@modifies
-	exception->cause
+	cause,
+	exception
 @*/
 ;
 
@@ -2372,6 +2483,7 @@ _e4c_exception_throw(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -2384,6 +2496,7 @@ _e4c_exception_throw(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 	is_initialized_mutex,
 
@@ -2395,6 +2508,7 @@ _e4c_exception_throw(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	NotEnoughMemoryException,
@@ -2405,6 +2519,7 @@ _e4c_exception_throw(
 	internalState,
 
 	fatal_error_flag,
+	is_finalized,
 	is_initialized,
 
 	frame->thrown_exception
@@ -2633,7 +2748,7 @@ static E4C_INLINE void _e4c_environment_deallocate(e4c_environment * environment
 		_e4c_environment_deallocate(environment->next);
 		environment->next = NULL;
 
-		_e4c_frame_deallocate(environment->context.current_frame);
+		_e4c_frame_deallocate(environment->context.current_frame, environment->context.finalize_handler);
 		environment->context.current_frame = NULL;
 
 		free(environment);
@@ -3617,7 +3732,10 @@ static E4C_INLINE void _e4c_exception_deallocate(e4c_exception * exception, e4c_
 			_e4c_exception_deallocate(exception->cause, finalize_handler);
 
 			if(finalize_handler != NULL){
+				/* TODO: find the proper way to make Splint happy */
+				/*@-noeffectuncon@*/
 				finalize_handler(exception->custom_data);
+				/*@=noeffectuncon@*/
 			}
 
 			free(exception);
