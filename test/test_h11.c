@@ -5,7 +5,10 @@
 static void aux(/*@null@*/ void * pointer)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	NotEnoughMemoryException,
+	NullPointerException
 @*/
 /*@modifies
 	fileSystem,
@@ -23,7 +26,14 @@ static void aux(/*@null@*/ void * pointer)
 static int ext2(/*@null@*/ void * pointer)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	e4c_default_signal_mappings,
+
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
+	RuntimeException
 @*/
 /*@modifies
 	fileSystem,
@@ -85,7 +95,14 @@ static int ext2(/*@null@*/ void * pointer)
 static int ext1(void)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	e4c_default_signal_mappings,
+
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
+	RuntimeException
 @*/
 /*@modifies
 	fileSystem,

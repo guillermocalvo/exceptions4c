@@ -5,7 +5,11 @@
 static void aux(void)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException
 @*/
 /*@modifies
 	fileSystem,

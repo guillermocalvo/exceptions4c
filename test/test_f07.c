@@ -5,7 +5,10 @@
 static void aux5(void)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	NotEnoughMemoryException,
+	NullPointerException
 @*/
 /*@modifies
 	fileSystem,
@@ -31,6 +34,9 @@ static void aux4(void)
 	fileSystem,
 	internalState,
 
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
 	ProgramSignalException
 @*/
 /*@modifies
@@ -59,6 +65,9 @@ static void aux3(void)
 	fileSystem,
 	internalState,
 
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
 	ProgramSignalException
 @*/
 /*@modifies
@@ -79,6 +88,9 @@ static void aux2(void)
 	fileSystem,
 	internalState,
 
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
 	ProgramSignalException
 @*/
 /*@modifies
@@ -104,6 +116,9 @@ static void aux1(void)
 	fileSystem,
 	internalState,
 
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
 	ProgramSignalException
 @*/
 /*@modifies

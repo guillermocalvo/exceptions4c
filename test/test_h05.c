@@ -16,7 +16,10 @@ static int parse_exception(const e4c_exception * exception)
 static void aux(/*@null@*/ void * pointer)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	NotEnoughMemoryException,
+	NullPointerException
 @*/
 /*@modifies
 	fileSystem,
@@ -34,7 +37,14 @@ static void aux(/*@null@*/ void * pointer)
 static int ext(void)
 /*@globals
 	fileSystem,
-	internalState
+	internalState,
+
+	e4c_default_signal_mappings,
+
+	AssertionException,
+	NotEnoughMemoryException,
+	NullPointerException,
+	RuntimeException
 @*/
 /*@modifies
 	fileSystem,

@@ -51,15 +51,28 @@
 */
 
 # define DEFINE_UNIT_TEST(IS_REQUIREMENT, CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
+	/*@-globuse@*/ \
 	static int test_##CODE##_function(void) \
 	/*@globals \
 		fileSystem, \
-		internalState \
+		internalState, \
+		\
+		e4c_default_signal_mappings, \
+		\
+		AbortException, \
+		AssertionException, \
+		BadPointerException, \
+		MemoryAllocationException, \
+		NotEnoughMemoryException, \
+		NullPointerException, \
+		RuntimeException, \
+		SignalException \
 	@*/ \
 	/*@modifies \
 		fileSystem, \
 		internalState \
 	@*/; \
+	/*@=globuse@*/ \
 	\
 	unit_test test_##CODE = { \
 		/* is_requirement */		IS_REQUIREMENT, \
