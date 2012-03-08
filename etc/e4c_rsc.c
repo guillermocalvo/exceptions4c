@@ -4,7 +4,7 @@
  *
  * exceptions4c automatic resource handling source code file
  *
- * @version		1.1
+ * @version		1.2
  * @author		Copyright (c) 2012 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -35,5 +35,5 @@ E4C_DEFINE_EXCEPTION(FileException,						"File exception.",					InputOutputExcep
 E4C_DEFINE_EXCEPTION(FileOpenException,					"Couldn't open file.",				FileException);
 E4C_DEFINE_EXCEPTION(FileCloseException,				"Couldn't close file.",				FileException);
 E4C_DEFINE_EXCEPTION(MutexException,					"Mutex error.",						RuntimeException);
-E4C_DEFINE_EXCEPTION(MutexLockError,					"Couldn't lock mutex.",				MutexException);
-E4C_DEFINE_EXCEPTION(MutexUnlockError,					"Couldn't unlock mutex.",			MutexException);
+E4C_DEFINE_EXCEPTION(MutexLockException,				"Couldn't lock mutex.",				MutexException);
+E4C_DEFINE_EXCEPTION(MutexUnlockException,				"Couldn't unlock mutex.",			MutexException);

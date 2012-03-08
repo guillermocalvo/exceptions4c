@@ -4,7 +4,7 @@
  *
  * exceptions4c gcc stack trace source code file
  *
- * @version		1.0
+ * @version		1.1
  * @author		Copyright (c) 2012 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -69,17 +69,22 @@
 # endif
 
 
-typedef struct call_site_array call_site_array_t;
+typedef struct call_site_array e4c_call_site_array;
 typedef struct debug_info_struct e4c_debug_info;
 typedef struct call_frame_struct e4c_call_frame;
 typedef struct call_stack_struct e4c_call_stack;
 
 struct call_site{
+
+	/*@observer@*/ /*@null@*/
 	const void *		caller;
+	/*@observer@*/ /*@null@*/
 	const void *		callee;
 };
 
 struct call_site_array{
+
+	/*@observer@*/ /*@notnull@*/
 	const char *		binary_path;
 	int					size;
 	struct call_site	call_site[E4C_STACK_TRACE_MAX_FUNCTION_CALLS];
@@ -87,6 +92,7 @@ struct call_site_array{
 
 struct debug_info_struct{
 
+	/*@observer@*/ /*@null@*/
 	const void *		address;
 	int					line_number;
 	char				function_name[E4C_STACK_TRACE_MAX_FUNCTION_NAME_LENGTH];
@@ -97,15 +103,20 @@ struct call_frame_struct{
 
 	e4c_debug_info		caller;
 	e4c_debug_info		callee;
+	/*@observer@*/ /*@null@*/
 	e4c_call_frame *	next;
+	/*@observer@*/ /*@null@*/
 	e4c_call_frame *	previous;
 };
 
 struct call_stack_struct{
 
+	/*@observer@*/ /*@notnull@*/
 	const char *		binary_path;
 	int					size;
+	/*@null@*/
 	e4c_call_frame *	first_frame;
+	/*@null@*/
 	e4c_call_frame *	last_frame;
 };
 
@@ -131,31 +142,159 @@ struct call_stack_struct{
 				fscanf(FILE, SCANF_PATTERN, \
 				(DEBUG_INFO)->function_name, \
 				(DEBUG_INFO)->file_path, \
-				(DEBUG_INFO)->file_path + 2, \
+				&(DEBUG_INFO)->file_path[2], \
 				&(DEBUG_INFO)->line_number) == 4 \
 			)
-# define INITIALIZE_CALL_FRAME(CALL_FRAME, CALL_SITE_ARRAY, INDEX) \
-			do{ \
-				( CALL_FRAME + INDEX )->caller.address		= ( CALL_SITE_ARRAY->call_site + INDEX )->caller; \
-				( CALL_FRAME + INDEX )->callee.address		= ( CALL_SITE_ARRAY->call_site + INDEX )->callee; \
-				( CALL_FRAME + INDEX )->caller.line_number	= 0; \
-				( CALL_FRAME + INDEX )->callee.line_number	= 0; \
-				( CALL_FRAME + INDEX )->previous			= ( INDEX == 0 ? NULL : CALL_FRAME + INDEX - 1 ); \
-				( CALL_FRAME + INDEX )->next				= ( INDEX + 1 == CALL_SITE_ARRAY->size ? NULL : CALL_FRAME + INDEX + 1 ); \
-			}while(0)
+
+# ifdef S_SPLINT_S
+#	define popen	fopen
+#	define pclose	fclose
+# endif
 
 
-static call_site_array_t call_site_array = {NULL, 0, { {NULL, NULL} } };
+static e4c_call_site_array call_site_array = {
+	"",
+	0,
+	/*@-initallelements@*/
+	{
+		{NULL, NULL}
+	}
+	/*@=initallelements@*/
+};
 
 
-static void __cyg_profile_func_enter(void * callee, void * caller) DO_NOT_TRACE_FUNCTION UNUSED_FUNCTION;
-static void __cyg_profile_func_exit(void * callee, void * caller) DO_NOT_TRACE_FUNCTION UNUSED_FUNCTION;
-static e4c_call_frame * _e4c_parse_call_frame_array(call_site_array_t * call_site_array) DO_NOT_TRACE_FUNCTION;
-inline static e4c_call_stack * _e4c_parse_call_stack(call_site_array_t * call_site_array) DO_NOT_TRACE_FUNCTION;
-inline static call_site_array_t * _e4c_capture_call_site_array(const char * binary_path) DO_NOT_TRACE_FUNCTION;
-inline static int _e4c_print_call_frame(const char * binary_path, e4c_debug_info * debug_info, const char * * prefix_exclude, int print_line) DO_NOT_TRACE_FUNCTION;
-inline static void _e4c_print_call_stack(e4c_call_stack * call_stack, const char * * prefix_exclude, int max);
-inline static void _e4c_print_exception(const e4c_exception * exception, int is_cause, const char * * prefix_exclude, int max) DO_NOT_TRACE_FUNCTION;
+static
+void
+__cyg_profile_func_enter(
+	/*@observer@*/
+	void * callee,
+	/*@observer@*/
+	void * caller
+) DO_NOT_TRACE_FUNCTION UNUSED_FUNCTION
+/*@globals
+	call_site_array
+@*/
+/*@modifies
+	call_site_array
+@*/
+;
+
+static
+void
+__cyg_profile_func_exit(
+	/*@observer@*/
+	void * callee,
+	/*@observer@*/
+	void * caller
+) DO_NOT_TRACE_FUNCTION UNUSED_FUNCTION
+/*@globals
+	call_site_array
+@*/
+/*@modifies
+	call_site_array
+@*/
+;
+
+static
+/*@null@*/
+e4c_call_frame *
+_e4c_parse_call_frame_array(
+	e4c_call_site_array * call_site_array
+) DO_NOT_TRACE_FUNCTION
+/*@globals
+	fileSystem
+@*/
+/*@modifies
+	fileSystem
+@*/
+/*@requires maxRead(call_site_array->call_site) >= call_site_array->size @*/
+;
+
+inline static
+/*@null@*/
+e4c_call_stack *
+_e4c_parse_call_stack(
+	e4c_call_site_array * call_site_array
+) DO_NOT_TRACE_FUNCTION
+/*@globals
+	fileSystem
+@*/
+/*@modifies
+	fileSystem
+@*/
+/*@requires maxRead(call_site_array->call_site) >= call_site_array->size @*/
+;
+
+inline static
+/*@null@*/
+e4c_call_site_array *
+_e4c_capture_call_site_array(
+	/*@observer@*/ /*@notnull@*/
+	const char * binary_path
+) DO_NOT_TRACE_FUNCTION
+/*@globals
+	call_site_array
+@*/
+;
+
+inline static
+int
+_e4c_print_call_frame(
+	/*@temp@*/ /*@notnull@*/
+	const char * binary_path,
+	/*@temp@*/ /*@notnull@*/
+	e4c_debug_info * debug_info,
+	/*@temp@*/ /*@notnull@*/
+	const char * * prefix_exclude,
+	int print_line
+) DO_NOT_TRACE_FUNCTION
+/*@globals
+	fileSystem
+@*/
+/*@modifies
+	fileSystem
+@*/
+/*@requires
+	maxRead(debug_info->function_name) >= 0
+	/\
+	maxRead(prefix_exclude) >= 0
+@*/
+;
+
+inline static
+void
+_e4c_print_call_stack(
+	/*@temp@*/ /*@notnull@*/
+	e4c_call_stack * call_stack,
+	/*@temp@*/ /*@notnull@*/
+	const char * * prefix_exclude,
+	int max
+)
+/*@globals
+	fileSystem
+@*/
+/*@modifies
+	fileSystem
+@*/
+;
+
+inline static
+void
+_e4c_print_exception(
+	/*@temp@*/ /*@notnull@*/
+	const e4c_exception * exception,
+	int is_cause,
+	/*@temp@*/ /*@notnull@*/
+	const char * * prefix_exclude,
+	int max
+) DO_NOT_TRACE_FUNCTION
+/*@globals
+	fileSystem
+@*/
+/*@modifies
+	fileSystem
+@*/
+;
 
 
 static void __cyg_profile_func_enter(void * callee, void * caller){
@@ -170,54 +309,73 @@ static void __cyg_profile_func_enter(void * callee, void * caller){
 
 static void __cyg_profile_func_exit(void * callee, void * caller){
 
-	if(call_site_array.size == 0) return;
+	if(call_site_array.size == 0){
+		return;
+	}
 
 	call_site_array.size--;
 }
 
-static e4c_call_frame * _e4c_parse_call_frame_array(call_site_array_t * call_site_array){
+static e4c_call_frame * _e4c_parse_call_frame_array(e4c_call_site_array * call_site_array){
 
 	e4c_call_frame * call_frame = NULL;
 
 	if(call_site_array->size > 0){
 
-		char * command;
+		size_t	command_size;
+		char *	command;
 
-		command		= malloc( 2 * (E4C_STACK_TRACE_PRINTF_POINTER_SIZE + 1) * call_site_array->size + E4C_STACK_TRACE_ADDR2LINE_BUFFER_SIZE );
-		call_frame	= malloc( sizeof(*call_frame) * call_site_array->size );
+		command_size= 2 * ( /*@-sizeoftype@*/ E4C_STACK_TRACE_PRINTF_POINTER_SIZE /*@=sizeoftype@*/ + 1) * call_site_array->size + E4C_STACK_TRACE_ADDR2LINE_BUFFER_SIZE;
+		command		= calloc( command_size, (size_t)1 );
 
-		if(command != NULL && call_frame != NULL){
+		if(command != NULL){
 
-			FILE *	pipe;
-			int		index;
-			char *	tmp;
+			call_frame	= calloc( (size_t)call_site_array->size, sizeof(*call_frame) );
 
-			tmp = command + sprintf(command, "%s %s \"%s\"", E4C_STACK_TRACE_ADDR2LINE_PATH, E4C_STACK_TRACE_ADDR2LINE_OPTIONS, call_site_array->binary_path);
-			for(index = 0; index < call_site_array->size; index++){
+			if(call_frame != NULL){
 
-				tmp += sprintf(tmp, PRINTF_PRINT_2_POINTERS, call_site_array->call_site[index].caller, call_site_array->call_site[index].callee);
+				FILE *	pipe;
+				int		index;
+				int		written;
 
-				INITIALIZE_CALL_FRAME(call_frame, call_site_array, index);
-			}
-
-			sprintf(tmp, " 2>&1");
-
-			pipe = popen(command, "r");
-			if(pipe != NULL){
+				written = snprintf(command, command_size, "%s %s \"%s\"", E4C_STACK_TRACE_ADDR2LINE_PATH, E4C_STACK_TRACE_ADDR2LINE_OPTIONS, call_site_array->binary_path);
 
 				for(index = 0; index < call_site_array->size; index++){
 
-					if( !PARSE_DEBUG_INFO(pipe, &call_frame[index].caller) || !PARSE_DEBUG_INFO(pipe, &call_frame[index].callee) ){
+					written += snprintf(&command[written], command_size - written, PRINTF_PRINT_2_POINTERS, call_site_array->call_site[index].caller, call_site_array->call_site[index].callee);
 
-						break;
-					}
+					call_frame[index].caller.address		= call_site_array->call_site[index].caller;
+					call_frame[index].callee.address		= call_site_array->call_site[index].callee;
+					call_frame[index].caller.line_number	= 0;
+					call_frame[index].callee.line_number	= 0;
+					*call_frame[index].caller.function_name	= '\0';
+					*call_frame[index].callee.function_name	= '\0';
+					*call_frame[index].caller.file_path		= '\0';
+					*call_frame[index].callee.file_path		= '\0';
+					call_frame[index].previous				= ( index == 0 ? NULL : &call_frame[index - 1] );
+					call_frame[index].next					= ( index + 1 == call_site_array->size ? NULL : &call_frame[index + 1] );
 				}
 
-				pclose(pipe);
+				(void)snprintf(&command[written], command_size - written, " 2>&1");
+
+				pipe = popen(command, "r");
+				if(pipe != NULL){
+
+					for(index = 0; index < call_site_array->size; index++){
+
+						if( !PARSE_DEBUG_INFO(pipe, &call_frame[index].caller) || !PARSE_DEBUG_INFO(pipe, &call_frame[index].callee) ){
+
+							break;
+						}
+					}
+
+					(void)pclose(pipe);
+				}
 			}
+
+			free(command);
 		}
 
-		free(command);
 	}
 
 	return(call_frame);
@@ -250,25 +408,30 @@ inline static int _e4c_print_call_frame(const char * binary_path, e4c_debug_info
 	return(1);
 }
 
-inline static e4c_call_stack * _e4c_parse_call_stack(call_site_array_t * call_site_array){
+inline static e4c_call_stack * _e4c_parse_call_stack(e4c_call_site_array * call_site_array){
 
 	e4c_call_stack *	call_stack = NULL;
 
 	if(call_site_array != NULL){
 
 		call_stack				= malloc( sizeof(*call_stack) );
-		call_stack->binary_path = call_site_array->binary_path;
-		call_stack->size		= call_site_array->size;
-		call_stack->first_frame = _e4c_parse_call_frame_array(call_site_array);
-		call_stack->last_frame	= ( call_stack->first_frame == NULL ? NULL : call_stack->first_frame + call_site_array->size - 1);
+
+		if(call_stack != NULL){
+
+			call_stack->binary_path = call_site_array->binary_path;
+			call_stack->size		= call_site_array->size;
+			call_stack->first_frame = _e4c_parse_call_frame_array(call_site_array);
+			call_stack->last_frame	= ( call_stack->first_frame == NULL ? NULL : call_stack->first_frame + call_site_array->size - 1);
+		}
 	}
 
 	return(call_stack);
 }
 
-inline static call_site_array_t * _e4c_capture_call_site_array(const char * binary_path){
+inline static e4c_call_site_array * _e4c_capture_call_site_array(const char * binary_path){
 
-	call_site_array_t * tmp = malloc( sizeof(*tmp) );
+	e4c_call_site_array * tmp = malloc( sizeof(*tmp) );
+
 	if(tmp != NULL){
 
 		memcpy( tmp, &call_site_array, sizeof(*tmp) );
@@ -353,7 +516,7 @@ void e4c_stack_trace_print_exception(const e4c_exception * exception){
 
 void * e4c_stack_trace_initialize(const e4c_exception * exception){
 
-	call_site_array_t * call_site_array = NULL;
+	e4c_call_site_array * call_site_array = NULL;
 
 	if(exception != NULL){
 
