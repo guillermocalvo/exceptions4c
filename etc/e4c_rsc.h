@@ -4,7 +4,7 @@
  *
  * exceptions4c automatic resource handling header file
  *
- * @version     1.1
+ * @version     1.2
  * @author      Copyright (c) 2012 Guillermo Calvo
  *
  * @section e4c_rsc_h exceptions4c automatic resource handling header file

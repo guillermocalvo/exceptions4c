@@ -4,7 +4,7 @@
  *
  * exceptions4c gcc stack trace header file
  *
- * @version     1.0
+ * @version     1.1
  * @author      Copyright (c) 2012 Guillermo Calvo
  *
  * @section e4c_st_g_h exceptions4c gcc stack trace header file
@@ -84,6 +84,9 @@
 # ifndef EXCEPTIONS4C
 #	include "e4c.h"
 # endif
+
+
+/*@-exportany@*/
 
 
 /**
@@ -200,6 +203,9 @@ void e4c_stack_trace_finalize(
 	internalState
 @*/
 ;
+
+
+/*@=exportany@*/
 
 
 # endif
