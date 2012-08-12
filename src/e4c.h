@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 9, 4)
+# define E4C_VERSION_(version)			version(2, 9, 5)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -199,21 +199,21 @@
 
 
 /*
- * The E4C_NORETURN_ compile-time parameter
+ * The E4C_NO_RETURN_ compile-time parameter
  * could be defined in order to work with some specific compiler.
  */
-# ifndef E4C_NORETURN_
+# ifndef E4C_NO_RETURN_
 
 #	if defined(__GNUC__)
-#		define E4C_NORETURN_				__attribute__ ((noreturn))
+#		define E4C_NO_RETURN_				__attribute__ ((noreturn))
 #		define E4C_UNREACHABLE_RETURN_(_value_)
 
 #	elif defined(S_SPLINT_S)
-#		define E4C_NORETURN_
+#		define E4C_NO_RETURN_
 #		define E4C_UNREACHABLE_RETURN_(_value_)
 
 #	else
-#		define E4C_NORETURN_
+#		define E4C_NO_RETURN_
 #		define E4C_UNREACHABLE_RETURN_(_value_) return _value_
 #	endif
 
@@ -1420,7 +1420,7 @@
  * marked with this macro:
  *
  * @code
- * void f1(int foo) E4C_NORETURN;
+ * void f1(int foo) E4C_NO_RETURN;
  * // ...
  * void f1(int foo){
  *     if(foo == 1){
@@ -1452,9 +1452,9 @@
  *
  * @see     #E4C_UNREACHABLE_RETURN
  */
-# define E4C_NORETURN \
+# define E4C_NO_RETURN \
 	\
-	E4C_NORETURN_
+	E4C_NO_RETURN_
 
 /**
  * Simulates a function return
@@ -1468,12 +1468,12 @@
  * @note
  * It does not make sense using this macro in @c void functions.
  *
- * It may be used after calling a function marked as @c #E4C_NORETURN, so that
+ * It may be used after calling a function marked as @c #E4C_NO_RETURN, so that
  * the compiler will not complain about <em>control reaching end of non-void
  * function</em>. For example:
  *
  * @code
- * void f1(int foo) E4C_NORETURN;
+ * void f1(int foo) E4C_NO_RETURN;
  *
  * int f3(int bar, int foo){
  *
@@ -1488,10 +1488,10 @@
  * @endcode
  *
  * This macro will become an actual @c return statement if the compiler does not
- * support @c #E4C_NORETURN, even though it will never be reached (because the
+ * support @c #E4C_NO_RETURN, even though it will never be reached (because the
  * called function won't actually return control).
  *
- * @see     #E4C_NORETURN
+ * @see     #E4C_NO_RETURN
  */
 # define E4C_UNREACHABLE_RETURN(_value_) \
 	\
@@ -3521,7 +3521,7 @@ e4c_exception_throw_verbatim_(
 	fileSystem,
 	internalState
 @*/
-E4C_NORETURN;
+E4C_NO_RETURN;
 
 # if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
 
@@ -3550,7 +3550,7 @@ e4c_exception_throw_format_(
 	fileSystem,
 	internalState
 @*/
-E4C_NORETURN;
+E4C_NO_RETURN;
 
 # endif
 
