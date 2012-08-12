@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version     2.9
+ * @version     2.10
  * @author      Copyright (c) 2012 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 9, 6)
+# define E4C_VERSION_(version)			version(2, 10, 0)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -204,18 +204,22 @@
  */
 # ifdef E4C_NO_RETURN_
 #	define E4C_UNREACHABLE_RETURN_(_value_)		( (void)0 )
+#	define E4C_UNREACHABLE_VOID_RETURN_			( (void)0 )
 
 # elif defined(__GNUC__)
 #	define E4C_NO_RETURN_						__attribute__ ((noreturn))
 #	define E4C_UNREACHABLE_RETURN_(_value_)		( (void)0 )
+#	define E4C_UNREACHABLE_VOID_RETURN_			( (void)0 )
 
 # elif defined(S_SPLINT_S)
 #	define E4C_NO_RETURN_
 #	define E4C_UNREACHABLE_RETURN_(_value_)		( (void)0 )
+#	define E4C_UNREACHABLE_VOID_RETURN_			( (void)0 )
 
 # else
 #	define E4C_NO_RETURN_
 #	define E4C_UNREACHABLE_RETURN_(_value_)		return(_value_)
+#	define E4C_UNREACHABLE_VOID_RETURN_			return
 
 # endif
 
@@ -1461,9 +1465,6 @@
  * This macro ensures portability on compilers which don't support functions
  * that never return.
  *
- * @note
- * It does not make sense using this macro in @c void functions.
- *
  * It may be used after calling a function marked as @c #E4C_NO_RETURN, so that
  * the compiler will not complain about <em>control reaching end of non-void
  * function</em>. For example:
@@ -1488,10 +1489,52 @@
  * called function won't actually return control).
  *
  * @see     #E4C_NO_RETURN
+ * @see     #E4C_UNREACHABLE_VOID_RETURN
  */
 # define E4C_UNREACHABLE_RETURN(_value_) \
 	\
 	E4C_UNREACHABLE_RETURN_(_value_)
+
+/**
+ * Simulates a function void return
+ *
+ * This macro ensures portability on static source code analyzers which don't
+ * support functions that never return.
+ *
+ * It may be used after calling a function marked as @c #E4C_NO_RETURN, so that
+ * the analyzer will not complain about spurious errors. For example, if we
+ * didn't use <tt>E4C_UNREACHABLE_VOID_RETURN</tt> here, some analyzers might
+ * complain about <em>possible null pointer dereference</em> at line
+ * <tt>foo = *bar</tt>, because they are not aware that function call
+ * <tt>f1(321);</tt> will never return control:
+ *
+ * @code
+ * void f1(int foo) E4C_NO_RETURN;
+ *
+ * void f3(int * bar){
+ *
+ *     int foo;
+ *
+ *     if(bar == NULL){
+ *         f1(321);
+ *         E4C_UNREACHABLE_VOID_RETURN;
+ *     }
+ *
+ *     foo = *bar;
+ *     printf("value: %d", foo);
+ * }
+ * @endcode
+ *
+ * This macro will become an actual @c return statement if the compiler does not
+ * support @c #E4C_NO_RETURN, even though it will never be reached (because the
+ * called function won't actually return control).
+ *
+ * @see     #E4C_NO_RETURN
+ * @see     #E4C_UNREACHABLE_RETURN
+ */
+# define E4C_UNREACHABLE_VOID_RETURN \
+	\
+	E4C_UNREACHABLE_VOID_RETURN_
 
 /** @} */
 
