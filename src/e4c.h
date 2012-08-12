@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 10, 0)
+# define E4C_VERSION_(version)			version(2, 10, 1)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -213,8 +213,14 @@
 
 # elif defined(S_SPLINT_S)
 #	define E4C_NO_RETURN_
-#	define E4C_UNREACHABLE_RETURN_(_value_)		( (void)0 )
-#	define E4C_UNREACHABLE_VOID_RETURN_			( (void)0 )
+#	define E4C_UNREACHABLE_RETURN_(_value_) \
+		/*@-unreachable@*/ /*@-noeffect@*/ \
+		( (void)0 ) \
+		/*@=unreachable@*/ /*@=noeffect@*/
+#	define E4C_UNREACHABLE_VOID_RETURN_ \
+		/*@-unreachable@*/ /*@-noeffect@*/ \
+		( (void)0 ) \
+		/*@=unreachable@*/ /*@=noeffect@*/
 
 # else
 #	define E4C_NO_RETURN_
