@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 9, 5)
+# define E4C_VERSION_(version)			version(2, 9, 6)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -202,24 +202,20 @@
  * The E4C_NO_RETURN_ compile-time parameter
  * could be defined in order to work with some specific compiler.
  */
-# ifndef E4C_NO_RETURN_
+# ifdef E4C_NO_RETURN_
+#	define E4C_UNREACHABLE_RETURN_(_value_)		( (void)0 )
 
-#	if defined(__GNUC__)
-#		define E4C_NO_RETURN_				__attribute__ ((noreturn))
-#		define E4C_UNREACHABLE_RETURN_(_value_)
+# elif defined(__GNUC__)
+#	define E4C_NO_RETURN_						__attribute__ ((noreturn))
+#	define E4C_UNREACHABLE_RETURN_(_value_)		( (void)0 )
 
-#	elif defined(S_SPLINT_S)
-#		define E4C_NO_RETURN_
-#		define E4C_UNREACHABLE_RETURN_(_value_)
-
-#	else
-#		define E4C_NO_RETURN_
-#		define E4C_UNREACHABLE_RETURN_(_value_) return _value_
-#	endif
+# elif defined(S_SPLINT_S)
+#	define E4C_NO_RETURN_
+#	define E4C_UNREACHABLE_RETURN_(_value_)		( (void)0 )
 
 # else
-
-#	define E4C_UNREACHABLE_RETURN_(_value_)
+#	define E4C_NO_RETURN_
+#	define E4C_UNREACHABLE_RETURN_(_value_)		return(_value_)
 
 # endif
 

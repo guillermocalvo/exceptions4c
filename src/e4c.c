@@ -3237,6 +3237,7 @@ E4C_BOOL e4c_frame_catch_(const e4c_exception_type * exception_type, const char 
 	/* check if 'e4c_frame_catch_' was used before calling e4c_context_begin */
 	if(context == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_frame_catch_: " DESC_NOT_BEGUN_YET, file, line, function);
+		E4C_UNREACHABLE_RETURN(E4C_FALSE);
 	}
 
 	frame = context->current_frame;
