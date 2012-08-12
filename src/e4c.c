@@ -4,7 +4,7 @@
  *
  * exceptions4c source code file
  *
- * @version		2.9
+ * @version		2.10
  * @author		Copyright (c) 2012 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
@@ -158,6 +158,7 @@
 #	define PREVENT_PROC(condition, message, function) \
 		if(condition){ \
 			INTERNAL_ERROR(message, function); \
+			E4C_UNREACHABLE_VOID_RETURN; \
 		}
 # else
 #	define PREVENT_FUNC(condition, message, function, unreachable_return_value)
@@ -2651,6 +2652,7 @@ static void _e4c_library_handle_signal(int signal_number){
 			if(previous_handler == SIG_ERR){
 				/* we were unable to register the signal handling procedure again */
 				INTERNAL_ERROR(DESC_SIGERR_HANDLE, "_e4c_library_handle_signal");
+				E4C_UNREACHABLE_VOID_RETURN;
 			}
 
 			/* check context and frame; initialize exception and cause */
@@ -2884,6 +2886,7 @@ void e4c_context_begin(E4C_BOOL handle_signals){
 	/* check if e4c_context_begin was called twice for this thread */
 	if(environment != NULL){
 		MISUSE_ERROR(ContextAlreadyBegun, "e4c_context_begin: " DESC_ALREADY_BEGUN, NULL, 0, NULL);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* allocate memory for the new environment */
@@ -2913,6 +2916,7 @@ void e4c_context_end(void){
 	/* check if `e4c_context_end` was called before calling `e4c_context_begin` */
 	if(environment == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_context_end: " DESC_NOT_BEGUN_YET, NULL, 0, NULL);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* update local variable */
@@ -2930,6 +2934,7 @@ void e4c_context_end(void){
 	/* check if there are too many frames left (breaking out of a try block) */
 	if( !IS_TOP_FRAME(frame) ){
 		INTERNAL_ERROR(DESC_TOO_MANY_FRAMES, "e4c_context_end");
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* reset all signal handlers */
@@ -2950,6 +2955,7 @@ void e4c_context_begin(E4C_BOOL handle_signals){
 	/* this can also happen when the program uses threads but E4C_THREADSAFE is not defined */
 	if(current_context != NULL){
 		MISUSE_ERROR(ContextAlreadyBegun, "e4c_context_begin: " DESC_ALREADY_BEGUN, NULL, 0, NULL);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* check if the current frame is NOT NULL (unlikely) */
@@ -2978,6 +2984,7 @@ void e4c_context_end(void){
 	/* check if `e4c_context_end` was called before calling `e4c_context_begin` */
 	if(context == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_context_end: " DESC_NOT_BEGUN_YET, NULL, 0, NULL);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* get the current frame */
@@ -2989,6 +2996,7 @@ void e4c_context_end(void){
 	/* check if there are too many frames left (breaking out of a try block) */
 	if( !IS_TOP_FRAME(frame) ){
 		INTERNAL_ERROR(DESC_TOO_MANY_FRAMES, "e4c_context_end");
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* reset all signal handlers */
@@ -3021,6 +3029,7 @@ static void _e4c_context_set_signal_handlers(e4c_context * context, const e4c_si
 			if(previous_handler == SIG_ERR){
 				/* we were unable to reset to the default action */
 				INTERNAL_ERROR(DESC_SIGERR_DEFAULT, "e4c_set_signal_handlers");
+				E4C_UNREACHABLE_VOID_RETURN;
 			}
 			next_mapping++;
 		}
@@ -3053,6 +3062,7 @@ static void _e4c_context_set_signal_handlers(e4c_context * context, const e4c_si
 		previous_handler = signal(next_mapping->signal_number, handler);
 		if(previous_handler == SIG_ERR){
 			INTERNAL_ERROR(error_message, "e4c_set_signal_handlers");
+			E4C_UNREACHABLE_VOID_RETURN;
 		}
 
 		next_mapping++;
@@ -3089,6 +3099,7 @@ void e4c_context_set_handlers(e4c_uncaught_handler uncaught_handler, void * cust
 	/* check if `e4c_context_set_handlers` was called before calling `e4c_context_begin` */
 	if(context == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_context_set_handlers: " DESC_NOT_BEGUN_YET, NULL, 0, NULL);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	context->uncaught_handler	= uncaught_handler;
@@ -3106,6 +3117,7 @@ void e4c_context_set_signal_mappings(const e4c_signal_mapping * mappings){
 	/* check if `e4c_context_set_signal_mappings` was called before calling `e4c_context_begin` */
 	if(context == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_context_set_signal_mappings: " DESC_NOT_BEGUN_YET, NULL, 0, NULL);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	_e4c_context_set_signal_handlers(context, mappings);
@@ -3219,10 +3231,11 @@ e4c_frame_stage e4c_frame_get_stage_(const char * file, int line, const char * f
 	/* check if 'e4c_frame_get_stage_' was used before calling e4c_context_begin */
 	if(context == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_frame_get_stage_: " DESC_NOT_BEGUN_YET, file, line, function);
+		E4C_UNREACHABLE_RETURN(e4c_done_);
 	}
 
 	/* check if the current frame is NULL (very unlikely) */
-	PREVENT_FUNC(context->current_frame == NULL, DESC_INVALID_FRAME, "e4c_frame_get_stage_", E4C_FALSE);
+	PREVENT_FUNC(context->current_frame == NULL, DESC_INVALID_FRAME, "e4c_frame_get_stage_", e4c_done_);
 
 	return(context->current_frame->stage);
 }
@@ -3356,6 +3369,7 @@ void e4c_frame_repeat_(int max_repeat_attempts, e4c_frame_stage stage, const cha
 			MISUSE_ERROR(ContextHasNotBegunYet, "E4C_REACQUIRE: " DESC_NOT_BEGUN_YET, file, line, function);
 		}
 		MISUSE_ERROR(ContextHasNotBegunYet, "E4C_RETRY: " DESC_NOT_BEGUN_YET, file, line, function);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* get the current frame */
@@ -3370,6 +3384,7 @@ void e4c_frame_repeat_(int max_repeat_attempts, e4c_frame_stage stage, const cha
 			MISUSE_ERROR(ExceptionSystemFatalError, "E4C_REACQUIRE: " DESC_CANNOT_REACQUIRE, file, line, function);
 		}
 		MISUSE_ERROR(ExceptionSystemFatalError, "E4C_RETRY: " DESC_CANNOT_RETRY, file, line, function);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* check if "uncatchable" exception */
@@ -3403,6 +3418,7 @@ void e4c_frame_repeat_(int max_repeat_attempts, e4c_frame_stage stage, const cha
 		case e4c_done_:
 		default:
 			MISUSE_ERROR(ExceptionSystemFatalError, "e4c_frame_repeat: " DESC_CANNOT_REPEAT, file, line, function);
+			E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* deallocate previously thrown exception */
@@ -3605,6 +3621,7 @@ void e4c_exception_throw_verbatim_(const e4c_exception_type * exception_type, co
 	/* check if 'throw' was used before calling e4c_context_begin */
 	if(context == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_exception_throw_verbatim_: " DESC_NOT_BEGUN_YET, file, line, function);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* get the current frame */
@@ -3645,6 +3662,7 @@ void e4c_exception_throw_format_(const e4c_exception_type * exception_type, cons
 	/* check if 'throwf' was used before calling e4c_context_begin */
 	if(context == NULL){
 		MISUSE_ERROR(ContextHasNotBegunYet, "e4c_exception_throw_format_: " DESC_NOT_BEGUN_YET, file, line, function);
+		E4C_UNREACHABLE_VOID_RETURN;
 	}
 
 	/* get the current frame */
