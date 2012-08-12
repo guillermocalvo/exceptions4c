@@ -1459,7 +1459,7 @@ _e4c_context_propagate(
 	context->current_frame->thrown_exception
 @*/
 # endif
-E4C_NORETURN;
+E4C_NO_RETURN;
 
 # ifdef E4C_THREADSAFE
 
@@ -2278,7 +2278,7 @@ e4c_exception_throw_verbatim_(
 	is_initialized
 @*/
 # endif
-E4C_NORETURN;
+E4C_NO_RETURN;
 /*@=redecl@*/
 
 # if defined(HAVE_C99_VSNPRINTF) || defined(HAVE_VSNPRINTF)
@@ -2348,7 +2348,7 @@ e4c_exception_throw_format_(
 	is_initialized
 @*/
 # endif
-E4C_NORETURN;
+E4C_NO_RETURN;
 /*@=redecl@*/
 
 # endif
