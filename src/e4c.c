@@ -719,7 +719,7 @@ _e4c_library_fatal_error(
 	is_initialized
 @*/
 # endif
-;
+E4C_NO_RETURN;
 
 # ifdef E4C_THREADSAFE
 
