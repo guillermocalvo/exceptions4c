@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 10, 4)
+# define E4C_VERSION_(version)			version(2, 10, 5)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -161,6 +161,14 @@
 #	define E4C_BOOL						int
 #	define E4C_FALSE					0
 #	define E4C_TRUE						1
+# endif
+
+
+/*
+ * Make sure we can use exceptions4c within C++.
+ */
+# ifdef __cplusplus
+	extern "C" {
 # endif
 
 
@@ -3599,6 +3607,12 @@ E4C_NO_RETURN;
 
 # endif
 
+/*
+ * End of the extern "C" block.
+ */
+#ifdef __cplusplus
+	}
+#endif
 
 /*@=exportany@*/
 
