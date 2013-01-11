@@ -113,7 +113,7 @@
 #	define THREAD_TYPE				pthread_t
 #	define THREAD_CURRENT			pthread_self()
 #	define THREAD_SAME(t1, t2)		( pthread_equal(t1, t2) != 0 )
-#	define THREAD_EXIT				pthread_exit
+#	define THREAD_EXIT				pthread_cancel
 #	define MUTEX_DEFINE(mutex)		static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 #	define MUTEX_LOCK(mutex, function) \
 		if(pthread_mutex_lock(&mutex) != 0){ \
@@ -123,7 +123,7 @@
 		if(pthread_mutex_unlock(&mutex) != 0){ \
 			_e4c_library_fatal_error(&ExceptionSystemFatalError, DESC_UNLOCK_ERROR, __FILE__, __LINE__, function, errno); \
 		}
-#	define STOP_EXECUTION			THREAD_EXIT(PTHREAD_CANCELED)
+#	define STOP_EXECUTION			exit( THREAD_EXIT(THREAD_CURRENT) )
 #	define DANGLING_CONTEXT			(environment_collection.first != NULL)
 # else
 #	define E4C_CONTEXT				current_context
