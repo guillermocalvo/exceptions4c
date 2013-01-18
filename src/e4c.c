@@ -2588,6 +2588,7 @@ static void _e4c_library_finalize(void){
 	if(fatal_error_flag){
 		/* print fatal error message */
 		fprintf(stderr, MSG_AT_EXIT_ERROR);
+		fflush(stderr);
 		/* force failure exit status */
 		exit(EXIT_FAILURE);
 	}
@@ -2693,6 +2694,7 @@ static E4C_INLINE void _e4c_library_fatal_error(const e4c_exception_type * excep
 
 	/* prints error message */
 	fprintf(stderr, MSG_FATAL_ERROR);
+	fflush(stderr);
 
 	/* records critical error so that MSG_AT_EXIT_ERROR will be printed too */
 	fatal_error_flag = E4C_TRUE;
