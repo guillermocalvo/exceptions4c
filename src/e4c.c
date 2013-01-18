@@ -106,7 +106,7 @@
  * could be defined in order to prevent calling pthread_cancel.
  */
 #	ifdef MISSING_PTHREAD_CANCEL
-#		define pthread_cancel(_ignore_)
+#		define pthread_cancel(_ignore_) 0
 #	endif
 /*
  * Some systems don't even define PTHREAD_CANCELED.
