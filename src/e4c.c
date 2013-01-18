@@ -101,6 +101,19 @@
 
 # ifdef E4C_THREADSAFE
 #	include <pthread.h>
+/*
+ * The MISSING_PTHREAD_CANCEL compile-time parameter
+ * could be defined in order to prevent calling pthread_cancel.
+ */
+#	ifdef MISSING_PTHREAD_CANCEL
+#		define pthread_cancel(_ignore_)
+#	endif
+/*
+ * Some systems don't even define PTHREAD_CANCELED.
+ */
+#	ifndef PTHREAD_CANCELED
+#		define PTHREAD_CANCELED		( (void *)-1 )
+#	endif
 #	define E4C_CONTEXT				_e4c_context_get_current()
 #	define DESC_INVALID_STATE		"The exception context for this thread is in an invalid state."
 #	define DESC_ALREADY_BEGUN		"The exception context for this thread has already begun."
