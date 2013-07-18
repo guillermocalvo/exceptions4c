@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"e4c_using_context{..} after having already begun",
 	"This test uses the library in an inconsistent way, by attempting to <strong>start a <code>e4c_using_context</code> block</strong> when the exception context is already begun. The library must signal the misuse by throwing the exception <code>ContextAlreadyBegun</code>.",
 	NULL,
-	EXIT_FAILURE,
+	EXIT_WHATEVER,
 	"before_USING_CONTEXT_block",
 	"ContextAlreadyBegun"
 ){

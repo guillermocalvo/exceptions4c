@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"e4c_context_end() without beginning",
 	"This test uses the library improperly, by attempting to <strong>call <code>e4c_context_end()</code></strong>, without having called <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
 	NULL,
-	EXIT_FAILURE,
+	EXIT_WHATEVER,
 	"before_CONTEXT_END",
 	"ContextHasNotBegunYet"
 ){

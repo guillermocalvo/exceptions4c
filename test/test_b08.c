@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"break... in the middle of a try{...} block",
 	"This test uses the library in an inconsistent way, by <strong>breaking out of a <code>try</code> block</strong>. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
 	NULL,
-	EXIT_FAILURE,
+	EXIT_WHATEVER,
 	"before_CONTEXT_END",
 	"ExceptionSystemFatalError"
 ){

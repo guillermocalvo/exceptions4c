@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"break... in the middle of a e4c_reusing_context{..} block",
 	"This test uses the library in an inconsistent way, by <strong>breaking out of a <code>e4c_reusing_context</code> block</strong>. The library must signal the misuse by throwing the exception <code>ContextNotEnded</code>.",
 	NULL,
-	EXIT_FAILURE,
+	EXIT_WHATEVER,
 	"after_REUSING_CONTEXT_block",
 	"ContextNotEnded"
 ){

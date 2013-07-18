@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"throw(...) without beginning",
 	"This test uses the library improperly, by attempting to <strong>throw an exception</strong>, without calling <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
 	NULL,
-	EXIT_FAILURE,
+	EXIT_WHATEVER,
 	"before_THROW",
 	"ContextHasNotBegunYet"
 ){

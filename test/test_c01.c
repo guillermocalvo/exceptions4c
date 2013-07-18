@@ -7,7 +7,7 @@ DEFINE_TEST(
 	"Exiting program without ending",
 	"This test uses the library improperly, by attempting to <strong>exit the program</strong>, without calling <code>e4c_context_end()</code> first. The exception context is begun, but it never gets ended because the program exits. The library must signal the misuse by throwing the exception <code>ContextNotEnded</code>.",
 	NULL,
-	EXIT_FAILURE,
+	EXIT_WHATEVER,
 	"before_EXIT_main",
 	"ContextNotEnded"
 ){
