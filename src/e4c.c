@@ -122,7 +122,7 @@
 #	define DESC_LOCK_ERROR			"Synchronization error (could not acquire lock)."
 #	define DESC_UNLOCK_ERROR		"Synchronization error (could not release lock)."
 #	define MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the thread will be terminated\nimmediately.\n"
-#	define MSG_AT_EXIT_ERROR		"\n\nThe program will now yield a failure exit code due to exception system errors.\n"
+#	define MSG_AT_EXIT_ERROR		"\n\nException system errors occurred during program execution.\n"
 #	define THREAD_TYPE				pthread_t
 #	define THREAD_CURRENT			pthread_self()
 #	define THREAD_SAME(t1, t2)		( pthread_equal(t1, t2) != 0 )
@@ -146,7 +146,7 @@
 #	define DESC_NOT_BEGUN_YET		"The exception context for this program has not begun yet."
 #	define DESC_NOT_ENDED			"The program did not end its exception context properly."
 #	define MSG_FATAL_ERROR			"\n\nThis is an unrecoverable programming error; the application will be terminated\nimmediately.\n"
-#	define MSG_AT_EXIT_ERROR		"\n\nIf this application is making use of threads, please recompile exceptions4c\nwith thread support (by defining the macro E4C_THREADSAFE).\n\n\nThe program will now yield a failure exit code due to exception system errors.\n"
+#	define MSG_AT_EXIT_ERROR		"\n\nException system errors occurred during program execution.\nIf this application is making use of threads, please recompile exceptions4c\nwith thread support (by defining the macro E4C_THREADSAFE).\n"
 #	define MUTEX_DEFINE(mutex)
 #	define MUTEX_LOCK(mutex, function)
 #	define MUTEX_UNLOCK(mutex, function)
@@ -2602,8 +2602,6 @@ static void _e4c_library_finalize(void){
 		/* print fatal error message */
 		fprintf(stderr, MSG_AT_EXIT_ERROR);
 		fflush(stderr);
-		/* force failure exit status */
-		exit(EXIT_FAILURE);
 	}
 }
 
