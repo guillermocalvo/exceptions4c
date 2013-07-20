@@ -4,8 +4,8 @@
  *
  * exceptions4c header file
  *
- * @version     2.10
- * @author      Copyright (c) 2012 Guillermo Calvo
+ * @version     2.11
+ * @author      Copyright (c) 2013 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
  *
@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 10, 10)
+# define E4C_VERSION_(version)			version(2, 11, 0)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
