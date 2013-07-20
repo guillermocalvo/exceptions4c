@@ -4,8 +4,8 @@
  *
  * exceptions4c source code file
  *
- * @version		2.10
- * @author		Copyright (c) 2012 Guillermo Calvo
+ * @version		2.11
+ * @author		Copyright (c) 2013 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1356,59 +1356,19 @@ _e4c_context_set_signal_handlers(
 static
 void
 _e4c_context_at_uncaught_exception(
+	/*@in@*/ /*@temp@*/ /*@null@*/
+	e4c_context *				context,
 	/*@in@*/ /*@temp@*/ /*@notnull@*/
-	e4c_context *				context
+	const e4c_exception *		exception
 )
-/*@requires notnull context->current_frame@*/
-# ifdef E4C_THREADSAFE
 /*@globals
 	fileSystem,
-	internalState,
-
-	environment_collection,
-	environment_collection_mutex,
-	fatal_error_flag,
-	is_finalized,
-	is_initialized,
-	is_initialized_mutex,
-
-	ContextHasNotBegunYet,
-	ExceptionSystemFatalError
+	internalState
 @*/
 /*@modifies
 	fileSystem,
-	internalState,
-
-	environment_collection,
-	environment_collection_mutex,
-	fatal_error_flag,
-	is_finalized,
-	is_initialized,
-	is_initialized_mutex
+	internalState
 @*/
-# else
-/*@globals
-	fileSystem,
-	internalState,
-
-	current_context,
-	fatal_error_flag,
-	is_finalized,
-	is_initialized,
-
-	ContextHasNotBegunYet,
-	ExceptionSystemFatalError
-@*/
-/*@modifies
-	fileSystem,
-	internalState,
-
-	current_context,
-	fatal_error_flag,
-	is_finalized,
-	is_initialized
-@*/
-# endif
 ;
 
 static /*@noreturn@*/
@@ -2592,17 +2552,20 @@ static void _e4c_library_finalize(void){
 
 		/* create temporary exception to be printed out */
 		_e4c_exception_initialize(&exception, &ContextNotEnded, E4C_TRUE, DESC_NOT_ENDED, E4C_INFO_FILE_, E4C_INFO_LINE_, "_e4c_library_finalize", errno);
-		_e4c_print_exception(&exception);
+		_e4c_context_at_uncaught_exception(E4C_CONTEXT, &exception);
 
 		fatal_error_flag = E4C_TRUE;
 	}
 
+# ifndef NDEBUG
 	/* check for critical error */
 	if(fatal_error_flag){
 		/* print fatal error message */
 		fprintf(stderr, MSG_AT_EXIT_ERROR);
 		fflush(stderr);
 	}
+# endif
+
 }
 
 static void _e4c_library_handle_signal(int signal_number){
@@ -2701,11 +2664,7 @@ static E4C_INLINE void _e4c_library_fatal_error(const e4c_exception_type * excep
 	INITIALIZE_ONCE;
 
 	/* prints this specific exception */
-	_e4c_print_exception(&exception);
-
-	/* prints error message */
-	fprintf(stderr, MSG_FATAL_ERROR);
-	fflush(stderr);
+	_e4c_context_at_uncaught_exception(E4C_CONTEXT, &exception);
 
 	/* records critical error so that MSG_AT_EXIT_ERROR will be printed too */
 	fatal_error_flag = E4C_TRUE;
@@ -2864,7 +2823,11 @@ static void _e4c_context_propagate(e4c_context * context, e4c_exception * except
 
 	/* if this is the upper frame, then this is an uncaught exception */
 	if( IS_TOP_FRAME(frame) ){
-		_e4c_context_at_uncaught_exception(context);
+		_e4c_context_at_uncaught_exception(context, exception);
+
+		e4c_context_end();
+
+		STOP_EXECUTION;
 	}
 
 	/* otherwise, we will jump to the upper frame */
@@ -3087,25 +3050,28 @@ static void _e4c_context_set_signal_handlers(e4c_context * context, const e4c_si
 	}
 }
 
-static void _e4c_context_at_uncaught_exception(e4c_context * context){
+static void _e4c_context_at_uncaught_exception(e4c_context * context, const e4c_exception * exception){
 
-	/* assert: context != NULL */
-	/* assert: context->current_frame != NULL */
+	/* assert: exception != NULL */
 
-	e4c_uncaught_handler handler;
+	if(context == NULL){
 
-	handler		= context->uncaught_handler;
+		/* fatal error (likely library misuse) */
+		_e4c_print_exception(exception);
 
-	if(handler != NULL){
-		/* TODO: find the proper way to make Splint happy */
-		/*@-noeffectuncon@*/
-		handler(context->current_frame->thrown_exception);
-		/*@=noeffectuncon@*/
+	}else{
+
+		e4c_uncaught_handler handler;
+
+		handler = context->uncaught_handler;
+
+		if(handler != NULL){
+			/* TODO: find the proper way to make Splint happy */
+			/*@-noeffectuncon@*/
+			handler(exception);
+			/*@=noeffectuncon@*/
+		}
 	}
-
-	e4c_context_end();
-
-	STOP_EXECUTION;
 }
 
 void e4c_context_set_handlers(e4c_uncaught_handler uncaught_handler, void * custom_data, e4c_initialize_handler initialize_handler, e4c_finalize_handler finalize_handler){
@@ -3836,6 +3802,12 @@ static void _e4c_print_exception(const e4c_exception * exception){
 		_e4c_print_exception_type(exception->type);
 	}
 
+	/* checks whether this exception is fatal to the exception system (likely library misuse) */
+	if( e4c_is_instance_of(exception, &ExceptionSystemFatalError) ){
+
+		fprintf(stderr, MSG_FATAL_ERROR);
+		fflush(stderr);
+	}
 # endif
 
 }
