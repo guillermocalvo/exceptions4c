@@ -52,7 +52,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 11, 0)
+# define E4C_VERSION_(version)			version(2, 11, 1)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -3297,9 +3297,12 @@ e4c_library_version(
  * @c #e4c_is_instance_of can be used to determine if a thrown exception
  * <strong>is an instance of</strong> a given exception type.
  *
- * This macro is intended to be used in a @c #catch block, or in a @c #finally
- * block provided that some exception was actually thrown (i.e.
+ * This function is intended to be used in a @c #catch block, or in a @c
+ * #finally block provided that some exception was actually thrown (i.e.
  * @c #e4c_get_status returned @c #e4c_failed or @c #e4c_recovered).
+ *
+ * This function will return @c false if either @c instance or @ type are
+ * @c NULL.
  *
  * @code
  * try{
@@ -3316,8 +3319,6 @@ e4c_library_version(
  *
  * @pre     @c instance <strong>must not</strong> be @c NULL
  * @pre     @c type <strong>must not</strong> be @c NULL
- * @throws  #NullPointerException
- *          If either @c instance or @c type is @c NULL
  *
  * @see     #e4c_exception
  * @see     #e4c_exception_type
@@ -3331,17 +3332,7 @@ e4c_is_instance_of(
 	/*@temp@*/ /*@notnull@*/
 	const e4c_exception_type *	exception_type
 )
-/*@globals
-	fileSystem,
-	internalState,
-
-	NotEnoughMemoryException,
-	NullPointerException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
+/*@*/
 ;
 
 /**
