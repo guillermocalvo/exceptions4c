@@ -9,10 +9,10 @@
  *
  * @section e4c_st_g_h exceptions4c gcc stack trace header file
  *
- * This extension allows @b exceptions4c to print a trace stack regarding an
+ * This extension allows **exceptions4c** to print a trace stack regarding an
  * uncaught exception:
  *
- * @code
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * Uncaught RuntimeException: He who foos last, foos best.
  *
  *     thrown at thud (foobar.c:9)
@@ -29,12 +29,12 @@
  *     from bar (foobar.c:75)
  *     from foo (foobar.c:84)
  *     from main (foobar.c:96)
- * @endcode
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * You need to set up the provided exception context handlers through the
- * function @c #e4c_context_set_handlers:
+ * function `#e4c_context_set_handlers`:
  *
- * @code
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.c}
  * int main(int argc, char *argv[]){
  *
  *     e4c_using_context(true){
@@ -49,30 +49,28 @@
  *         // ...
  *     }
  * }
- * @endcode
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  *
  * This module needs to be compiled with GCC (the GNU Compiler Collection). It
- * depends on the <em>GCC Function Instrumentation</em> and <em>Generate
- * debugging information</em> functionality. They can be enabled by using the
- * compiler parameters:
+ * depends on the *GCC Function Instrumentation* and *Generate debugging
+ * information* functionality. They can be enabled by using the compiler
+ * parameters:
  *
- * @li @c -finstrument-functions
- * @li @c -g3
+ *   - `-finstrument-functions`
+ *   - `-g3`
  *
  * @section license License
  *
- * This is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software.  If not, see <http://www.gnu.org/licenses/>.
+ * > This is free software: you can redistribute it and/or modify
+ * > it under the terms of the GNU General Public License as published by
+ * > the Free Software Foundation, either version 3 of the License, or
+ * > (at your option) any later version.
+ * >
+ * > This software is distributed in the hope that it will be useful,
+ * > but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * > MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * > [GNU General Public License](http://www.gnu.org/licenses/gpl.html)
+ * > for more details.
  *
  */
 
@@ -99,9 +97,9 @@
  * output. The stack trace represents the reverse path of execution at the
  * moment the exception was thrown.
  *
- * It must be passed to @c #e4c_context_set_handlers as the handler for uncaught
- * exceptions, along with @c #e4c_stack_trace_initialize and
- * @c #e4c_stack_trace_finalize.
+ * It must be passed to `#e4c_context_set_handlers` as the handler for uncaught
+ * exceptions, along with `#e4c_stack_trace_initialize` and
+ * `#e4c_stack_trace_finalize`.
  *
  * @see     #e4c_context_set_handlers
  * @see     #e4c_stack_trace_initialize
@@ -139,9 +137,9 @@ void e4c_stack_trace_print_exception(
  * thrown. It expects that the initial value of the custom data is a text string
  * containing the path to the executing program.
  *
- * It must be passed to @c #e4c_context_set_handlers as the handler for
+ * It must be passed to `#e4c_context_set_handlers` as the handler for
  * initializing the custom data of an exception, along with
- * @c #e4c_stack_trace_finalize and @c #e4c_stack_trace_print_exception.
+ * `#e4c_stack_trace_finalize` and `#e4c_stack_trace_print_exception`.
  *
  * @see     #e4c_context_set_handlers
  * @see     #e4c_stack_trace_finalize
@@ -176,9 +174,9 @@ void * e4c_stack_trace_initialize(
  * This function disposes of the call stack captured at the moment the exception
  * was thrown.
  *
- * It must be passed to @c #e4c_context_set_handlers as the handler for
+ * It must be passed to `#e4c_context_set_handlers` as the handler for
  * finalizing the custom data of an exception, along with
- * @c #e4c_stack_trace_initialize and @c #e4c_stack_trace_print_exception.
+ * `#e4c_stack_trace_initialize` and `#e4c_stack_trace_print_exception`.
  *
  * @see     #e4c_context_set_handlers
  * @see     #e4c_stack_trace_initialize
