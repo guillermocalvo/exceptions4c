@@ -4,7 +4,7 @@
  *
  * exceptions4c header file
  *
- * @version     2.11
+ * @version     3.0
  * @author      Copyright (c) 2013 Guillermo Calvo
  *
  * @section e4c_h exceptions4c header file
@@ -32,16 +32,19 @@
  *
  * @section license License
  *
- * > This is free software: you can redistribute it and/or modify
- * > it under the terms of the GNU General Public License as published by
- * > the Free Software Foundation, either version 3 of the License, or
- * > (at your option) any later version.
+ * > This is free software: you can redistribute it and/or modify it under the
+ * > terms of the **GNU Lesser General Public License** as published by the
+ * > *Free Software Foundation*, either version 3 of the License, or (at your
+ * > option) any later version.
  * >
- * > This software is distributed in the hope that it will be useful,
- * > but WITHOUT ANY WARRANTY; without even the implied warranty of
- * > MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * > [GNU General Public License](http://www.gnu.org/licenses/gpl.html)
+ * > This software is distributed in the hope that it will be useful, but
+ * > **WITHOUT ANY WARRANTY**; without even the implied warranty of
+ * > **MERCHANTABILITY** or **FITNESS FOR A PARTICULAR PURPOSE**. See the
+ * > [GNU Lesser General Public License](http://www.gnu.org/licenses/lgpl.html)
  * > for more details.
+ * >
+ * > You should have received a copy of the GNU Lesser General Public License
+ * > along with this software. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -50,7 +53,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(2, 11, 2)
+# define E4C_VERSION_(version)			version(3, 0, 0)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
