@@ -1,0 +1,24 @@
+var searchData=
+[
+  ['e4c_5fdeclare_5fexception',['E4C_DECLARE_EXCEPTION',['../e4c_8h.html#afbe55946f07a3dca22879ad5832b2a19',1,'e4c.h']]],
+  ['e4c_5fdefine_5fexception',['E4C_DEFINE_EXCEPTION',['../e4c_8h.html#aadc9f577bd369729df5aa614e54eedd8',1,'e4c.h']]],
+  ['e4c_5fexception_5fmessage_5fsize',['E4C_EXCEPTION_MESSAGE_SIZE',['../e4c_8h.html#a221e306037ef73b1788ddd261088230f',1,'e4c.h']]],
+  ['e4c_5fignore_5fsignal',['E4C_IGNORE_SIGNAL',['../e4c_8h.html#acce379ab06acbdb14eb15e55cdba4631',1,'e4c.h']]],
+  ['e4c_5fno_5freturn',['E4C_NO_RETURN',['../e4c_8h.html#a45c8b2837d07a0316df144169b6d57e5',1,'e4c.h']]],
+  ['e4c_5fnull_5fsignal_5fmapping',['E4C_NULL_SIGNAL_MAPPING',['../e4c_8h.html#ad9a799b298c1f39c427364bfc7bfb230',1,'e4c.h']]],
+  ['e4c_5fon_5ffailure',['E4C_ON_FAILURE',['../e4c_8h.html#ae6ab0e5438f844f59155fee0ee92866f',1,'e4c.h']]],
+  ['e4c_5freusing_5fcontext',['e4c_reusing_context',['../e4c_8h.html#a67bf2b56660b4ddba6a66f7a54c4befd',1,'e4c.h']]],
+  ['e4c_5fsignal_5fmapping',['E4C_SIGNAL_MAPPING',['../e4c_8h.html#a598e01198e8ce022fdb32ae7145803f6',1,'e4c.h']]],
+  ['e4c_5funreachable_5freturn',['E4C_UNREACHABLE_RETURN',['../e4c_8h.html#a38c22cb71d38cabd98aa850d4075e246',1,'e4c.h']]],
+  ['e4c_5funreachable_5fvoid_5freturn',['E4C_UNREACHABLE_VOID_RETURN',['../e4c_8h.html#adc10e326f26beef709f69e2495d390f2',1,'e4c.h']]],
+  ['e4c_5fusing_5fcontext',['e4c_using_context',['../e4c_8h.html#a27678c11fa7d4e2a9436f527cc194013',1,'e4c.h']]],
+  ['e4c_5fusing_5ffile',['e4c_using_file',['../e4c__rsc_8h.html#ab95c95244edfd564ed80fb5425e80ec5',1,'e4c_rsc.h']]],
+  ['e4c_5fusing_5fmemory',['e4c_using_memory',['../e4c__rsc_8h.html#aed2e1edbae50abc57029677111ee492a',1,'e4c_rsc.h']]],
+  ['e4c_5fusing_5fmutex',['e4c_using_mutex',['../e4c__rsc_8h.html#ae79d31fae928b7ef6bb22f8b7a760fbe',1,'e4c_rsc.h']]],
+  ['e4c_5fversion_5fmajor',['E4C_VERSION_MAJOR',['../e4c_8h.html#a890f79613092dcd580078ff46babfb6e',1,'e4c.h']]],
+  ['e4c_5fversion_5fminor',['E4C_VERSION_MINOR',['../e4c_8h.html#aa4564247c8f8fa73e293f24e9790e2b5',1,'e4c.h']]],
+  ['e4c_5fversion_5fnumber',['E4C_VERSION_NUMBER',['../e4c_8h.html#aaabdc92526a7fb8e02558867f3ad0cb8',1,'e4c.h']]],
+  ['e4c_5fversion_5frevision',['E4C_VERSION_REVISION',['../e4c_8h.html#a472fdc2124dfc3fc50680cbf5811c868',1,'e4c.h']]],
+  ['e4c_5fversion_5fstring',['E4C_VERSION_STRING',['../e4c_8h.html#aea131104dcb566c9e4d134c476758b2c',1,'e4c.h']]],
+  ['e4c_5fversion_5fthreadsafe',['E4C_VERSION_THREADSAFE',['../e4c_8h.html#a28f15bc301e1a0a004040d0f2c196139',1,'e4c.h']]]
+];
