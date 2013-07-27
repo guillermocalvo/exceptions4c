@@ -9,6 +9,7 @@ var NAVTREE =
     [ "Multithreading", "index.html#threads", null ],
     [ "Integration", "index.html#integration", null ],
     [ "Portability", "index.html#portability", null ],
+    [ "Lightweight Version", "index.html#lightweight", null ],
     [ "Software License", "index.html#software_license", null ],
     [ "Documentation License", "index.html#documentation_license", null ],
     [ "Data Structures", null, [
