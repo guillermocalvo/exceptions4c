@@ -191,6 +191,9 @@ Integration</h1>
 Portability</h1>
 <p>This library should compile in any <b>ANSI C</b> compiler. It uses nothing but standard C functions. In order to use <b>exceptions4c</b> you have to drop the two files (<code><a class="el" href="e4c_8h.html" title="exceptions4c header file ">e4c.h</a></code> and <code>e4c.c</code>) in your project and remember to include the header file from your code. That's all.</p>
 <p>In case your application uses threads, <b>exceptions4c</b> relies on <b>pthreads</b>, the <b>POSIX</b> application programming interface for writing multithreaded applications. This <em>API</em> is available for most operating systems and platforms.</p>
+<h1><a class="anchor" id="lightweight"></a>
+Lightweight Version</h1>
+<p>If you have the feeling that the standard version of <b>exceptions4c</b> may be <em>a bit overkill</em> for your specific needs, there exists a <a href="https://code.google.com/p/exceptions4c/wiki/lite">lightweight version</a>, targeted at small projects and embedded systems. Use it when you just want to handle error conditions that may occur in your program through a simple yet powerful exception handling mechanism. It provides the <b>core functionality of exceptions4c in less than 200 source lines of code</b>.</p>
 <h1><a class="anchor" id="software_license"></a>
 Software License</h1>
 <blockquote class="doxtable">
