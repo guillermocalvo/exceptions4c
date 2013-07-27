@@ -3227,15 +3227,16 @@ E4C_BOOL e4c_frame_catch_(const e4c_exception_type * exception_type, const char 
 		/* assert: thrown_exception is catchable (otherwise we would have skipped the "catching" stage in e4c_frame_next_stage_) */
 
 		/* does this block catch current exception? */
-		if(	frame->thrown_exception->type != exception_type && !_e4c_exception_type_extends(frame->thrown_exception->type, exception_type) ){
-			/* nay, keep looking for an exception handler */
-			return(E4C_FALSE);
+		if(	frame->thrown_exception->type == exception_type || _e4c_exception_type_extends(frame->thrown_exception->type, exception_type) ){
+
+			/* yay, catch current exception by executing the handler */
+			frame->uncaught = E4C_FALSE;
+
+			return(E4C_TRUE);
 		}
 
-		/* yay, catch current exception by executing the handler */
-		frame->uncaught = E4C_FALSE;
-
-		return(E4C_TRUE);
+		/* nay, keep looking for an exception handler */
+		return(E4C_FALSE);
 	}
 
 	MISUSE_ERROR(ContextHasNotBegunYet, "e4c_frame_catch_: " DESC_NOT_BEGUN_YET, file, line, function);
@@ -3422,28 +3423,24 @@ e4c_status e4c_get_status(void){
 
 static E4C_INLINE E4C_BOOL _e4c_exception_type_extends(const e4c_exception_type * child, const e4c_exception_type * parent){
 
+	/* assert: child != parent */
 	/* assert: child != NULL */
 	/* assert: parent != NULL */
 
-	if(child == parent){
-		return(E4C_TRUE);
+	for(; child->supertype != NULL && child->supertype != child; child = child->supertype){
+
+		if(child->supertype == parent){
+
+			return(E4C_TRUE);
+		}
 	}
 
-	/* If the exception is "its own parent" (the root of the hierarchy) or if it
-		has "no parent" whatsoever, then we can determine that it does not
-		extend the specified "parent"
-	*/
-	if(child->supertype == child || child->supertype == NULL){
-		return(E4C_FALSE);
-	}
-
-	/* otherwise, we will keep looking for a common ancestor */
-	return( _e4c_exception_type_extends(child->supertype, parent) );
+	return(E4C_FALSE);
 }
 
 E4C_BOOL e4c_is_instance_of(const e4c_exception * instance, const e4c_exception_type * exception_type){
 
-	if(instance == NULL || exception_type == NULL){
+	if(instance == NULL || instance->type == NULL || exception_type == NULL){
 		return(E4C_FALSE);
 	}
 
@@ -3451,12 +3448,7 @@ E4C_BOOL e4c_is_instance_of(const e4c_exception * instance, const e4c_exception_
 		return(E4C_TRUE);
 	}
 
-	if(instance->type->supertype == NULL || instance->type->supertype == instance->type){
-		/* if this exception has no other supertype... */
-		return(E4C_FALSE);
-	}
-
-	return( _e4c_exception_type_extends(instance->type->supertype, exception_type) );
+	return( _e4c_exception_type_extends(instance->type, exception_type) );
 }
 
 static E4C_INLINE int _e4c_print_exception_type_node(const e4c_exception_type * exception_type){
