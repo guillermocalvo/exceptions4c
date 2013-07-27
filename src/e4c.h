@@ -53,7 +53,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(3, 0, 0)
+# define E4C_VERSION_(version)			version(3, 0, 1)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -241,12 +241,12 @@
 
 # if defined(HAVE_POSIX_SIGSETJMP) || defined(HAVE_SIGSETJMP)
 #	define E4C_CONTINUATION_BUFFER_		sigjmp_buf
-#	define E4C_CONTINUATION_CREATE_(_continuation_) \
-		(void)sigsetjmp(_continuation_->buffer, 1)
+#	define E4C_CONTINUATION_CREATE_(continuation) \
+		sigsetjmp(continuation->buffer, 1)
 # else
 #	define E4C_CONTINUATION_BUFFER_		jmp_buf
-#	define E4C_CONTINUATION_CREATE_(_continuation_) \
-		(void)setjmp(_continuation_->buffer)
+#	define E4C_CONTINUATION_CREATE_(continuation) \
+		setjmp(continuation->buffer)
 # endif
 
 
@@ -263,7 +263,7 @@
 #	define E4C_INFO_FILE_				NULL
 #	define E4C_INFO_LINE_				0
 #	define E4C_INFO_FUNC_				NULL
-#	define E4C_ASSERT(_ignore_)			( (void)0 )
+#	define E4C_ASSERT(ignore)			( (void)0 )
 # endif
 
 # define E4C_INFO_ \
@@ -272,9 +272,9 @@
 			E4C_INFO_FUNC_
 
 
-# define E4C_PASTE_(_x_, _y_, _z_)		_x_ ## _ ## _y_ ## _ ## _z_
-# define E4C_MANGLE_(_pre_, _id_, _post_) E4C_PASTE_(_pre_, _id_, _post_)
-# define E4C_AUTO_(_id_)				E4C_MANGLE_(_implicit, _id_, __LINE__)
+# define E4C_PASTE_(x, y, z)			x ## _ ## y ## _ ## z
+# define E4C_MANGLE_(pre, id, post)		E4C_PASTE_(pre, id, post)
+# define E4C_AUTO_(id)					E4C_MANGLE_(_implicit, id, __LINE__)
 
 
 # ifdef E4C_THREADSAFE
@@ -286,26 +286,26 @@
 # endif
 
 
-# define E4C_VERSION_STRING_(_major_, _minor_, _revision_) \
-	#_major_ "." #_minor_ "." #_revision_ E4C_VERSION_THREADSAFE_STRING_
-# define E4C_VERSION_NUMBER_(_major_, _minor_, _revision_) ( \
+# define E4C_VERSION_STRING_(major, minor, revision) \
+	#major "." #minor "." #revision E4C_VERSION_THREADSAFE_STRING_
+# define E4C_VERSION_NUMBER_(major, minor, revision) ( \
 	( (long)E4C_VERSION_THREADSAFE_	* 10000000L) +	\
-	( (long)_major_					* 1000000L) +	\
-	( (long)_minor_					* 1000L) +		\
-	( (long)_revision_				* 1L)			\
+	( (long)major					* 1000000L) +	\
+	( (long)minor					* 1000L) +		\
+	( (long)revision				* 1L)			\
 )
-# define E4C_VERSION_MAJOR_(_major_, _minor_, _revision_) ( (int)_major_ )
-# define E4C_VERSION_MINOR_(_major_, _minor_, _revision_) ( (int)_minor_ )
-# define E4C_VERSION_REVISION_(_major_, _minor_, _revision_) ( (int)_revision_ )
+# define E4C_VERSION_MAJOR_(major, minor, revision) ( (int)major )
+# define E4C_VERSION_MINOR_(major, minor, revision) ( (int)minor )
+# define E4C_VERSION_REVISION_(major, minor, revision) ( (int)revision )
 
 
 /*
  * These undocumented macros hide implementation details from documentation.
  */
 
-# define E4C_FRAME_LOOP_(_stage_) \
-	E4C_CONTINUATION_CREATE_( e4c_frame_first_stage_(_stage_, E4C_INFO_) ); \
-	while( e4c_frame_next_stage_() )
+# define E4C_FRAME_LOOP_(stage) \
+	if(E4C_CONTINUATION_CREATE_(e4c_frame_first_stage_(stage,E4C_INFO_)) >= 0) \
+		while( e4c_frame_next_stage_() )
 
 # define E4C_TRY \
 	E4C_FRAME_LOOP_(e4c_acquiring_) \
