@@ -4,7 +4,7 @@
  *
  * exceptions4c automatic resource handling header file
  *
- * @version     2.0
+ * @version     2.1
  * @author      Copyright (c) 2012 Guillermo Calvo
  *
  * @section e4c_rsc_h exceptions4c automatic resource handling header file
@@ -77,8 +77,8 @@
 /*
  * Binds the disposal of mutex to the function pthread_mutex_unlock
  */
-# define e4c_dispose_mutex(_mutex_, _failed_) \
-	if( pthread_mutex_unlock(_mutex_) != 0 ) \
+# define e4c_dispose_mutex(mutex, failed) \
+	if( pthread_mutex_unlock(mutex) != 0 ) \
 		throw(MutexUnlockError, "Could not unlock mutex: " #mutex)
 
 
