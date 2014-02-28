@@ -69,7 +69,7 @@ int e4c_extends(const struct e4c_exception_type * child, const struct e4c_except
 
 void e4c_throw(const struct e4c_exception_type * exception_type, const char * file, int line, const char * message){
 
-	e4c.err.type = (exception_type == NULL ? exception_type : &NullPointerException);
+	e4c.err.type = (exception_type != NULL ? exception_type : &NullPointerException);
 	e4c.err.file = file;
 	e4c.err.line = line;
 
