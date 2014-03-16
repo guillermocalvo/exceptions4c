@@ -53,7 +53,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(3, 0, 2)
+# define E4C_VERSION_(version)			version(3, 0, 3)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -1181,7 +1181,9 @@
 /**
  * Provides the maximum length (in bytes) of an exception message
  */
-# define E4C_EXCEPTION_MESSAGE_SIZE 128
+# ifndef E4C_EXCEPTION_MESSAGE_SIZE
+#	define E4C_EXCEPTION_MESSAGE_SIZE 128
+# endif
 
 /**
  * Reuses an existing exception context, otherwise, begins a new one and then
