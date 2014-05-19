@@ -53,7 +53,7 @@
 # define EXCEPTIONS4C
 
 
-# define E4C_VERSION_(version)			version(3, 0, 3)
+# define E4C_VERSION_(version)			version(3, 0, 4)
 
 
 # if !defined(E4C_THREADSAFE) && ( \
@@ -2349,7 +2349,7 @@ typedef void * (*e4c_initialize_handler)(const e4c_exception * exception)
  *       return(custom_data);
  *   }
  *
- *   void * finalize_data(void * custom_data){
+ *   void finalize_data(void * custom_data){
  *
  *       free(custom_data);
  *   }
