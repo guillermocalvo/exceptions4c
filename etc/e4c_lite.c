@@ -21,7 +21,7 @@ static void e4c_propagate(void){
 
 	if(e4c.frames > 0) longjmp(e4c.jump[e4c.frames - 1], 1);
 
-	if(fprintf(stderr, e4c.err.file == NULL ? err_msg[0] : err_msg[1], e4c.err.type->name, e4c.err.message, e4c.err.file, e4c.err.line) > 0)
+	if(fprintf(stderr, e4c.err.file ? err_msg[1] : err_msg[0], e4c.err.type->name, e4c.err.message, e4c.err.file, e4c.err.line) > 0)
 		(void)fflush(stderr);
 
 	exit(EXIT_FAILURE);
@@ -61,7 +61,7 @@ int e4c_hook(int is_catch){
 
 int e4c_extends(const struct e4c_exception_type * child, const struct e4c_exception_type * parent){
 
-	for(; child != NULL && child->supertype != child; child = child->supertype)
+	for(; child && child->supertype != child; child = child->supertype)
 		if(child->supertype == parent) return 1;
 
 	return 0;
@@ -69,11 +69,11 @@ int e4c_extends(const struct e4c_exception_type * child, const struct e4c_except
 
 void e4c_throw(const struct e4c_exception_type * exception_type, const char * file, int line, const char * message){
 
-	e4c.err.type = (exception_type != NULL ? exception_type : &NullPointerException);
+	e4c.err.type = (exception_type ? exception_type : &NullPointerException);
 	e4c.err.file = file;
 	e4c.err.line = line;
 
-	(void)sprintf(e4c.err.message, "%.*s", (int)E4C_MESSAGE_SIZE - 1, (message != NULL ? message : e4c.err.type->default_message));
+	(void)sprintf(e4c.err.message, "%.*s", (int)E4C_MESSAGE_SIZE - 1, (message ? message : e4c.err.type->default_message));
 
 	e4c_propagate();
 }
