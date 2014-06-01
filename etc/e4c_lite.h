@@ -56,7 +56,7 @@ struct e4c_exception{
 #define E4C_EXCEPTION e4c.err
 
 /* Returns whether current exception is of a given type */
-#define E4C_IS_INSTANCE_OF(t) ( e4c.err.type == &t || e4c_extends(e4c.err.type, &t) )
+#define E4C_IS_INSTANCE_OF(t) ( E4C_EXCEPTION.type == &t || e4c_extends(E4C_EXCEPTION.type, &t) )
 
 /* Implementation details */
 #define E4C_TRY if(e4c_try(E4C_INFO) && setjmp(e4c.jump[e4c.frames - 1]) >= 0) while(e4c_hook(0)) if(e4c.frame[e4c.frames].stage == e4c_trying)
