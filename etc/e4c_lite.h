@@ -1,5 +1,5 @@
 /*
- * exceptions4c lightweight version 1.0
+ * exceptions4c lightweight version 1.1
  *
  * Copyright (c) 2013 Guillermo Calvo
  * Licensed under the GNU Lesser General Public License
@@ -75,5 +75,8 @@ extern int e4c_try(const char * file, int line);
 extern int e4c_hook(int is_catch);
 extern int e4c_extends(const struct e4c_exception_type * child, const struct e4c_exception_type * parent);
 extern void e4c_throw(const struct e4c_exception_type * exception_type, const char * file, int line, const char * message);
+
+/* OpenMP support */
+#pragma omp threadprivate(e4c)
 
 # endif
