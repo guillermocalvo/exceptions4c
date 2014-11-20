@@ -2686,9 +2686,6 @@ static E4C_INLINE void _e4c_environment_deallocate(e4c_environment * environment
 
 	if(environment != NULL){
 
-		_e4c_environment_deallocate(environment->next);
-		environment->next = NULL;
-
 		_e4c_frame_deallocate(environment->context.current_frame, environment->context.finalize_handler);
 		environment->context.current_frame = NULL;
 
@@ -2737,6 +2734,7 @@ static e4c_environment * _e4c_environment_remove(void){
 					found							= previous->next  /* (equals current) */;
 					previous->next					= current->next;
 				}
+				current->next = NULL;
 				break;
 			}
 
