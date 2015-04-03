@@ -21,7 +21,7 @@
         </ul>
     </td>
     <td>
-      <img alt="" src="https://raw.githubusercontent.com/guillermocalvo/exceptions4c/master/etc/img/example.png" style="max-height: 2em;" />
+      <img alt="" src="https://raw.githubusercontent.com/guillermocalvo/exceptions4c/master/etc/img/example.png" />
     </td>
   </tr>
 </table>
