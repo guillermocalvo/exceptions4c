@@ -40,7 +40,7 @@
 
 
 # ifndef EXCEPTIONS4C
-#	include "e4c.h"
+#	include "../src/e4c.h"
 # endif
 
 

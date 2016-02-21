@@ -4,7 +4,7 @@
 # define TESTING_FRAMEWORK_H
 
 # include <stdio.h>
-# include "e4c.h"
+# include "../src/e4c.h"
 
 /*@-exportany@*/
 
