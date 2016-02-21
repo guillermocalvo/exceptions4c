@@ -1,0 +1,27 @@
+language: c
+
+script:
+
+  - echo travis_fold:start:AUTORECONF
+  - autoreconf --install
+  - echo travis_fold:end:AUTORECONF
+
+  - echo travis_fold:start:CONFIGURE
+  - ./configure
+  - echo travis_fold:end:CONFIGURE
+
+  - echo travis_fold:start:MAKE
+  - make
+  - echo travis_fold:end:MAKE
+
+  - echo travis_fold:start:TESTS
+  - make check
+  - echo travis_fold:end:TESTS
+
+  - echo travis_fold:start:COVERAGE
+  - gcov src/e4c.c --object-file test/libe4ctest-e4c
+  - echo travis_fold:end:COVERAGE
+
+after_success:
+
+  - bash <(curl -s https://codecov.io/bash)
