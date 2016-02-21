@@ -19,7 +19,7 @@ script:
   - echo travis_fold:end:TESTS
 
   - echo travis_fold:start:COVERAGE
-  - gcov src/e4c.c --object-file test/libe4ctest-e4c
+  - gcov src/e4c.c --object-file test/test_e4c-e4c
   - echo travis_fold:end:COVERAGE
 
 after_success:
