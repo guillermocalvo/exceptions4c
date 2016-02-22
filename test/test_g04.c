@@ -12,7 +12,7 @@ static void set_zero_g04(int * * pointer)
 	int * null_pointer = NULL;
 
 	/*@-boundsread@*/
-	memcpy(pointer, &null_pointer, sizeof(pointer) );
+	memcpy(pointer, &null_pointer, sizeof(null_pointer) );
 	/*@=boundsread@*/
 }
 
