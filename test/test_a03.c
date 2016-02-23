@@ -14,7 +14,7 @@ DEFINE_TEST(
 	"ContextHasNotBegunYet"
 ){
 
-	char * buffer;
+	char * buffer = NULL;
 
 	ECHO(("before_WITH_block\n"));
 
