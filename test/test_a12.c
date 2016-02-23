@@ -14,7 +14,7 @@ DEFINE_TEST(
 
 	ECHO(("before_RETRY\n"));
 
-	retry(10);
+	E4C_RETRY(10);
 
 	ECHO(("after_RETRY\n"));
 

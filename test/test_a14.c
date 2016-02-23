@@ -19,7 +19,7 @@ DEFINE_TEST(
 
 		ECHO(("inside_IF\n"));
 
-	}catch(NullPointerException){
+	}E4C_CATCH(NullPointerException){
 
 		ECHO(("inside_CATCH\n"));
 	}
