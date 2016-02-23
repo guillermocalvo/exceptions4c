@@ -39,7 +39,7 @@ DEFINE_TEST(
 	"ContextHasNotBegunYet"
 ){
 
-	char * tmp;
+	char * tmp = NULL;
 
 	ECHO(("before_CONTEXT_BEGIN\n"));
 
