@@ -46,6 +46,7 @@ test_e4c_SOURCES =  \
     test_a10.c      \
     test_a11.c      \
     test_a12.c      \
+    test_a13.c      \
     test_a14.c      \
     test_b01.c      \
     test_b02.c      \
