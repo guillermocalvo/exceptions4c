@@ -25,6 +25,8 @@ the misuse to the client.\
 			TEST(a09) \
 			TEST(a10) \
 			TEST(a11) \
+			TEST(a12) \
+			TEST(a13) \
 
 END_SUITE
 
