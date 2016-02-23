@@ -103,6 +103,8 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([atexit])
 AC_CHECK_FUNCS([calloc])
 AC_CHECK_FUNCS([exit])
+AC_CHECK_FUNCS([fflush])
+AC_CHECK_FUNCS([fprintf])
 AC_CHECK_FUNCS([free])
 AC_CHECK_FUNCS([longjmp])
 AC_CHECK_FUNCS([malloc])
@@ -119,19 +121,19 @@ AC_CHECK_FUNCS([vsnprintf])
 #AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
     e4c.pc
-	Makefile
-	src/Makefile
-	test/Makefile
-	doc/Makefile
+    Makefile
+    src/Makefile
+    test/Makefile
+    doc/Makefile
 ])
 
 
 # Automake initialisation
 AM_INIT_AUTOMAKE([
     -Wall
-	-Werror
-	foreign
-	no-define
+    -Werror
+    foreign
+    no-define
 ])
 
 
