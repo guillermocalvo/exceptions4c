@@ -3,7 +3,7 @@
 
 
 DEFINE_TEST(
-	a13,
+	a14,
 	"catch() without beginning",
 	"This test uses the library improperly, by attempting to <strong>call <code>catch()</code></strong>, without having called <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
 	NULL,
