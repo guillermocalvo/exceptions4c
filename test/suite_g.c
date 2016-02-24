@@ -24,6 +24,21 @@ others won't.\
 			TEST(g07) \
 			TEST(g08) \
 			TEST(g09) \
+			TEST(g10) \
+			TEST(g11) \
+			TEST(g12) \
+			TEST(g13) \
+			TEST(g14) \
+			TEST(g15) \
+			TEST(g16) \
+			TEST(g17) \
+			TEST(g18) \
+			TEST(g19) \
+			TEST(g20) \
+			TEST(g21) \
+			TEST(g22) \
+			TEST(g23) \
+			TEST(g24) \
 
 END_SUITE
 
