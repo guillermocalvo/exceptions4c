@@ -90,6 +90,21 @@ test_e4c_SOURCES =  \
     test_g07.c      \
     test_g08.c      \
     test_g09.c      \
+    test_g10.c      \
+    test_g11.c      \
+    test_g12.c      \
+    test_g13.c      \
+    test_g14.c      \
+    test_g15.c      \
+    test_g16.c      \
+    test_g17.c      \
+    test_g18.c      \
+    test_g19.c      \
+    test_g20.c      \
+    test_g21.c      \
+    test_g22.c      \
+    test_g23.c      \
+    test_g24.c      \
     test_h01.c      \
     test_h02.c      \
     test_h03.c      \
