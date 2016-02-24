@@ -1,8 +1,8 @@
 
 # exceptions4c
 
-[![Build status][BUILD_STATUS]][BUILD_STATUS_LINK]
-[![Code coverage][COVERAGE]][COVERAGE_LINK]
+[![Build status][BUILD_STATUS_BADGE]][BUILD_STATUS_LINK]
+[![Code coverage][COVERAGE_BADGE]][COVERAGE_LINK]
 
 > Bring the power of exceptions to your C applications
 > with this tiny, portable library.
@@ -235,18 +235,23 @@ author/license owner cannot be held liable for damages.
 ![LGPL][LGPL_LOGO]
 ![exceptions4c][E4C_LOGO]
 
+![Code coverage][COVERAGE_GRAPH]
+
 
 [BUILD_STATUS_LINK]:
 https://travis-ci.org/guillermocalvo/exceptions4c
 
-[BUILD_STATUS]:
+[BUILD_STATUS_BADGE]:
 https://travis-ci.org/guillermocalvo/exceptions4c.svg
 
 [COVERAGE_LINK]:
 https://codecov.io/github/guillermocalvo/exceptions4c
 
-[COVERAGE]:
+[COVERAGE_BADGE]:
 https://codecov.io/github/guillermocalvo/exceptions4c/coverage.svg
+
+[COVERAGE_GRAPH]:
+https://codecov.io/github/guillermocalvo/exceptions4c/branch.svg?branch=master
 
 [EXAMPLE]:
 https://raw.githubusercontent.com/guillermocalvo/exceptions4c/master/etc/img/example.png
