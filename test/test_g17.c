@@ -26,15 +26,18 @@ DEFINE_TEST(
 
 #ifdef SIGSTOP
 
-		raise(SIGSTOP);
+		ECHO(("SIGSTOP_CANNOT_ACTUALLY_BE_HANDLED\n"));
+
+		/* TODO: remove mapping: SIGSTOP/StopException */
+		/* raise(SIGSTOP); */
 
 #else
 
 		ECHO(("SIGSTOP_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
 
-		throw(StopException, "This exception simulates a signal SIGSTOP");
-
 #endif
+
+		throw(StopException, "This exception simulates a signal SIGSTOP");
 
 		/*@-unreachable@*/
 		ECHO(("after_SIGSTOP\n"));
