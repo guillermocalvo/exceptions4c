@@ -22,6 +22,7 @@ test_e4c_SOURCES =  \
     run_f.c         \
     run_g.c         \
     run_h.c         \
+    run_i.c         \
     run_z.c         \
     run__all.c      \
     suite_a.c       \
@@ -32,6 +33,7 @@ test_e4c_SOURCES =  \
     suite_f.c       \
     suite_g.c       \
     suite_h.c       \
+    suite_i.c       \
     suite_z.c       \
     testing.c       \
     test_a01.c      \
@@ -65,6 +67,7 @@ test_e4c_SOURCES =  \
     test_b14.c      \
     test_b15.c      \
     test_b16.c      \
+    test_b17.c      \
     test_c01.c      \
     test_c02.c      \
     test_d01.c      \
@@ -117,6 +120,7 @@ test_e4c_SOURCES =  \
     test_h09.c      \
     test_h10.c      \
     test_h11.c      \
+    test_i01.c      \
     test_z01.c      \
     test_z02.c      \
     test_z03.c      \

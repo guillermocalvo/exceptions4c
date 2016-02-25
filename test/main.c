@@ -31,6 +31,7 @@ Unit testing parameters:
 			* SUITE_CAUGHT
 			* SUITE_SIGNALS
 			* SUITE_INTEGRATION
+			* SUITE_FEATURES
 			* PLATFORM_REQUIREMENTS
 		Default value: ALL_SUITES
 
