@@ -38,6 +38,8 @@ signal the misuse to the client.\
 			TEST(b15) \
 			TEST(b16) \
 			TEST(b17) \
+			TEST(b18) \
+			TEST(b19) \
 
 END_SUITE
 
