@@ -3,6 +3,7 @@
 
 [![Build status][BUILD_STATUS_BADGE]][BUILD_STATUS_LINK]
 [![Code coverage][COVERAGE_BADGE]][COVERAGE_LINK]
+[![Static analysis][COVERITY_BADGE]][COVERITY_LINK]
 
 > Bring the power of exceptions to your C applications
 > with this tiny, portable library.
@@ -252,6 +253,12 @@ https://codecov.io/github/guillermocalvo/exceptions4c/coverage.svg
 
 [COVERAGE_GRAPH]:
 https://codecov.io/github/guillermocalvo/exceptions4c/branch.svg?branch=master
+
+[COVERITY_LINK]:
+https://scan.coverity.com/projects/guillermocalvo-exceptions4c
+
+[COVERITY_BADGE]:
+https://scan.coverity.com/projects/8074/badge.svg
 
 [EXAMPLE]:
 https://raw.githubusercontent.com/guillermocalvo/exceptions4c/master/etc/img/example.png
