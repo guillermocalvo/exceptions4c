@@ -126,6 +126,10 @@ test_e4c_SOURCES =  \
     test_i02.c      \
     test_i03.c      \
     test_i04.c      \
+    test_i05.c      \
+    test_i06.c      \
+    test_i07.c      \
+    test_i08.c      \
     test_z01.c      \
     test_z02.c      \
     test_z03.c      \
