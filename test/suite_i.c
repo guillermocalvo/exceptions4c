@@ -15,6 +15,10 @@ other features of the library are used. \
 			TEST(i02) \
 			TEST(i03) \
 			TEST(i04) \
+			TEST(i05) \
+			TEST(i06) \
+			TEST(i07) \
+			TEST(i08) \
 
 END_SUITE
 
