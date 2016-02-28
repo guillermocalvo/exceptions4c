@@ -22,6 +22,7 @@ other features of the library are used. \
 			TEST(i09) \
 			TEST(i10) \
 			TEST(i11) \
+			TEST(i12) \
 
 END_SUITE
 
