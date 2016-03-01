@@ -41,6 +41,8 @@ signal the misuse to the client.\
 			TEST(b18) \
 			TEST(b19) \
 			TEST(b20) \
+			TEST(b21) \
+			TEST(b22) \
 
 END_SUITE
 
