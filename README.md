@@ -23,6 +23,7 @@ which map the semantics of exception handling you're probably already used to:
 
 You can use exceptions in C by writing `try/catch/finally` blocks:
 
+```c
     #include "e4c.h"
 
     int foobar(){
@@ -44,6 +45,7 @@ You can use exceptions in C by writing `try/catch/finally` blocks:
 
         return(foo);
     }
+```
 
 This way you will never have to deal again with boring error codes, or check
 return values every time you call a function.
@@ -74,6 +76,7 @@ If you write a `catch` block that handles an exception with no defined
 exceptions in *hierarchies*, you can design generic `catch` blocks that deal
 with several exceptions:
 
+```c
     /*                   Name             Default message   Supertype */
     E4C_DEFINE_EXCEPTION(ColorException, "Colorful error.", RuntimeException);
     E4C_DEFINE_EXCEPTION(RedException,   "Red error.",      ColorException);
@@ -94,6 +97,7 @@ with several exceptions:
         const e4c_exception * e = e4c_get_exception();
         printf("You cannot use that color: %s (%s).", e->name, e->message);
     }
+```
 
 When looking for a match, `catch` blocks are inspected in the order they appear
 *in the code*. If you place a handler for a superclass before a subclass
@@ -109,6 +113,7 @@ There are other keywords related to resource handling:
 
 They allow you to express the *Dispose Pattern* in your code:
 
+```c
     /* syntax #1 */
     FOO f;
     with(f, e4c_dispose_FOO) f = e4c_acquire_FOO(foo, bar); use do_something(f);
@@ -124,6 +129,7 @@ They allow you to express the *Dispose Pattern* in your code:
     e4c_using_file(report, "log.txt", "a"){
         fputs("hello, world!\n", report);
     }
+```
 
 This is a clean and terse way to handle all kinds of resources with implicit
 acquisition and automatic disposal.
@@ -135,6 +141,7 @@ In addition, signals such as `SIGHUP`, `SIGFPE` and `SIGSEGV` can be handled in
 an *exceptional* way. Forget about scary segmentation faults, all you need is to
 catch `BadPointerException`:
 
+```c
     int * pointer = NULL;
 
     try{
@@ -142,7 +149,7 @@ catch `BadPointerException`:
     }catch(BadPointerException){
         printf("No problem ;-)");
     }
-
+```
 
 ## Multithreading
 
