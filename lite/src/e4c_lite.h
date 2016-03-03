@@ -77,6 +77,8 @@ extern int e4c_extends(const struct e4c_exception_type * child, const struct e4c
 extern void e4c_throw(const struct e4c_exception_type * exception_type, const char * file, int line, const char * message);
 
 /* OpenMP support */
-#pragma omp threadprivate(e4c)
+#if defined(_OPENMP)
+# pragma omp threadprivate(e4c)
+#endif
 
 # endif
