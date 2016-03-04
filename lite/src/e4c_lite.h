@@ -1,7 +1,7 @@
 /*
- * exceptions4c lightweight version 1.1
+ * exceptions4c lightweight version 2.0
  *
- * Copyright (c) 2013 Guillermo Calvo
+ * Copyright (c) 2016 Guillermo Calvo
  * Licensed under the GNU Lesser General Public License
  */
 
@@ -21,19 +21,18 @@
 # define E4C_MESSAGE_SIZE 128
 #endif
 
-/* Exception handling keywords: try/catch/finally/throw */
-#ifndef E4C_NOKEYWORDS
-# define try E4C_TRY
-# define catch(type) E4C_CATCH(type)
-# define finally E4C_FINALLY
-# define throw(type, message) E4C_THROW(type, message)
+/* Controls whether file/line info is attached to exceptions */
+#ifndef NDEBUG
+# define E4C_DEBUG_INFO __FILE__, __LINE__
+#else
+# define E4C_DEBUG_INFO NULL, 0
 #endif
 
 /* Represents an exception type */
 struct e4c_exception_type{
-	const char * name;
-	const char * default_message;
-	const struct e4c_exception_type * supertype;
+    const char * name;
+    const char * default_message;
+    const struct e4c_exception_type * supertype;
 };
 
 /* Declarations and definitions of exception types */
@@ -46,10 +45,10 @@ E4C_DECLARE_EXCEPTION(NullPointerException);
 
 /* Represents an instance of an exception type */
 struct e4c_exception{
-	char message[E4C_MESSAGE_SIZE];
-	const char * file;
-	int line;
-	const struct e4c_exception_type * type;
+    char message[E4C_MESSAGE_SIZE];
+    const char * file;
+    int line;
+    const struct e4c_exception_type * type;
 };
 
 /* Retrieve current thrown exception */
@@ -59,16 +58,12 @@ struct e4c_exception{
 #define E4C_IS_INSTANCE_OF(t) ( E4C_EXCEPTION.type == &t || e4c_extends(E4C_EXCEPTION.type, &t) )
 
 /* Implementation details */
-#define E4C_TRY if(e4c_try(E4C_INFO) && setjmp(e4c.jump[e4c.frames - 1]) >= 0) while(e4c_hook(0)) if(e4c.frame[e4c.frames].stage == e4c_trying)
+#define E4C_TRY if(e4c_try(E4C_DEBUG_INFO) && setjmp(e4c.jump[e4c.frames - 1]) >= 0) while(e4c_hook(0)) if(e4c.frame[e4c.frames].stage == e4c_trying)
 #define E4C_CATCH(type) else if(e4c.frame[e4c.frames].stage == e4c_catching && E4C_IS_INSTANCE_OF(type) && e4c_hook(1))
 #define E4C_FINALLY else if(e4c.frame[e4c.frames].stage == e4c_finalizing)
-#define E4C_THROW(type, message) e4c_throw(&type, E4C_INFO, message)
-#ifndef NDEBUG
-# define E4C_INFO __FILE__, __LINE__
-#else
-# define E4C_INFO NULL, 0
-#endif
+#define E4C_THROW(type, message) e4c_throw(&type, E4C_DEBUG_INFO, message)
 
+/* This functions must be called only via E4C_TRY, E4C_CATCH, E4C_FINALLY and E4C_THROW */
 enum e4c_stage{e4c_beginning, e4c_trying, e4c_catching, e4c_finalizing, e4c_done};
 extern struct e4c_context{jmp_buf jump[E4C_MAX_FRAMES]; struct e4c_exception err; struct{unsigned char stage; unsigned char uncaught;} frame[E4C_MAX_FRAMES + 1]; int frames;} e4c;
 extern int e4c_try(const char * file, int line);
@@ -77,8 +72,8 @@ extern int e4c_extends(const struct e4c_exception_type * child, const struct e4c
 extern void e4c_throw(const struct e4c_exception_type * exception_type, const char * file, int line, const char * message);
 
 /* OpenMP support */
-#if defined(_OPENMP)
+#ifdef _OPENMP
 # pragma omp threadprivate(e4c)
 #endif
 
-# endif
+#endif
