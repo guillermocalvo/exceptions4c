@@ -5,7 +5,9 @@
 # Licensed under the GNU Lesser General Public License
 #
 
-AUTOMAKE_OPTIONS = -Wall -Werror foreign subdir-objects
+AUTOMAKE_OPTIONS = foreign subdir-objects
+
+AM_CFLAGS = -Wall -Werror --pedantic -coverage -O0 -I$(E4C_PATH) -I$(E4C_LITE_PATH)
 
 
 # Library
@@ -84,21 +86,18 @@ tests: check
 
 # exceptions4c library
 
-lib_libe4c_a_CFLAGS                     = --pedantic -Wall -Wextra -ansi
+lib_libe4c_a_CFLAGS                     = -Wall -Werror --pedantic
 lib_libe4c_a_SOURCES                    = src/e4c.c
 
 
 # exceptions4c library (lightweight version)
 
-lib_libe4c_lite_a_CFLAGS                = --pedantic -Wall -Wextra -ansi
+lib_libe4c_lite_a_CFLAGS                = -Wall -Werror --pedantic
 lib_libe4c_lite_a_SOURCES               = lite/src/e4c_lite.c
 
 
 # exceptions4c tests
 
-E4C_TEST_CFLAGS = --pedantic -Wall -std=c99 -coverage -O0
-
-bin_check_test_e4c_CFLAGS               = $(E4C_TEST_CFLAGS)
 bin_check_test_e4c_SOURCES =            \
                                         \
     src/e4c.c                           \
@@ -251,22 +250,9 @@ bin_check_test_e4c_SOURCES =            \
 
 # exceptions4c tests (lightweight version)
 
-E4C_LITE_TEST_CFLAGS = --pedantic -Wall -std=c99 -coverage -O0 -I$(E4C_LITE_PATH)
-
-bin_check_lite_t_uncaught_CFLAGS        = $(E4C_LITE_TEST_CFLAGS)
-bin_check_lite_t_uncaught_SOURCES       = lite/test/t_uncaught.c lite/src/e4c_lite.c
-
-bin_check_lite_t_caught_CFLAGS          = $(E4C_LITE_TEST_CFLAGS)
-bin_check_lite_t_caught_SOURCES         = lite/test/t_caught.c lite/src/e4c_lite.c
-
-bin_check_lite_t_cleanup_CFLAGS         = $(E4C_LITE_TEST_CFLAGS)
-bin_check_lite_t_cleanup_SOURCES        = lite/test/t_cleanup.c lite/src/e4c_lite.c
-
-bin_check_lite_t_hierarchy_CFLAGS       = $(E4C_LITE_TEST_CFLAGS)
-bin_check_lite_t_hierarchy_SOURCES      = lite/test/t_hierarchy.c lite/src/e4c_lite.c
-
-bin_check_lite_t_limits_CFLAGS          = $(E4C_LITE_TEST_CFLAGS)
-bin_check_lite_t_limits_SOURCES         = lite/test/t_limits.c lite/src/e4c_lite.c
-
-bin_check_lite_t_overflow_CFLAGS        = $(E4C_LITE_TEST_CFLAGS)
-bin_check_lite_t_overflow_SOURCES       = lite/test/t_overflow.c lite/src/e4c_lite.c
+bin_check_lite_t_uncaught_SOURCES       = lite/src/e4c_lite.c lite/test/t_uncaught.c
+bin_check_lite_t_caught_SOURCES         = lite/src/e4c_lite.c lite/test/t_caught.c
+bin_check_lite_t_cleanup_SOURCES        = lite/src/e4c_lite.c lite/test/t_cleanup.c
+bin_check_lite_t_hierarchy_SOURCES      = lite/src/e4c_lite.c lite/test/t_hierarchy.c
+bin_check_lite_t_limits_SOURCES         = lite/src/e4c_lite.c lite/test/t_limits.c
+bin_check_lite_t_overflow_SOURCES       = lite/src/e4c_lite.c lite/test/t_overflow.c
