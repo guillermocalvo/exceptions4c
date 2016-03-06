@@ -250,13 +250,13 @@ author/license owner cannot be held liable for damages.
 https://travis-ci.org/guillermocalvo/exceptions4c
 
 [BUILD_STATUS_BADGE]:
-https://travis-ci.org/guillermocalvo/exceptions4c.svg
+https://travis-ci.org/guillermocalvo/exceptions4c.svg?branch=master
 
 [COVERAGE_LINK]:
-https://codecov.io/github/guillermocalvo/exceptions4c
+https://codecov.io/github/guillermocalvo/exceptions4c?branch=master
 
 [COVERAGE_BADGE]:
-https://codecov.io/github/guillermocalvo/exceptions4c/coverage.svg
+https://codecov.io/github/guillermocalvo/exceptions4c/coverage.svg?branch=master
 
 [COVERAGE_GRAPH]:
 https://codecov.io/github/guillermocalvo/exceptions4c/branch.svg?branch=master
