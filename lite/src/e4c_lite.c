@@ -19,17 +19,22 @@ static void e4c_propagate(void){
 
 	e4c.frame[e4c.frames].uncaught = 1;
 
-	if(e4c.frames > 0) longjmp(e4c.jump[e4c.frames - 1], 1);
+	if(e4c.frames > 0){
+		longjmp(e4c.jump[e4c.frames - 1], 1);
+	}
 
-	if(fprintf(stderr, e4c.err.file ? err_msg[1] : err_msg[0], e4c.err.type->name, e4c.err.message, e4c.err.file, e4c.err.line) > 0)
+	if(fprintf(stderr, e4c.err.file ? err_msg[1] : err_msg[0], e4c.err.type->name, e4c.err.message, e4c.err.file, e4c.err.line) > 0){
 		(void)fflush(stderr);
+	}
 
 	exit(EXIT_FAILURE);
 }
 
 int e4c_try(const char * file, int line){
 
-	if(e4c.frames >= E4C_MAX_FRAMES) e4c_throw(&RuntimeException, file, line, "Too many `try` blocks nested.");
+	if(e4c.frames >= E4C_MAX_FRAMES){
+		e4c_throw(&RuntimeException, file, line, "Too many `try` blocks nested.");
+	}
 
 	e4c.frames++;
 
@@ -43,26 +48,38 @@ int e4c_hook(int is_catch){
 
 	int uncaught;
 
-	if(is_catch) return !(e4c.frame[e4c.frames].uncaught = 0);
+	if(is_catch){
+		e4c.frame[e4c.frames].uncaught = 0;
+		return 1;
+	}
 
 	uncaught = e4c.frame[e4c.frames].uncaught;
 
 	e4c.frame[e4c.frames].stage++;
-	if(e4c.frame[e4c.frames].stage == e4c_catching && !uncaught) e4c.frame[e4c.frames].stage++;
+	if(e4c.frame[e4c.frames].stage == e4c_catching && !uncaught){
+		e4c.frame[e4c.frames].stage++;
+	}
 
-	if(e4c.frame[e4c.frames].stage < e4c_done) return 1;
+	if(e4c.frame[e4c.frames].stage < e4c_done){
+		return 1;
+	}
 
 	e4c.frames--;
 
-	if(uncaught) e4c_propagate();
+	if(uncaught){
+		e4c_propagate();
+	}
 
 	return 0;
 }
 
 int e4c_extends(const struct e4c_exception_type * child, const struct e4c_exception_type * parent){
 
-	for(; child && child->supertype != child; child = child->supertype)
-		if(child->supertype == parent) return 1;
+	for(; child && child->supertype != child; child = child->supertype){
+		if(child->supertype == parent){
+			return 1;
+		}
+	}
 
 	return 0;
 }
