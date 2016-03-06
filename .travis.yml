@@ -24,7 +24,8 @@ script:
   - echo travis_fold:end:TESTS
 
   - echo travis_fold:start:COVERAGE
-  - gcov src/e4c.c --object-file test/test_e4c-e4c
+  - gcov src/e4c.c --object-directory src/*
+  - gcov lite/src/e4c_lite.c --object-directory lite/src/*
   - echo travis_fold:end:COVERAGE
 
 after_success:

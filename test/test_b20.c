@@ -40,7 +40,7 @@ DEFINE_TEST(
 
 		ECHO(("inside_CATCH_block\n"));
 
-		fprintf(stderr, e4c_get_exception()->name);
+		fprintf(stderr, "%s", e4c_get_exception()->name);
 	}
 
 	ECHO(("before_CONTEXT_END\n"));
