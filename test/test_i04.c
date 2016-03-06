@@ -42,7 +42,7 @@ DEFINE_TEST(
 
 		e = e4c_get_exception();
 
-		fprintf(stderr, e->message);
+		fprintf(stderr, "%s", e->message);
 	}
 
 	ECHO(("before_CONTEXT_END\n"));
