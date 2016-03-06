@@ -7,7 +7,7 @@
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 
-AM_CFLAGS = -Wall -Werror --pedantic -coverage -O0 -I$(E4C_PATH) -I$(E4C_LITE_PATH)
+AM_CFLAGS = -Wall -Werror --pedantic -Wno-missing-braces -coverage -O0 -I$(E4C_PATH) -I$(E4C_LITE_PATH)
 
 
 # Library
@@ -86,13 +86,13 @@ tests: check
 
 # exceptions4c library
 
-lib_libe4c_a_CFLAGS                     = -Wall -Werror --pedantic
+lib_libe4c_a_CFLAGS                     = -Wall -Werror --pedantic -Wno-missing-braces
 lib_libe4c_a_SOURCES                    = src/e4c.c
 
 
 # exceptions4c library (lightweight version)
 
-lib_libe4c_lite_a_CFLAGS                = -Wall -Werror --pedantic
+lib_libe4c_lite_a_CFLAGS                = -Wall -Werror --pedantic -Wno-missing-braces
 lib_libe4c_lite_a_SOURCES               = lite/src/e4c_lite.c
 
 
