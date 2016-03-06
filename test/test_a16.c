@@ -18,6 +18,10 @@ DEFINE_TEST(
 
 		E4C_THROWF(WildException, "%s_%s", "FORMATTED", "MESSAGE");
 
+# elif defined(HAVE_VSNPRINTF)
+
+		e4c_exception_throw_format_(&WildException, "file", 123, "function", "%s_%s", "FORMATTED", "MESSAGE");
+
 # else
 
 		E4C_THROW(WildException, "No variadic macros support");

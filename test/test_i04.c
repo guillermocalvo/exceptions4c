@@ -26,6 +26,10 @@ DEFINE_TEST(
 
 		E4C_THROWF(WildException, "%s_%s", "FORMATTED", "MESSAGE");
 
+# elif defined(HAVE_VSNPRINTF)
+
+		e4c_exception_throw_format_(&WildException, "file", 123, "function", "%s_%s", "FORMATTED", "MESSAGE");
+
 # else
 
 		ECHO(("no_VARIADIC_MACROS\n"));
@@ -42,7 +46,7 @@ DEFINE_TEST(
 
 		e = e4c_get_exception();
 
-		fprintf(stderr, e->message);
+		fprintf(stderr, "%s", e->message);
 	}
 
 	ECHO(("before_CONTEXT_END\n"));

@@ -7,7 +7,7 @@ AC_PREREQ([2.68])
 
 
 # Initialize package
-AC_INIT([exceptions4c], [3.0.5], [exceptions4c@guillermo.in], [e4c], [https://github.com/guillermocalvo/exceptions4c/])
+AC_INIT([exceptions4c], [3.0.5], [exceptions4c@guillermo.in], [exceptions4c], [https://github.com/guillermocalvo/exceptions4c/])
 
 
 # Information on the package
@@ -31,6 +31,7 @@ AC_CONFIG_SRCDIR([src/e4c.c])
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_RANLIB
+AM_PROG_AR
 
 
 # Checks for header files.
@@ -122,9 +123,6 @@ AC_CHECK_FUNCS([vsnprintf])
 AC_CONFIG_FILES([
     e4c.pc
     Makefile
-    src/Makefile
-    test/Makefile
-    doc/Makefile
 ])
 
 
@@ -133,6 +131,7 @@ AM_INIT_AUTOMAKE([
     -Wall
     -Werror
     foreign
+	subdir-objects
     no-define
 ])
 

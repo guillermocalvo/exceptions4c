@@ -139,7 +139,10 @@ E4C_DEFINE_EXCEPTION(SiblingException, "This is a sibling exception.", ParentExc
 
 		SAFE_SPRINTF(SAFE_ARRAY(runner->buffer), PLATFORM_OPEN_REPORT, runner->report);
 
-		(void)system(runner->buffer);
+		if( system(runner->buffer) == -1 ){
+
+			fprintf(stderr, "\nCould not open report: %s\n", runner->report);
+		}
 	}
 
 # else
