@@ -40,7 +40,7 @@
 
 
 # ifndef EXCEPTIONS4C
-#	include "../src/e4c.h"
+#   include "../src/e4c.h"
 # endif
 
 
@@ -66,8 +66,8 @@
  * Binds the disposal of file to the standard function fclose
  */
 # define e4c_dispose_file(file, failed) \
-	if( fclose(file) != 0 ) \
-		throw(FileCloseError, "Could not close file: " #file)
+    if( fclose(file) != 0 ) \
+        throw(FileCloseError, "Could not close file: " #file)
 
 /*
  * Binds the acquisition of mutex to the function pthread_mutex_lock
@@ -78,8 +78,8 @@
  * Binds the disposal of mutex to the function pthread_mutex_unlock
  */
 # define e4c_dispose_mutex(mutex, failed) \
-	if( pthread_mutex_unlock(mutex) != 0 ) \
-		throw(MutexUnlockError, "Could not unlock mutex: " #mutex)
+    if( pthread_mutex_unlock(mutex) != 0 ) \
+        throw(MutexUnlockError, "Could not unlock mutex: " #mutex)
 
 
 /**
@@ -118,13 +118,13 @@
  *
  */
 # define e4c_using_memory(buffer, bytes) \
-	E4C_WITH(buffer, e4c_dispose_memory){ \
-		buffer = e4c_acquire_memory(bytes); \
-		if(buffer == NULL){ \
-			E4C_THROW(MemoryAllocationException, \
-			"Could not allocate memory for: " #buffer); \
-		} \
-	}E4C_USE
+    E4C_WITH(buffer, e4c_dispose_memory){ \
+        buffer = e4c_acquire_memory(bytes); \
+        if(buffer == NULL){ \
+            E4C_THROW(MemoryAllocationException, \
+            "Could not allocate memory for: " #buffer); \
+        } \
+    }E4C_USE
 
 /**
  * Introduces a block of code with automatic acquisition and disposal of a
@@ -157,12 +157,12 @@
  *
  */
 # define e4c_using_file(file, path, mode) \
-	E4C_WITH(file, e4c_dispose_file){ \
-		file = e4c_acquire_file(path, mode); \
-		if(file == NULL){ \
-			E4C_THROW(FileOpenException, "Could not open file: " #path); \
-		} \
-	}E4C_USE
+    E4C_WITH(file, e4c_dispose_file){ \
+        file = e4c_acquire_file(path, mode); \
+        if(file == NULL){ \
+            E4C_THROW(FileOpenException, "Could not open file: " #path); \
+        } \
+    }E4C_USE
 
 /**
  * Introduces a block of code with automatic acquisition and disposal of a mutex
@@ -190,12 +190,12 @@
  *          If `pthread_mutex_unlock` does not return *zero*
  */
 # define e4c_using_mutex(mutex) \
-	E4C_WITH(mutex, e4c_dispose_mutex){ \
-		int result = e4c_acquire_mutex(mutex); \
-		if(result != 0){ \
-			E4C_THROW(MutexLockException, "Could not lock mutex: " #mutex); \
-		} \
-	}E4C_USE
+    E4C_WITH(mutex, e4c_dispose_mutex){ \
+        int result = e4c_acquire_mutex(mutex); \
+        if(result != 0){ \
+            E4C_THROW(MutexLockException, "Could not lock mutex: " #mutex); \
+        } \
+    }E4C_USE
 
 /** @} */
 

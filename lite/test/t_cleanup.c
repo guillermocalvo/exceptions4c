@@ -4,35 +4,35 @@
 
 TEST_CASE(test_cleanup){
 
-	volatile int created     = 0;
-	volatile int destroyed   = 0;
-	volatile int started     = 0;
-	volatile int finished    = 0;
+    volatile int created     = 0;
+    volatile int destroyed   = 0;
+    volatile int started     = 0;
+    volatile int finished    = 0;
 
-	E4C_TRY{
+    E4C_TRY{
 
-		created = 1;
+        created = 1;
 
-		E4C_TRY{
+        E4C_TRY{
 
-			started = 1;
+            started = 1;
 
-			E4C_THROW(NullPointerException, "Get me out of here");
+            E4C_THROW(NullPointerException, "Get me out of here");
 
-			finished = 1; /* this should not happen */
+            finished = 1; /* this should not happen */
 
-		}E4C_FINALLY{
+        }E4C_FINALLY{
 
-			destroyed = 1;
-		}
+            destroyed = 1;
+        }
 
-	}E4C_CATCH(NullPointerException){
+    }E4C_CATCH(NullPointerException){
 
-		printf("No problem :-)");
-	}
+        printf("No problem :-)");
+    }
 
-	TEST_ASSERT(created);
-	TEST_ASSERT(started);
-	TEST_ASSERT(!finished);
-	TEST_ASSERT(destroyed);
+    TEST_ASSERT(created);
+    TEST_ASSERT(started);
+    TEST_ASSERT(!finished);
+    TEST_ASSERT(destroyed);
 }

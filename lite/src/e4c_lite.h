@@ -1,5 +1,5 @@
 /*
- * exceptions4c lightweight version 2.0
+ * exceptions4c lightweight version 2.1
  *
  * Copyright (c) 2016 Guillermo Calvo
  * Licensed under the GNU Lesser General Public License
