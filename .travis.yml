@@ -40,4 +40,4 @@ addons:
     notification_email: coverity@guillermo.in
     build_command_prepend: "autoreconf --install; ./configure; make clean"
     build_command: "make -j 4"
-    branch_pattern: master
+    branch_pattern: coverity_scan
