@@ -1,11 +1,11 @@
 /*
  *
- * @file		e4c_rsc.c
+ * @file        e4c_rsc.c
  *
  * exceptions4c automatic resource handling source code file
  *
- * @version		2.0
- * @author		Copyright (c) 2012 Guillermo Calvo
+ * @version     2.0
+ * @author      Copyright (c) 2012 Guillermo Calvo
  *
  * This is free software: you can redistribute it and/or modify it under the
  * terms of the **GNU Lesser General Public License** as published by the
@@ -31,10 +31,10 @@
 # include "e4c_rsc.h"
 
 
-E4C_DEFINE_EXCEPTION(MemoryAllocationException,			"Couldn't allocate memory.",		NotEnoughMemoryException);
-E4C_DEFINE_EXCEPTION(FileException,						"File exception.",					InputOutputException);
-E4C_DEFINE_EXCEPTION(FileOpenException,					"Couldn't open file.",				FileException);
-E4C_DEFINE_EXCEPTION(FileCloseException,				"Couldn't close file.",				FileException);
-E4C_DEFINE_EXCEPTION(MutexException,					"Mutex error.",						RuntimeException);
-E4C_DEFINE_EXCEPTION(MutexLockException,				"Couldn't lock mutex.",				MutexException);
-E4C_DEFINE_EXCEPTION(MutexUnlockException,				"Couldn't unlock mutex.",			MutexException);
+E4C_DEFINE_EXCEPTION(MemoryAllocationException,         "Couldn't allocate memory.",        NotEnoughMemoryException);
+E4C_DEFINE_EXCEPTION(FileException,                     "File exception.",                  InputOutputException);
+E4C_DEFINE_EXCEPTION(FileOpenException,                 "Couldn't open file.",              FileException);
+E4C_DEFINE_EXCEPTION(FileCloseException,                "Couldn't close file.",             FileException);
+E4C_DEFINE_EXCEPTION(MutexException,                    "Mutex error.",                     RuntimeException);
+E4C_DEFINE_EXCEPTION(MutexLockException,                "Couldn't lock mutex.",             MutexException);
+E4C_DEFINE_EXCEPTION(MutexUnlockException,              "Couldn't unlock mutex.",           MutexException);

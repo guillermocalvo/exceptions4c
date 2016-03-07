@@ -37,56 +37,56 @@
 #define BACKTRACE_MAX_SIZE 32
 
 typedef struct struct_BackTrace {
-	void *frames[BACKTRACE_MAX_SIZE];
-	size_t count, skip;
+    void *frames[BACKTRACE_MAX_SIZE];
+    size_t count, skip;
 } BackTrace;
 
 void BackTrace_create(BackTrace *back_trace) {
-	back_trace->count = backtrace(back_trace->frames, BACKTRACE_MAX_SIZE);
-	/* we don't need to show this function and
-	the internal e4c function that calls it */
-	back_trace->skip = 2;
+    back_trace->count = backtrace(back_trace->frames, BACKTRACE_MAX_SIZE);
+    /* we don't need to show this function and
+    the internal e4c function that calls it */
+    back_trace->skip = 2;
 }
 
 void *BackTrace_create_for_exception(const e4c_exception *e) {
-	BackTrace *back_trace = malloc(sizeof(BackTrace));
-	BackTrace_create(back_trace);
-	return back_trace;
+    BackTrace *back_trace = malloc(sizeof(BackTrace));
+    BackTrace_create(back_trace);
+    return back_trace;
 }
 
 void BackTrace_destroy(void *back_trace) {
-	free(back_trace);
+    free(back_trace);
 }
 
 void BackTrace_dump(BackTrace *back_trace) {
-	char **strings = backtrace_symbols(back_trace->frames, back_trace->count);
-	if (strings) {
-		for (size_t i = back_trace->skip, c = back_trace->count; i < c; i++) {
-			fprintf(stderr, "  %s\n", strings[i]);
-		}
-		free(strings);
-	}
+    char **strings = backtrace_symbols(back_trace->frames, back_trace->count);
+    if (strings) {
+        for (size_t i = back_trace->skip, c = back_trace->count; i < c; i++) {
+            fprintf(stderr, "  %s\n", strings[i]);
+        }
+        free(strings);
+    }
 }
 
 void myfunc() {
-	throw(NotEnoughMemoryException, "False alarm!");
+    throw(NotEnoughMemoryException, "False alarm!");
 }
 
 int main(int argc, char *argv[]) {
-	int r = 0;
-	e4c_using_context(E4C_FALSE) {
-		e4c_context_set_handlers(NULL, NULL, BackTrace_create_for_exception, BackTrace_destroy);
-		try {
-			myfunc();
-		}
-		catch (RuntimeException) {
-			const e4c_exception *e = e4c_get_exception();
-			fprintf(stderr, "%s: %s", e->name, e->message);
-			if (e->custom_data) {
-				BackTrace_dump(e->custom_data);
-			}
-			r = 1;
-		}
-	}
-	return r;
+    int r = 0;
+    e4c_using_context(E4C_FALSE) {
+        e4c_context_set_handlers(NULL, NULL, BackTrace_create_for_exception, BackTrace_destroy);
+        try {
+            myfunc();
+        }
+        catch (RuntimeException) {
+            const e4c_exception *e = e4c_get_exception();
+            fprintf(stderr, "%s: %s", e->name, e->message);
+            if (e->custom_data) {
+                BackTrace_dump(e->custom_data);
+            }
+            r = 1;
+        }
+    }
+    return r;
 }

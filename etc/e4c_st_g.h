@@ -83,7 +83,7 @@
 
 
 # ifndef EXCEPTIONS4C
-#	include "../src/e4c.h"
+#   include "../src/e4c.h"
 # endif
 
 
@@ -113,19 +113,19 @@
  */
 /*@unused@*/ extern
 void e4c_stack_trace_print_exception(
-	/*@temp@*/ /*@notnull@*/
-	const e4c_exception * exception
+    /*@temp@*/ /*@notnull@*/
+    const e4c_exception * exception
 )
 /*@globals
-	fileSystem,
-	internalState,
+    fileSystem,
+    internalState,
 
-	NotEnoughMemoryException,
-	NullPointerException
+    NotEnoughMemoryException,
+    NullPointerException
 @*/
 /*@modifies
-	fileSystem,
-	internalState
+    fileSystem,
+    internalState
 @*/
 ;
 
@@ -153,18 +153,18 @@ void e4c_stack_trace_print_exception(
  */
 /*@unused@*/ extern
 void * e4c_stack_trace_initialize(
-	/*@temp@*/ /*@notnull@*/
-	const e4c_exception * exception
+    /*@temp@*/ /*@notnull@*/
+    const e4c_exception * exception
 )
 /*@globals
-	fileSystem,
-	internalState,
+    fileSystem,
+    internalState,
 
-	NotEnoughMemoryException
+    NotEnoughMemoryException
 @*/
 /*@modifies
-	fileSystem,
-	internalState
+    fileSystem,
+    internalState
 @*/
 ;
 
@@ -190,18 +190,18 @@ void * e4c_stack_trace_initialize(
  */
 /*@unused@*/ extern
 void e4c_stack_trace_finalize(
-	/*@owned@*/ /*@null@*/
-	void * custom_data
+    /*@owned@*/ /*@null@*/
+    void * custom_data
 )
 /*@globals
-	fileSystem,
-	internalState,
+    fileSystem,
+    internalState,
 
-	NotEnoughMemoryException
+    NotEnoughMemoryException
 @*/
 /*@modifies
-	fileSystem,
-	internalState
+    fileSystem,
+    internalState
 @*/
 ;
 
