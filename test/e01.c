@@ -2,7 +2,7 @@
 # include "testing.h"
 
 
-static void another_function(volatile E4C_BOOL * flag);
+void another_function(volatile E4C_BOOL * flag);
 
 
 /**
@@ -41,7 +41,7 @@ TEST_CASE{
     e4c_context_end();
 }
 
-static void another_function(volatile E4C_BOOL * flag){
+void another_function(volatile E4C_BOOL * flag){
 
     E4C_TRY{
 

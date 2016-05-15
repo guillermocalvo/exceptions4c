@@ -3,7 +3,7 @@
 # include <signal.h>
 
 
-static e4c_signal_mapping custom_mappings[2] = {
+e4c_signal_mapping custom_mappings[2] = {
 
     E4C_SIGNAL_MAPPING(1024, RuntimeException),
     E4C_NULL_SIGNAL_MAPPING

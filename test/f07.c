@@ -2,11 +2,11 @@
 # include "testing.h"
 
 
-static void aux1(void);
-static void aux2(void);
-static void aux3(void);
-static void aux4(void);
-static void aux5(void);
+void aux1(void);
+void aux2(void);
+void aux3(void);
+void aux4(void);
+void aux5(void);
 
 
 /**
@@ -41,12 +41,12 @@ TEST_CASE{
 }
 
 
-static void aux1(void){
+void aux1(void){
 
     aux2();
 }
 
-static void aux2(void){
+void aux2(void){
 
     E4C_TRY{
 
@@ -59,12 +59,12 @@ static void aux2(void){
     }
 }
 
-static void aux3(void){
+void aux3(void){
 
     aux4();
 }
 
-static void aux4(void){
+void aux4(void){
 
     E4C_TRY{
 
@@ -76,7 +76,7 @@ static void aux4(void){
     }
 }
 
-static void aux5(void){
+void aux5(void){
 
     E4C_THROW(RuntimeException, "I'm going to be caught.");
 

@@ -2,7 +2,7 @@
 # include "testing.h"
 
 
-static void aux(volatile E4C_BOOL * flag);
+void aux(volatile E4C_BOOL * flag);
 
 
 /**
@@ -34,7 +34,7 @@ TEST_CASE{
 }
 
 
-static void aux(volatile E4C_BOOL * flag){
+void aux(volatile E4C_BOOL * flag){
 
     E4C_TRY{
 

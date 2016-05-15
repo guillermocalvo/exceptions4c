@@ -2,8 +2,8 @@
 # include "testing.h"
 
 
-static int * null(int dummy);
-static int integer = 123;
+int * null(int dummy);
+int integer = 123;
 
 
 /**
@@ -32,7 +32,7 @@ TEST_CASE{
     TEST_DUMP("%p", (void *)pointer);
 }
 
-static int * null(int dummy){
+int * null(int dummy){
 
     return(dummy ? NULL : &integer);
 }

@@ -2,8 +2,8 @@
 # include "testing.h"
 
 
-static void another_function(volatile E4C_BOOL * flag1, volatile E4C_BOOL * flag2);
-static void yet_another_function(volatile E4C_BOOL * flag2);
+void another_function(volatile E4C_BOOL * flag1, volatile E4C_BOOL * flag2);
+void yet_another_function(volatile E4C_BOOL * flag2);
 
 
 /**
@@ -47,7 +47,7 @@ TEST_CASE{
     e4c_context_end();
 }
 
-static void another_function(volatile E4C_BOOL * flag1, volatile E4C_BOOL * flag2){
+void another_function(volatile E4C_BOOL * flag1, volatile E4C_BOOL * flag2){
 
     E4C_TRY{
 
@@ -61,7 +61,7 @@ static void another_function(volatile E4C_BOOL * flag1, volatile E4C_BOOL * flag
     *flag1 = E4C_FALSE;
 }
 
-static void yet_another_function(volatile E4C_BOOL * flag2){
+void yet_another_function(volatile E4C_BOOL * flag2){
 
     E4C_TRY{
 

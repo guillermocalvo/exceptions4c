@@ -3,10 +3,10 @@
 # include <signal.h>
 
 
-static void * custom_initialize_handler(const e4c_exception * exception);
-static E4C_DEFINE_EXCEPTION(CustomException, "This is a custom exception", RuntimeException);
-static char initialization[64] = "FOOBAR";
-static e4c_signal_mapping custom_mappings[2] = {
+void * custom_initialize_handler(const e4c_exception * exception);
+E4C_DEFINE_EXCEPTION(CustomException, "This is a custom exception", RuntimeException);
+char initialization[64] = "FOOBAR";
+e4c_signal_mapping custom_mappings[2] = {
     E4C_SIGNAL_MAPPING(SIGTERM, CustomException),
     E4C_NULL_SIGNAL_MAPPING
 };
@@ -51,7 +51,7 @@ TEST_CASE{
     TEST_ASSERT(SIGTERM_was_thrown);
 }
 
-static void * custom_initialize_handler(const e4c_exception * exception){
+void * custom_initialize_handler(const e4c_exception * exception){
 
     return(initialization);
 }

@@ -2,8 +2,8 @@
 # include "testing.h"
 
 
-static volatile E4C_BOOL custom_initializer_was_executed = E4C_FALSE;
-static void * custom_initialize_handler(const e4c_exception * exception);
+volatile E4C_BOOL custom_initializer_was_executed = E4C_FALSE;
+void * custom_initialize_handler(const e4c_exception * exception);
 
 
 /**
@@ -50,7 +50,7 @@ TEST_CASE{
 
 }
 
-static void * custom_initialize_handler(const e4c_exception * exception){
+void * custom_initialize_handler(const e4c_exception * exception){
 
     custom_initializer_was_executed = E4C_TRUE;
 

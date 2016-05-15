@@ -2,8 +2,8 @@
 # include "testing.h"
 
 
-static int library_3rd_party(int foobar);
-static void library_function(int foobar);
+int library_3rd_party(int foobar);
+void library_function(int foobar);
 
 
 /**
@@ -28,7 +28,7 @@ TEST_CASE{
     TEST_ASSERT(status == LIBRARY_SUCCESS);
 }
 
-static int library_3rd_party(int foobar){
+int library_3rd_party(int foobar){
 
     volatile int status = LIBRARY_SUCCESS;
 
@@ -55,7 +55,7 @@ static int library_3rd_party(int foobar){
     return(status);
 }
 
-static void library_function(int foobar){
+void library_function(int foobar){
 
     /* This exception will always be thrown */
     if(foobar){

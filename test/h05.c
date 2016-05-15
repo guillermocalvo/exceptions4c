@@ -2,9 +2,9 @@
 # include "testing.h"
 
 
-static int library_3rd_party(int foobar);
-static void library_function(int foobar);
-static int parse_exception(const e4c_exception * exception);
+int library_3rd_party(int foobar);
+void library_function(int foobar);
+int parse_exception(const e4c_exception * exception);
 
 
 /**
@@ -29,7 +29,7 @@ TEST_CASE{
     TEST_ASSERT(status == LIBRARY_FAILURE_ILLEGAL_ARGUMENT);
 }
 
-static int library_3rd_party(int foobar){
+int library_3rd_party(int foobar){
 
     volatile int status = LIBRARY_SUCCESS;
 
@@ -52,7 +52,7 @@ static int library_3rd_party(int foobar){
     return(status);
 }
 
-static void library_function(int foobar){
+void library_function(int foobar){
 
     /* This exception will always be thrown */
     if(foobar){
@@ -63,7 +63,7 @@ static void library_function(int foobar){
     TEST_FAIL("IllegalArgumentException should have been thrown");
 }
 
-static int parse_exception(const e4c_exception * exception){
+int parse_exception(const e4c_exception * exception){
 
     if( e4c_is_instance_of(exception, &InputOutputException) ){
 

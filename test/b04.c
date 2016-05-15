@@ -2,8 +2,8 @@
 # include "testing.h"
 
 
-static void * e4c_acquire_buffer(size_t bytes);
-static void e4c_dispose_buffer(void * buffer, E4C_BOOL failed);
+void * e4c_acquire_buffer(size_t bytes);
+void e4c_dispose_buffer(void * buffer, E4C_BOOL failed);
 
 
 /**
@@ -33,12 +33,12 @@ TEST_CASE{
 }
 
 
-static void * e4c_acquire_buffer(size_t bytes){
+void * e4c_acquire_buffer(size_t bytes){
 
     return( calloc( (size_t)1, bytes ) );
 }
 
-static void e4c_dispose_buffer(void * buffer, E4C_BOOL failed){
+void e4c_dispose_buffer(void * buffer, E4C_BOOL failed){
 
     (void)failed;
 

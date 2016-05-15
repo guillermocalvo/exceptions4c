@@ -61,7 +61,7 @@
 /* Test Cases */
 # define TEST_CASE \
     \
-    static void test_case(void); \
+    void test_case(void); \
     \
     int main(void){ \
         TEST_PRINT("Running test %s...", __FILE__); \
@@ -69,7 +69,7 @@
         return(EXIT_SUCCESS); \
     } \
     \
-    static void test_case(void)
+    void test_case(void)
 
 # define TEST_X_CASE TEST_CASE
 

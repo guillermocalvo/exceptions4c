@@ -2,8 +2,8 @@
 # include "testing.h"
 
 
-static int zero(int dummy);
-static int integer = 123;
+int zero(int dummy);
+int integer = 123;
 
 
 /**
@@ -47,7 +47,7 @@ TEST_CASE{
     TEST_ASSERT(caught);
 }
 
-static int zero(int dummy){
+int zero(int dummy){
 
     return(dummy ? 0 : 1);
 }
