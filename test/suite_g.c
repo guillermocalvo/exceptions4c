@@ -37,8 +37,6 @@ others won't.\
 			TEST(g20) \
 			TEST(g21) \
 			TEST(g22) \
-			TEST(g23) \
-			TEST(g24) \
 
 END_SUITE
 

@@ -5,13 +5,13 @@
 
 
 DEFINE_TEST(
-	g18,
-	"Signal SIGKILL",
-	"This test raises <code>SIGKILL</code>; the library signal handling is enabled; the exception <code>KillException</code> is caught and then the program exits.",
+	g20,
+	"Signal SIGXCPU",
+	"This test raises <code>SIGXCPU</code>; the library signal handling is enabled; the exception <code>CPUTimeException</code> is caught and then the program exits.",
 	"This functionality relies on the <strong>platform's ability to handle signals</strong>.",
 	EXIT_SUCCESS,
 	"after_CONTEXT_END",
-	"KillException_WAS_CAUGHT"
+	"CPUTimeException_WAS_CAUGHT"
 ){
 
 	E4C_BOOL	caught		= E4C_FALSE;
@@ -22,22 +22,22 @@ DEFINE_TEST(
 
 	E4C_TRY{
 
-		ECHO(("before_SIGKILL\n"));
+		ECHO(("before_SIGXCPU\n"));
 
-#ifdef SIGKILL
+#ifdef SIGXCPU
 
-		raise(SIGKILL);
+		raise(SIGXCPU);
 
 #else
 
-		ECHO(("SIGKILL_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
+		ECHO(("SIGXCPU_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
 
-		throw(KillException, "This exception simulates a signal SIGKILL");
+		throw(CPUTimeException, "This exception simulates a signal SIGXCPU");
 
 #endif
 
 		/*@-unreachable@*/
-		ECHO(("after_SIGKILL\n"));
+		ECHO(("after_SIGXCPU\n"));
 		/*@=unreachable@*/
 
 	}E4C_CATCH(SignalException){
@@ -57,7 +57,7 @@ DEFINE_TEST(
 
 	if(!caught){
 
-		ECHO(("SIGKILL_WAS_NOT_CAUGHT\n"));
+		ECHO(("SIGXCPU_WAS_NOT_CAUGHT\n"));
 
 	}
 
