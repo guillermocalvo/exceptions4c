@@ -164,12 +164,12 @@ check_PROGRAMS =                        \
 	bin/check/i13                       \
 	bin/check/i14                       \
 	bin/check/i15                       \
-    bin/check/lite/t_uncaught           \
-    bin/check/lite/t_caught             \
-    bin/check/lite/t_cleanup            \
-    bin/check/lite/t_hierarchy          \
-    bin/check/lite/t_limits             \
-    bin/check/lite/t_overflow
+    bin/check/lite/uncaught             \
+    bin/check/lite/caught               \
+    bin/check/lite/cleanup              \
+    bin/check/lite/hierarchy            \
+    bin/check/lite/limits               \
+    bin/check/lite/overflow
 
 TESTS =                                 \
 	bin/check/a01                       \
@@ -275,12 +275,12 @@ TESTS =                                 \
 	bin/check/i13                       \
 	bin/check/i14                       \
 	bin/check/i15                       \
-    bin/check/lite/t_uncaught           \
-    bin/check/lite/t_caught             \
-    bin/check/lite/t_cleanup            \
-    bin/check/lite/t_hierarchy          \
-    bin/check/lite/t_limits             \
-    bin/check/lite/t_overflow
+    bin/check/lite/uncaught             \
+    bin/check/lite/caught               \
+    bin/check/lite/cleanup              \
+    bin/check/lite/hierarchy            \
+    bin/check/lite/limits               \
+    bin/check/lite/overflow
 
 XFAIL_TESTS =                           \
 	bin/check/a01                       \
@@ -331,8 +331,8 @@ XFAIL_TESTS =                           \
 	bin/check/h06                       \
 	bin/check/h11                       \
 	bin/check/i05                       \
-    bin/check/lite/t_uncaught           \
-    bin/check/lite/t_overflow
+    bin/check/lite/uncaught             \
+    bin/check/lite/overflow
 
 tests: check
 
@@ -458,12 +458,12 @@ bin_check_i15_SOURCES                   = src/e4c.c test/i15.c
 
 # exceptions4c tests (lightweight version)
 
-bin_check_lite_t_uncaught_SOURCES       = lite/src/e4c_lite.c lite/test/t_uncaught.c
-bin_check_lite_t_caught_SOURCES         = lite/src/e4c_lite.c lite/test/t_caught.c
-bin_check_lite_t_cleanup_SOURCES        = lite/src/e4c_lite.c lite/test/t_cleanup.c
-bin_check_lite_t_hierarchy_SOURCES      = lite/src/e4c_lite.c lite/test/t_hierarchy.c
-bin_check_lite_t_limits_SOURCES         = lite/src/e4c_lite.c lite/test/t_limits.c
-bin_check_lite_t_overflow_SOURCES       = lite/src/e4c_lite.c lite/test/t_overflow.c
+bin_check_lite_uncaught_SOURCES         = lite/src/e4c_lite.c lite/test/uncaught.c
+bin_check_lite_caught_SOURCES           = lite/src/e4c_lite.c lite/test/caught.c
+bin_check_lite_cleanup_SOURCES          = lite/src/e4c_lite.c lite/test/cleanup.c
+bin_check_lite_hierarchy_SOURCES        = lite/src/e4c_lite.c lite/test/hierarchy.c
+bin_check_lite_limits_SOURCES           = lite/src/e4c_lite.c lite/test/limits.c
+bin_check_lite_overflow_SOURCES         = lite/src/e4c_lite.c lite/test/overflow.c
 
 # coverage
 
