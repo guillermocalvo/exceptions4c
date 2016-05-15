@@ -2,9 +2,9 @@
 # include "testing.h"
 
 
-static volatile E4C_BOOL custom_handler_was_executed = E4C_FALSE;
-static void check_execution(void);
-static void custom_uncaught_handler(const e4c_exception * exception);
+volatile E4C_BOOL custom_handler_was_executed = E4C_FALSE;
+void check_execution(void);
+void custom_uncaught_handler(const e4c_exception * exception);
 
 
 /**
@@ -29,12 +29,12 @@ TEST_CASE{
     e4c_context_end();
 }
 
-static void check_execution(void){
+void check_execution(void){
 
     TEST_X_ASSERT(custom_handler_was_executed);
 }
 
-static void custom_uncaught_handler(const e4c_exception * exception){
+void custom_uncaught_handler(const e4c_exception * exception){
 
     custom_handler_was_executed = E4C_TRUE;
 }

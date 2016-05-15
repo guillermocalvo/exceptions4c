@@ -2,9 +2,9 @@
 # include "testing.h"
 
 
-static char foobar[64] = "FOOBAR";
-static void * custom_initialize_handler(const e4c_exception * exception);
-static volatile E4C_BOOL custom_handler_was_initialized = E4C_FALSE;
+char foobar[64] = "FOOBAR";
+void * custom_initialize_handler(const e4c_exception * exception);
+volatile E4C_BOOL custom_handler_was_initialized = E4C_FALSE;
 
 
 /**
@@ -34,7 +34,7 @@ TEST_CASE{
     TEST_ASSERT(custom_handler_was_initialized);
 }
 
-static void * custom_initialize_handler(const e4c_exception * exception){
+void * custom_initialize_handler(const e4c_exception * exception){
 
     return(&foobar);
 }

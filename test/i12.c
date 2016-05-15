@@ -3,8 +3,8 @@
 # include <signal.h>
 
 
-static E4C_DEFINE_EXCEPTION(CustomException, "This is a custom exception", RuntimeException);
-static e4c_signal_mapping custom_mappings[3] = {
+E4C_DEFINE_EXCEPTION(CustomException, "This is a custom exception", RuntimeException);
+e4c_signal_mapping custom_mappings[3] = {
 
     E4C_IGNORE_SIGNAL(SIGTERM),
     E4C_SIGNAL_MAPPING(SIGINT, CustomException),

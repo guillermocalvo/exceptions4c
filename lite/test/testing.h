@@ -32,7 +32,7 @@
 /* Test Cases */
 # define TEST_CASE \
     \
-    static void test_case(void); \
+    void test_case(void); \
     \
     int main(void){ \
         (void)printf("    - Running test %s...\n", __FILE__); \
@@ -40,7 +40,7 @@
         return(EXIT_SUCCESS); \
     } \
     \
-    static void test_case(void)
+    void test_case(void)
 
 
 # endif

@@ -2,7 +2,7 @@
 # include "testing.h"
 
 
-static void another_function(void);
+void another_function(void);
 
 
 /**
@@ -24,7 +24,7 @@ TEST_CASE{
 }
 
 
-static void another_function(void){
+void another_function(void){
 
     E4C_THROW(RuntimeException, "Nobody will catch me.");
 }

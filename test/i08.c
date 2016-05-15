@@ -2,10 +2,10 @@
 # include "testing.h"
 
 
-static char foobar[64] = "FOOBAR";
-static void custom_finalize_handler(void * custom_data);
-static volatile E4C_BOOL custom_handler_was_initialized = E4C_FALSE;
-static volatile E4C_BOOL custom_handler_was_finalized = E4C_FALSE;
+char foobar[64] = "FOOBAR";
+void custom_finalize_handler(void * custom_data);
+volatile E4C_BOOL custom_handler_was_initialized = E4C_FALSE;
+volatile E4C_BOOL custom_handler_was_finalized = E4C_FALSE;
 
 
 /**
@@ -36,7 +36,7 @@ TEST_CASE{
     TEST_ASSERT(custom_handler_was_finalized);
 }
 
-static void custom_finalize_handler(void * custom_data){
+void custom_finalize_handler(void * custom_data){
 
     custom_handler_was_finalized = E4C_TRUE;
 }

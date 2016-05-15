@@ -3,7 +3,7 @@
 
 
 typedef struct{ int id; const char * name; } custom_data_t;
-static custom_data_t initial_data = {123, "FOOBAR"};
+custom_data_t initial_data = {123, "FOOBAR"};
 
 
 /**

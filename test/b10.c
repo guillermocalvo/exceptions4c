@@ -2,7 +2,7 @@
 # include "testing.h"
 
 
-static void aux(void);
+void aux(void);
 
 /**
  * `goto` statement in the middle of a `finally` block
@@ -26,7 +26,7 @@ TEST_CASE{
 }
 
 
-static void aux(void){
+void aux(void){
 
     E4C_TRY{
 

@@ -2,7 +2,7 @@
 # include "testing.h"
 
 
-static E4C_DEFINE_EXCEPTION(CustomException, "This is a custom exception", RuntimeException);
+E4C_DEFINE_EXCEPTION(CustomException, "This is a custom exception", RuntimeException);
 
 
 /**
