@@ -6,7 +6,10 @@ E4C_DEFINE_EXCEPTION(ColorException, "Color exception.", RuntimeException);
 E4C_DEFINE_EXCEPTION(RedException, "Red exception.", ColorException);
 
 
-TEST_CASE(test_hierarchy){
+/**
+ * Exception hierarchy
+ */
+TEST_CASE{
 
     E4C_TRY{
 
