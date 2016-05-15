@@ -204,8 +204,6 @@ bin_check_test_e4c_SOURCES =            \
     test/g20.c                          \
     test/g21.c                          \
     test/g22.c                          \
-    test/g23.c                          \
-    test/g24.c                          \
     test/h01.c                          \
     test/h02.c                          \
     test/h03.c                          \

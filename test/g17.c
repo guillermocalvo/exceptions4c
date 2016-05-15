@@ -5,13 +5,13 @@
 
 
 DEFINE_TEST(
-	g17,
-	"Signal SIGSTOP",
-	"This test raises <code>SIGSTOP</code>; the library signal handling is enabled; the exception <code>StopException</code> is caught and then the program exits.",
+	g19,
+	"Signal SIGHUP",
+	"This test raises <code>SIGHUP</code>; the library signal handling is enabled; the exception <code>HangUpException</code> is caught and then the program exits.",
 	"This functionality relies on the <strong>platform's ability to handle signals</strong>.",
 	EXIT_SUCCESS,
 	"after_CONTEXT_END",
-	"StopException_WAS_CAUGHT"
+	"HangUpException_WAS_CAUGHT"
 ){
 
 	E4C_BOOL	caught		= E4C_FALSE;
@@ -22,25 +22,22 @@ DEFINE_TEST(
 
 	E4C_TRY{
 
-		ECHO(("before_SIGSTOP\n"));
+		ECHO(("before_SIGHUP\n"));
 
-#ifdef SIGSTOP
+#ifdef SIGHUP
 
-		ECHO(("SIGSTOP_CANNOT_ACTUALLY_BE_HANDLED\n"));
-
-		/* TODO: remove mapping: SIGSTOP/StopException */
-		/* raise(SIGSTOP); */
+		raise(SIGHUP);
 
 #else
 
-		ECHO(("SIGSTOP_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
+		ECHO(("SIGHUP_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
+
+		throw(HangUpException, "This exception simulates a signal SIGHUP");
 
 #endif
 
-		throw(StopException, "This exception simulates a signal SIGSTOP");
-
 		/*@-unreachable@*/
-		ECHO(("after_SIGSTOP\n"));
+		ECHO(("after_SIGHUP\n"));
 		/*@=unreachable@*/
 
 	}E4C_CATCH(SignalException){
@@ -60,7 +57,7 @@ DEFINE_TEST(
 
 	if(!caught){
 
-		ECHO(("SIGSTOP_WAS_NOT_CAUGHT\n"));
+		ECHO(("SIGHUP_WAS_NOT_CAUGHT\n"));
 
 	}
 

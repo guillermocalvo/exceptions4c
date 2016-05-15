@@ -5,13 +5,13 @@
 
 
 DEFINE_TEST(
-	g20,
-	"Signal SIGXCPU",
-	"This test raises <code>SIGXCPU</code>; the library signal handling is enabled; the exception <code>CPUTimeException</code> is caught and then the program exits.",
+	g22,
+	"Signal SIGBREAK",
+	"This test raises <code>SIGBREAK</code>; the library signal handling is enabled; the exception <code>UserBreakException</code> is caught and then the program exits.",
 	"This functionality relies on the <strong>platform's ability to handle signals</strong>.",
 	EXIT_SUCCESS,
 	"after_CONTEXT_END",
-	"CPUTimeException_WAS_CAUGHT"
+	"UserBreakException_WAS_CAUGHT"
 ){
 
 	E4C_BOOL	caught		= E4C_FALSE;
@@ -22,22 +22,22 @@ DEFINE_TEST(
 
 	E4C_TRY{
 
-		ECHO(("before_SIGXCPU\n"));
+		ECHO(("before_SIGBREAK\n"));
 
-#ifdef SIGXCPU
+#ifdef SIGBREAK
 
-		raise(SIGXCPU);
+		raise(SIGBREAK);
 
 #else
 
-		ECHO(("SIGXCPU_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
+		ECHO(("SIGBREAK_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
 
-		throw(CPUTimeException, "This exception simulates a signal SIGXCPU");
+		throw(UserBreakException, "This exception simulates a signal SIGBREAK");
 
 #endif
 
 		/*@-unreachable@*/
-		ECHO(("after_SIGXCPU\n"));
+		ECHO(("after_SIGBREAK\n"));
 		/*@=unreachable@*/
 
 	}E4C_CATCH(SignalException){
@@ -57,7 +57,7 @@ DEFINE_TEST(
 
 	if(!caught){
 
-		ECHO(("SIGXCPU_WAS_NOT_CAUGHT\n"));
+		ECHO(("SIGBREAK_WAS_NOT_CAUGHT\n"));
 
 	}
 

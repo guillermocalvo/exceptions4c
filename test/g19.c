@@ -5,13 +5,13 @@
 
 
 DEFINE_TEST(
-	g19,
-	"Signal SIGHUP",
-	"This test raises <code>SIGHUP</code>; the library signal handling is enabled; the exception <code>HangUpException</code> is caught and then the program exits.",
+	g21,
+	"Signal SIGQUIT",
+	"This test raises <code>SIGQUIT</code>; the library signal handling is enabled; the exception <code>UserQuitException</code> is caught and then the program exits.",
 	"This functionality relies on the <strong>platform's ability to handle signals</strong>.",
 	EXIT_SUCCESS,
 	"after_CONTEXT_END",
-	"HangUpException_WAS_CAUGHT"
+	"UserQuitException_WAS_CAUGHT"
 ){
 
 	E4C_BOOL	caught		= E4C_FALSE;
@@ -22,22 +22,22 @@ DEFINE_TEST(
 
 	E4C_TRY{
 
-		ECHO(("before_SIGHUP\n"));
+		ECHO(("before_SIGQUIT\n"));
 
-#ifdef SIGHUP
+#ifdef SIGQUIT
 
-		raise(SIGHUP);
+		raise(SIGQUIT);
 
 #else
 
-		ECHO(("SIGHUP_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
+		ECHO(("SIGQUIT_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
 
-		throw(HangUpException, "This exception simulates a signal SIGHUP");
+		throw(UserQuitException, "This exception simulates a signal SIGQUIT");
 
 #endif
 
 		/*@-unreachable@*/
-		ECHO(("after_SIGHUP\n"));
+		ECHO(("after_SIGQUIT\n"));
 		/*@=unreachable@*/
 
 	}E4C_CATCH(SignalException){
@@ -57,7 +57,7 @@ DEFINE_TEST(
 
 	if(!caught){
 
-		ECHO(("SIGHUP_WAS_NOT_CAUGHT\n"));
+		ECHO(("SIGQUIT_WAS_NOT_CAUGHT\n"));
 
 	}
 

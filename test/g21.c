@@ -5,13 +5,13 @@
 
 
 DEFINE_TEST(
-	g21,
-	"Signal SIGQUIT",
-	"This test raises <code>SIGQUIT</code>; the library signal handling is enabled; the exception <code>UserQuitException</code> is caught and then the program exits.",
+	g23,
+	"Signal SIGUSR1",
+	"This test raises <code>SIGUSR1</code>; the library signal handling is enabled; the exception <code>ProgramSignal1Exception</code> is caught and then the program exits.",
 	"This functionality relies on the <strong>platform's ability to handle signals</strong>.",
 	EXIT_SUCCESS,
 	"after_CONTEXT_END",
-	"UserQuitException_WAS_CAUGHT"
+	"ProgramSignal1Exception_WAS_CAUGHT"
 ){
 
 	E4C_BOOL	caught		= E4C_FALSE;
@@ -22,22 +22,22 @@ DEFINE_TEST(
 
 	E4C_TRY{
 
-		ECHO(("before_SIGQUIT\n"));
+		ECHO(("before_SIGUSR1\n"));
 
-#ifdef SIGQUIT
+#ifdef SIGUSR1
 
-		raise(SIGQUIT);
+		raise(SIGUSR1);
 
 #else
 
-		ECHO(("SIGQUIT_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
+		ECHO(("SIGUSR1_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
 
-		throw(UserQuitException, "This exception simulates a signal SIGQUIT");
+		throw(ProgramSignal1Exception, "This exception simulates a signal SIGUSR1");
 
 #endif
 
 		/*@-unreachable@*/
-		ECHO(("after_SIGQUIT\n"));
+		ECHO(("after_SIGUSR1\n"));
 		/*@=unreachable@*/
 
 	}E4C_CATCH(SignalException){
@@ -57,7 +57,7 @@ DEFINE_TEST(
 
 	if(!caught){
 
-		ECHO(("SIGQUIT_WAS_NOT_CAUGHT\n"));
+		ECHO(("SIGUSR1_WAS_NOT_CAUGHT\n"));
 
 	}
 
