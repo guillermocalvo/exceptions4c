@@ -464,3 +464,13 @@ bin_check_lite_t_cleanup_SOURCES        = lite/src/e4c_lite.c lite/test/t_cleanu
 bin_check_lite_t_hierarchy_SOURCES      = lite/src/e4c_lite.c lite/test/t_hierarchy.c
 bin_check_lite_t_limits_SOURCES         = lite/src/e4c_lite.c lite/test/t_limits.c
 bin_check_lite_t_overflow_SOURCES       = lite/src/e4c_lite.c lite/test/t_overflow.c
+
+# coverage
+
+coverage: check e4c.c.gcov e4c_lite.c.gcov
+
+e4c.c.gcov:
+	gcov src/e4c.c --object-directory src/*
+
+e4c_lite.c.gcov:
+	gcov lite/src/e4c_lite.c --object-directory lite/src/*
