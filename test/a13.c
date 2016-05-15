@@ -2,21 +2,19 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	a13,
-	"reacquire() without beginning",
-	"This test uses the library improperly, by attempting to <strong>call <code>reacquire()</code></strong>, without having called <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_REACQUIRE",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `e4c_context_end` call without beginning
+ *
+ * This test uses the library improperly, by attempting to call
+ * `e4c_context_end`, without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_REACQUIRE\n"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	E4C_REACQUIRE(10);
-
-	ECHO(("after_REACQUIRE\n"));
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

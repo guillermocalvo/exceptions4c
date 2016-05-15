@@ -2,54 +2,55 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	e01,
-	"Uncaught exception with a finally{...} block",
-	"This test checks the execution of a <code>finally</code> block. The expected behavior is:"
-		"<ol>"
-		"<li>The test starts a <code>try</code> block with a <code>finally</code> block.</li>"
-		"<li>The test throws an exception from inside the <code>try</code> block.</li>"
-		"<li>There is no <code>catch</code> block to handle it.</li>"
-		"<li>The <code>finally</code> block is executed.</li>"
-		"<li>The program is terminated.</li>"
-		"</ol>",
-	NULL,
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"inside_FINALLY_block",
-	"WildException"
-){
+static void another_function(volatile E4C_BOOL * flag);
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(E4C_TRUE);
+/**
+ * Uncaught exception with a `finally` block
+ *
+ * This test checks the execution of a `finally` block.
+ *
+ * The expected behavior is:
+ *
+ *   - The test starts a `try` block with a `catch` block.
+ *   - A function is called from the `try` block.
+ *     - The function starts a `try` block with a `finally` block.
+ *     - An exception is thrown from the `try` block.
+ *     - There is no `catch` block to handle it.
+ *     - The `finally` block is executed.
+ *   - The outter `catch` block catches the exception.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_TRY_FINALLY_block\n"));
+    volatile E4C_BOOL cleanup = E4C_FALSE;
 
-	E4C_TRY{
+    e4c_context_begin(E4C_FALSE);
 
-		ECHO(("before_THROW\n"));
+    E4C_TRY{
 
-		E4C_THROW(WildException, "Nobody will catch me.");
+        another_function(&cleanup);
 
-		/*@-unreachable@*/
+    }E4C_CATCH(RuntimeException){
 
-		ECHO(("after_THROW\n"));
+        TEST_ASSERT(  e4c_is_instance_of(e4c_get_exception(), &IllegalArgumentException) );
+    }
 
-		/*@=unreachable@*/
+    TEST_ASSERT(cleanup);
 
-	}E4C_FINALLY{
+    e4c_context_end();
+}
 
-		ECHO(("inside_FINALLY_block\n"));
+static void another_function(volatile E4C_BOOL * flag){
 
-	}
+    E4C_TRY{
 
-	ECHO(("after_TRY_FINALLY_block\n"));
+        E4C_THROW(IllegalArgumentException, "Get me out of here.");
 
-	ECHO(("before_CONTEXT_END\n"));
+    }E4C_FINALLY{
 
-	e4c_context_end();
+        *flag = E4C_TRUE;
+    }
 
-	ECHO(("after_CONTEXT_END\n"));
-
-	return(EXIT_SUCCESS);
+    *flag = E4C_FALSE;
 }

@@ -2,188 +2,83 @@
 # include "testing.h"
 
 
-static void aux5(void)
-/*@globals
-	fileSystem,
-	internalState,
+static void aux1(void);
+static void aux2(void);
+static void aux3(void);
+static void aux4(void);
+static void aux5(void);
 
-	NotEnoughMemoryException,
-	NullPointerException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
 
-	ECHO(("inside_aux5\n"));
+/**
+ * Catching an exception thrown deep down the call stack
+ *
+ * This test starts a `try` block, and calls a function. That function calls
+ * another one, and so on. Eventually, one of those functions will throw an
+ * exception that will be caught by a `catch(RuntimeException)` right next to
+ * the `try` block.",
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_THROW\n"));
+    volatile E4C_BOOL caught = E4C_FALSE;
 
-	E4C_THROW(TamedException, "I'm going to be caught.");
+    e4c_context_begin(E4C_FALSE);
 
-	/*@-unreachable@*/
+    E4C_TRY{
 
-	ECHO(("before_EXIT_aux5\n"));
+        aux1();
 
-	/*@=unreachable@*/
-}
+    }E4C_CATCH(RuntimeException){
 
-static void aux4(void)
-/*@globals
-	fileSystem,
-	internalState,
+        caught = E4C_TRUE;
 
-	AssertionException,
-	NotEnoughMemoryException,
-	NullPointerException,
-	ProgramSignalException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
+        TEST_ASSERT_EQUALS(e4c_get_exception()->type, &RuntimeException);
+    }
 
-	ECHO(("inside_aux4\n"));
+    e4c_context_end();
 
-	E4C_TRY{
-
-		aux5();
-
-	}E4C_CATCH(ProgramSignalException){
-
-		ECHO(("inside_AUX4_CATCH_block\n"));
-
-	}
-
-	ECHO(("before_EXIT_aux4\n"));
-}
-
-static void aux3(void)
-/*@globals
-	fileSystem,
-	internalState,
-
-	AssertionException,
-	NotEnoughMemoryException,
-	NullPointerException,
-	ProgramSignalException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
-
-	ECHO(("inside_aux3\n"));
-
-	aux4();
-
-	ECHO(("before_EXIT_aux3\n"));
-}
-
-static void aux2(void)
-/*@globals
-	fileSystem,
-	internalState,
-
-	AssertionException,
-	NotEnoughMemoryException,
-	NullPointerException,
-	ProgramSignalException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
-
-	ECHO(("inside_aux2\n"));
-
-	E4C_TRY{
-
-		aux3();
-
-	}
-
-	ECHO(("before_EXIT_aux2\n"));
+    TEST_ASSERT(caught);
 }
 
 
-static void aux1(void)
-/*@globals
-	fileSystem,
-	internalState,
+static void aux1(void){
 
-	AssertionException,
-	NotEnoughMemoryException,
-	NullPointerException,
-	ProgramSignalException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
-
-	ECHO(("inside_aux1\n"));
-
-	aux2();
-
-	ECHO(("before_EXIT_aux1\n"));
+    aux2();
 }
 
-/*@-globs@*/ /* ProgramSignalException */
-DEFINE_TEST(
-	f07,
-	"Catching an exception thrown deep down the call stack",
-	"This test starts a <code>try</code> block, and calls a function. That function calls another one, and so on. Eventually, one of those functions will throw an exception that will be caught by a <code>catch(TamedException)</code> right next to the <code>try</code> block.",
-	NULL,
-	EXIT_SUCCESS,
-	"exception_WAS_caught",
-	NULL
-){
+static void aux2(void){
 
-	E4C_BOOL caught = E4C_FALSE;
+    E4C_TRY{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+        aux3();
 
-	e4c_context_begin(E4C_TRUE);
+    }E4C_FINALLY{
 
-	ECHO(("before_TRY_block\n"));
-
-	E4C_TRY{
-
-		ECHO(("before_CALL_FUNCTION_aux1\n"));
-
-		aux1();
-
-		ECHO(("after_CALL_FUNCTION_aux1\n"));
-
-	}E4C_CATCH(TamedException){
-
-		caught = E4C_TRUE;
-
-		ECHO(("inside_MAIN_CATCH_block\n"));
-
-		ECHO(("catching__%s\n", e4c_get_exception()->name));
-	}
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	if(caught){
-
-		ECHO(("exception_WAS_caught\n"));
-
-	}else{
-
-		ECHO(("exception_WAS_NOT_caught\n"));
-
-	}
-
-	return(EXIT_SUCCESS);
+        /* The exception has not been caught yet */
+        TEST_ASSERT_EQUALS(e4c_get_status(), e4c_failed);
+    }
 }
-/*@=globs@*/ /* ProgramSignalException */
+
+static void aux3(void){
+
+    aux4();
+}
+
+static void aux4(void){
+
+    E4C_TRY{
+
+        aux5();
+
+    }E4C_CATCH(ProgramSignalException){
+
+        TEST_FAIL("Block `catch(ProgramSignalException)` cannot handle a RuntimeException");
+    }
+}
+
+static void aux5(void){
+
+    E4C_THROW(RuntimeException, "I'm going to be caught.");
+
+    TEST_FAIL("RuntimeException should have been thrown");
+}

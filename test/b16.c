@@ -2,27 +2,23 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b16,
-	"e4c_print_exception(NULL)",
-	"This test uses the library in an inconsistent way, by attempting to pass <code>NULL</code> to <code>e4c_print_exception</code>. The library must signal the misuse by throwing the exception <code>NullPointerException</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_PRINT_EXCEPTION",
-	"NullPointerException"
-){
+/**
+ * `e4c_print_exception(NULL)`
+ *
+ * This test uses the library in an inconsistent way, by attempting to pass
+ * `NULL` to `e4c_print_exception`.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `NullPointerException`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN_block\n"));
+    TEST_EXPECTING(NullPointerException);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_PRINT_EXCEPTION\n"));
+    e4c_print_exception(NULL);
 
-	e4c_print_exception(NULL);
-
-	ECHO(("before_CONTEXT_END_block\n"));
-
-	e4c_context_end();
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

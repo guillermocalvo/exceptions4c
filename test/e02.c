@@ -2,93 +2,75 @@
 # include "testing.h"
 
 
-static void aux(void)
-/*@globals
-	fileSystem,
-	internalState,
+static void another_function(volatile E4C_BOOL * flag1, volatile E4C_BOOL * flag2);
+static void yet_another_function(volatile E4C_BOOL * flag2);
 
-	AssertionException,
-	NotEnoughMemoryException,
-	NullPointerException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
 
-	ECHO(("before_SECOND_TRY_FINALLY_block\n"));
+/**
+ * Uncaught exception with a pair of `finally` blocks
+ *
+ * This test checks the execution of two consecutive `finally` blocks.
+ *
+ * The expected behavior is:
+ *
+ *   - The test starts a `try` block with a `catch` block.
+ *   - A function is called from the `try` block.
+ *     - The function starts a `try` block with a `finally` #1 block.
+ *     - Another function is called from the `try` block.
+ *       - The function starts a `try` block with a `finally` #2 block.
+ *       - The function throws an exception from its `try` block.
+ *       - There is no `catch` block to handle it.
+ *       - The `finally` #2 block (of the function) is executed.
+ *     - The `finally` #1 block (of the test) is executed.
+ *   - The outter `catch` block catches the exception.
+ *
+ */
+TEST_CASE{
 
-	E4C_TRY{
+    volatile E4C_BOOL cleanup1 = E4C_FALSE;
+    volatile E4C_BOOL cleanup2 = E4C_FALSE;
 
-		ECHO(("before_THROW\n"));
+    e4c_context_begin(E4C_FALSE);
 
-		E4C_THROW(WildException, "Nobody will catch me.");
+    E4C_TRY{
 
-		/*@-unreachable@*/
+        another_function(&cleanup1, &cleanup2);
 
-		ECHO(("after_THROW\n"));
+    }E4C_CATCH(RuntimeException){
 
-		/*@=unreachable@*/
+        TEST_ASSERT(  e4c_is_instance_of(e4c_get_exception(), &IllegalArgumentException) );
+    }
 
-	}E4C_FINALLY{
+    TEST_ASSERT(cleanup1);
+    TEST_ASSERT(cleanup2);
 
-		ECHO(("inside_SECOND_FINALLY_block__"));
-
-	}
-
-	ECHO(("after_SECOND_TRY_FINALLY_block\n"));
-
+    e4c_context_end();
 }
 
-DEFINE_TEST_LONG_DESCRIPTION(
-	e02,
-	"Uncaught exception with a pair of finally{...} blocks",
-	"This test checks the execution of two consecutive <code>finally</code> blocks. The expected behavior is:"
-		"<ol>"
-		"<li>The test starts a <code>try</code> block with a <code>finally</code> block.</li>"
-		"<li>The test calls a function from inside the <code>try</code> block.</li>"
-		"<li>The function starts a <code>try</code> block with a <code>finally</code> block.</li>"
-		"<li>The function throws an exception from inside its <code>try</code> block.</li>",
-		"<li>There is no <code>catch</code> block to handle it.</li>"
-		"<li>The <code>finally</code> block (of the function) is executed.</li>"
-		"<li>The <code>finally</code> block (of the test) is executed.</li>"
-		"<li>The program is terminated.</li>"
-		"</ol>",
-	NULL,
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"inside_SECOND_FINALLY_block____and_then____FIRST_FINALLY_block",
-	"WildException"
-){
+static void another_function(volatile E4C_BOOL * flag1, volatile E4C_BOOL * flag2){
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    E4C_TRY{
 
-	e4c_context_begin(E4C_TRUE);
+        yet_another_function(flag2);
 
-	ECHO(("before_FIRST_TRY_FINALLY_block\n"));
+    }E4C_FINALLY{
 
-	E4C_TRY{
+        *flag1 = E4C_TRUE;
+    }
 
-		ECHO(("before_CALL_FUNCTION_aux\n"));
+    *flag1 = E4C_FALSE;
+}
 
-		aux();
+static void yet_another_function(volatile E4C_BOOL * flag2){
 
-		ECHO(("after_CALL_FUNCTION_aux\n"));
+    E4C_TRY{
 
-	}E4C_FINALLY{
+        E4C_THROW(IllegalArgumentException, "Get me out of here.");
 
-		ECHO(("__and_then____FIRST_FINALLY_block\n"));
+    }E4C_FINALLY{
 
-	}
+        *flag2 = E4C_TRUE;
+    }
 
-	ECHO(("after_FIRST_TRY_FINALLY_block\n"));
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-
-	return(EXIT_SUCCESS);
+    *flag2 = E4C_FALSE;
 }

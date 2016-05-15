@@ -2,66 +2,57 @@
 # include "testing.h"
 
 
-static char foobar[] = "FOOBAR";
-
-static void * custom_initialize_handler(const e4c_exception * exception){
-
-	fprintf(stderr, "CUSTOM_INITIALIZE_HANDLER\n");
-
-	return(foobar);
-}
+static volatile E4C_BOOL custom_initializer_was_executed = E4C_FALSE;
+static void * custom_initialize_handler(const e4c_exception * exception);
 
 
-DEFINE_TEST(
-	i14,
-	"Mixing custom initialization handler and formatted message",
-	"This test sets custom initialization handler and throws an exception with a formatted message.",
-	NULL,
-	EXIT_SUCCESS,
-	"before_CONTEXT_END",
-	"WildException_FOOBAR"
-){
+/**
+ * Mixing custom initialization handler and formatted message
+ *
+ * This test sets custom *initialization handler* and *throws* an exception with
+ * a formatted message.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+# if !defined(E4C_THROWF) && !defined(HAVE_VSNPRINTF)
 
-	e4c_context_begin(E4C_FALSE);
-
-	ECHO(("before_SET_HANDLERS\n"));
-
-	e4c_context_set_handlers(NULL, NULL, custom_initialize_handler, NULL);
-
-	E4C_TRY{
-
-		ECHO(("before_THROWF\n"));
-
-# ifdef E4C_THROWF
-
-		E4C_THROWF(WildException, "%s_%s", "FORMATTED", "MESSAGE");
-
-# elif defined(HAVE_VSNPRINTF)
-
-		e4c_exception_throw_format_(&WildException, "file", 123, "function", "%s_%s", "FORMATTED", "MESSAGE");
+    TEST_SKIP("This platform does not support variadic macros or vsnprintf");
 
 # else
 
-		E4C_THROW(WildException, "No variadic macros support");
+    e4c_context_begin(E4C_FALSE);
+
+    e4c_context_set_handlers(NULL, NULL, custom_initialize_handler, NULL);
+
+    E4C_TRY{
+
+#  ifdef E4C_THROWF
+
+        E4C_THROWF(RuntimeException, "%s_%s", "FORMATTED", "MESSAGE");
+
+#  elif defined(HAVE_VSNPRINTF)
+
+        e4c_exception_throw_format_(&RuntimeException, "file", 123, "function", "%s_%s", "FORMATTED", "MESSAGE");
 
 # endif
 
-		ECHO(("after_THROWF\n"));
+    }E4C_CATCH(RuntimeException){
 
-	}E4C_CATCH(RuntimeException){
+        TEST_ASSERT_STRING_EQUALS(e4c_get_exception()->message, "FORMATTED_MESSAGE");
+    }
 
-		ECHO(("inside_CATCH_block\n"));
+    e4c_context_end();
 
-		fprintf(stderr, "%s_%s", e4c_get_exception()->name, (const char *)e4c_get_exception()->custom_data);
-	}
+    TEST_ASSERT(custom_initializer_was_executed);
 
-	ECHO(("before_CONTEXT_END\n"));
+# endif
 
-	e4c_context_end();
+}
 
-	(void)fflush(stderr);
+static void * custom_initialize_handler(const e4c_exception * exception){
 
-	return(EXIT_SUCCESS);
+    custom_initializer_was_executed = E4C_TRUE;
+
+    return(NULL);
 }

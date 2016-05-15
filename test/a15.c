@@ -2,21 +2,19 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	a15,
-	"e4c_get_status() without beginning",
-	"This test uses the library improperly, by attempting to <strong>call <code>e4c_get_status()</code></strong>, without having called <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_GET_STATUS",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `e4c_context_set_signal_mappings` call without beginning
+ *
+ * This test uses the library improperly, by attempting to call
+ * `e4c_context_set_signal_mappings`, without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_GET_STATUS"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	(void)e4c_get_status();
-
-	ECHO(("after_GET_STATUS\n"));
-
-	return(EXIT_SUCCESS);
+    e4c_context_set_signal_mappings(NULL);
 }

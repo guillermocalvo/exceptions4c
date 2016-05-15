@@ -1,137 +1,79 @@
 
 # include "testing.h"
 
-static int parse_exception(const e4c_exception * exception)
-/*@*/
-{
 
-	if(exception->type == &WildException){
+static int library_3rd_party(int foobar);
+static void library_function(int foobar);
+static int parse_exception(const e4c_exception * exception);
 
-		return(123);
-	}
 
-	return(-123);
+/**
+ * A library (called by an exception-unaware client) does not catch an exception
+ *
+ * This test simulates calling an external function (as in a library function).
+ * The client code is *exception-unaware*, but the external function uses the
+ * exception framework. So the external function uses a `e4c_reusing_context`
+ * block and then a new exception context is created.
+ *
+ * The external function does not catch an exception, however, the external
+ * function inspects the error and return an status code to its caller.
+ *
+ */
+TEST_CASE{
+
+    int status;
+
+    /* The client will check the returned error code */
+    status = library_3rd_party(123);
+
+    TEST_ASSERT(status == LIBRARY_FAILURE_ILLEGAL_ARGUMENT);
 }
 
-static void aux(/*@null@*/ void * pointer)
-/*@globals
-	fileSystem,
-	internalState,
+static int library_3rd_party(int foobar){
 
-	NotEnoughMemoryException,
-	NullPointerException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
-	if(pointer == NULL){
-		ECHO(("____aux_before_THROW\n"));
-		E4C_THROW(WildException, "The REUSING_CONTEXT block will mute me.");
-	}else{
-		ECHO(("____aux_no_exception_was_thrown\n"));
-	}
+    volatile int status = LIBRARY_SUCCESS;
+
+    /* We know that the client is exception-unaware */
+    TEST_ASSERT( !e4c_context_is_ready() );
+
+    {
+        e4c_reusing_context(status, E4C_ON_FAILURE(parse_exception) ){
+
+            E4C_TRY{
+
+                library_function(foobar);
+            }
+        }
+    }
+
+    /* The exception context must have finished by now */
+    TEST_ASSERT( !e4c_context_is_ready() );
+
+    return(status);
 }
 
-static int ext(void)
-/*@globals
-	fileSystem,
-	internalState,
+static void library_function(int foobar){
 
-	e4c_default_signal_mappings,
+    /* This exception will always be thrown */
+    if(foobar){
 
-	AssertionException,
-	NotEnoughMemoryException,
-	NullPointerException,
-	RuntimeException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
+        E4C_THROW(IllegalArgumentException, "The REUSING_CONTEXT block will mute me.");
+    }
 
-	volatile int		status = 0;
-	volatile E4C_BOOL	is_ready1;
-	volatile E4C_BOOL	is_ready2;
-
-	is_ready1 = e4c_context_is_ready();
-
-	if(is_ready1){
-		ECHO(("__ext_the_context_WAS_ready\n"));
-	}else{
-		ECHO(("__ext_the_context_WAS_NOT_ready\n"));
-	}
-
-	ECHO(("__ext_before_REUSING_CONTEXT\n"));
-
-	{
-		e4c_reusing_context(status, E4C_ON_FAILURE(parse_exception) ){
-
-			ECHO(("__ext_before_TRY_block\n"));
-
-			E4C_TRY{
-
-				ECHO(("__ext_before_CALL_FUNCTION_aux\n"));
-
-				aux(NULL);
-
-				ECHO(("__ext_after_CALL_FUNCTION_aux\n"));
-
-			}
-
-			ECHO(("__ext_after_TRY_block\n"));
-
-		}
-	}
-
-	ECHO(("__ext_after_REUSING_CONTEXT\n"));
-
-	is_ready2 = e4c_context_is_ready();
-
-	if(is_ready2){
-		ECHO(("__ext_the_context_IS_ready\n"));
-	}else{
-		ECHO(("__ext_the_context_IS_NOT_ready\n"));
-	}
-
-	if( BOOL_NOT_EQUAL(is_ready1, is_ready2) ){
-		return(112233);
-	}
-
-	if(status == 0){
-
-		ECHO(("__ext_there_was_no_error\n"));
-
-	}else{
-
-		ECHO(("__ext_there_was_an_error\n"));
-
-	}
-
-	return(status);
+    TEST_FAIL("IllegalArgumentException should have been thrown");
 }
 
-DEFINE_TEST(
-	h05,
-	"A library (exception-unaware client) does not catch an exception",
-	"This tests simulates a call to an external function (as in a library function). The client code is <em>exception-unaware</em>, but the external function uses the exception framework. So the external function opens a <code>e4c_reusing_context</code> and then a new exception context is created. The external function does not catch an exception, however, the <code>e4c_reusing_context</code> allows the external function to inspect the error and return an status code to its caller.",
-	NULL,
-	EXIT_SUCCESS,
-	"result_was_123",
-	NULL
-){
+static int parse_exception(const e4c_exception * exception){
 
-	int result;
+    if( e4c_is_instance_of(exception, &InputOutputException) ){
 
-	ECHO(("before_CALL_FUNCTION_ext\n"));
+        return(LIBRARY_FAILURE_IO);
+    }
 
-	result = ext();
+    if( e4c_is_instance_of(exception, &IllegalArgumentException) ){
 
-	ECHO(("after_CALL_FUNCTION_ext\n"));
+        return(LIBRARY_FAILURE_ILLEGAL_ARGUMENT);
+    }
 
-	ECHO(("result_was_%d\n", result));
-
-	return(EXIT_SUCCESS);
+    return(LIBRARY_FAILURE);
 }

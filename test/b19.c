@@ -2,27 +2,23 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b19,
-	"Reacquiring with no with{...} block",
-	"This test uses the library in an inconsistent way, by attempting to <code>reacquire</code> without having entered a <code>WITH</code> block. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_REACQUIRE",
-	"ExceptionSystemFatalError"
-){
+/**
+ * `reacquire` statement with no `with... use` block
+ *
+ * This test uses the library in an inconsistent way, by attempting to
+ * `reacquire` without having entered a `with` block.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ExceptionSystemFatalError`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN_block\n"));
+    TEST_EXPECTING(ExceptionSystemFatalError);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_REACQUIRE\n"));
+    E4C_REACQUIRE(10);
 
-	E4C_REACQUIRE(10);
-
-	ECHO(("before_CONTEXT_END_block\n"));
-
-	e4c_context_end();
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

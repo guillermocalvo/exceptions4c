@@ -2,57 +2,44 @@
 # include "testing.h"
 
 
-static void aux(void)
-/*@globals
-	fileSystem,
-	internalState,
+static void aux(void);
 
-	AssertionException,
-	NotEnoughMemoryException,
-	NullPointerException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
 
-	ECHO(("before_TRY_block\n"));
+/**
+ * `return` statement in the middle of a `catch` block
+ *
+ * This test uses the library in an inconsistent way, by returning from a
+ * function in the middle of a `catch` block.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ExceptionSystemFatalError`.
+ *
+ */
+TEST_CASE{
 
-	E4C_TRY{
-		ECHO(("inside_TRY_block\n"));
-		E4C_THROW(TamedException, "Hey! you cannot return in the middle of a catch block.");
-	}E4C_CATCH(TamedException){
-		ECHO(("inside_CATCH_block\n"));
-		return;
-	}
+    TEST_EXPECTING(ExceptionSystemFatalError);
 
-	ECHO(("after_TRY_block\n"));
+    e4c_context_begin(E4C_FALSE);
+
+    aux();
+
+    e4c_context_end();
 }
 
-DEFINE_TEST(
-	b09,
-	"return... in the middle of a catch{...} block",
-	"This test uses the library in an inconsistent way, by <strong>returning from a function in the middle of a <code>catch</code> block</strong>. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_CONTEXT_END",
-	"ExceptionSystemFatalError"
-){
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+static void aux(void){
 
-	e4c_context_begin(E4C_TRUE);
+    E4C_TRY{
 
-	ECHO(("before_CALL_FUNCTION_aux\n"));
+        TEST_ECHO("Inside `try` block...");
 
-	aux();
+        E4C_THROW(RuntimeException, NULL);
 
-	ECHO(("before_CONTEXT_END\n"));
+    }E4C_CATCH(RuntimeException){
 
-	e4c_context_end();
+        TEST_ECHO("Inside `catch` block...");
 
-	ECHO(("after_CONTEXT_END\n"));
-
-	return(EXIT_SUCCESS);
+        /* Never jump out of a `catch` block! */
+        return;
+    }
 }

@@ -2,21 +2,35 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	a09,
-	"e4c_context_set_handlers() without beginning",
-	"This test uses the library improperly, by attempting to <strong>call <code>e4c_context_set_handlers()</code></strong>, without having called <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_CONTEXT_SET_HANDLERS",
-	"ContextHasNotBegunYet"
-){
+# define e4c_acquire_memory malloc
+# define e4c_dispose_memory(buffer, failed) free(buffer)
+# define e4c_using_memory(buffer, bytes) \
+    E4C_WITH(buffer, e4c_dispose_memory){ \
+        buffer = e4c_acquire_memory(bytes); \
+        if(!buffer){ \
+            E4C_THROW(NotEnoughMemoryException, NULL); \
+        } \
+    }E4C_USE
 
-	ECHO(("before_CONTEXT_SET_HANDLERSn"));
 
-	e4c_context_set_handlers(NULL, NULL, NULL, NULL);
+/**
+ * `e4c_using_memory` block without beginning
+ *
+ * This test uses the library improperly, by attempting to start a
+ * `e4c_using_memory` block, without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("after_CONTEXT_SET_HANDLERS\n"));
+    char * tmp;
 
-	return(EXIT_SUCCESS);
+    TEST_EXPECTING(ContextHasNotBegunYet);
+
+    e4c_using_memory(tmp, (size_t)256){
+
+        free(tmp);
+    }
 }

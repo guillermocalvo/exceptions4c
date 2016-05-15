@@ -2,21 +2,31 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	a07,
-	"e4c_context_get_signal_mappings() without beginning",
-	"This test uses the library improperly, by attempting to <strong>call <code>e4c_context_get_signal_mappings()</code></strong>, without having called <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_CONTEXT_GET_SIGNAL_MAPPINGS",
-	"ContextHasNotBegunYet"
-){
+# define deallocate_buffer(resource, failed) free(resource)
 
-	ECHO(("before_CONTEXT_GET_SIGNAL_MAPPINGS\n"));
 
-	(void)e4c_context_get_signal_mappings();
+/**
+ * `with... use` block without beginning
+ *
+ * This test uses the library improperly, by attempting to start a `with... use`
+ * block, without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("after_CONTEXT_GET_SIGNAL_MAPPINGS\n"));
+    char * tmp = NULL;
 
-	return(EXIT_SUCCESS);
+    TEST_EXPECTING(ContextHasNotBegunYet);
+
+    E4C_WITH(tmp, deallocate_buffer){
+
+        tmp = malloc( (size_t)256 );
+
+    }E4C_USE{
+
+        free(tmp);
+    }
 }

@@ -2,57 +2,45 @@
 # include "testing.h"
 
 
-static void aux(void)
-/*@globals
-	fileSystem,
-	internalState,
+static void aux(void);
 
-	AssertionException,
-	NotEnoughMemoryException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
+/**
+ * `goto` statement in the middle of a `finally` block
+ *
+ * This test uses the library in an inconsistent way, by using `goto` to jump
+ * out of a `finally` block.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ExceptionSystemFatalError`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_TRY_block\n"));
+    TEST_EXPECTING(ExceptionSystemFatalError);
 
-	E4C_TRY{
-		ECHO(("inside_TRY_block\n"));
-	}E4C_FINALLY{
-		ECHO(("inside_FINALLY_block\n"));
-		goto out_of_try_block;
-	}
+    e4c_context_begin(E4C_FALSE);
 
-	out_of_try_block:
+    aux();
 
-	ECHO(("after_TRY_block\n"));
+    e4c_context_end();
 }
 
-DEFINE_TEST(
-	b10,
-	"goto... in the middle of a finally{...} block",
-	"This test uses the library in an inconsistent way, by <strong>using <code>goto</code> to jump out of a <code>finally</code> block</strong>. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_CONTEXT_END",
-	"ExceptionSystemFatalError"
-){
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+static void aux(void){
 
-	e4c_context_begin(E4C_TRUE);
+    E4C_TRY{
 
-	ECHO(("before_CALL_FUNCTION_aux\n"));
+        TEST_ECHO("Inside `try` block...");
 
-	aux();
+    }E4C_FINALLY{
 
-	ECHO(("before_CONTEXT_END\n"));
+        TEST_ECHO("Inside `finally` block...");
 
-	e4c_context_end();
+        /* Never jump out of a `finally` block! */
+        goto out_of_finally_block;
+    }
 
-	ECHO(("after_CONTEXT_END\n"));
+    out_of_finally_block:
 
-	return(EXIT_SUCCESS);
+    TEST_ECHO("Out of `finally` block...");
 }

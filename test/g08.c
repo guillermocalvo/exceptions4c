@@ -2,78 +2,52 @@
 # include "testing.h"
 
 
-static int set_zero_g08(int dummy)
-/*@*/
-{
+static int zero(int dummy);
+static int integer = 123;
 
-	if(dummy == 0){
-		return(1);
-	}
 
-	return(0);
+/**
+ * Catching `ArithmeticException`
+ *
+ * This test attempts to divide by zero; the library signal handling is enabled.
+ * The library will convert the signal `SIGFPE` into the exception
+ * `ArithmeticException`. There is a `catch(SignalException)` block, therefore
+ * the exception will be caught.
+ *
+ * This functionality relies on the platform's ability to handle signal
+ * `SIGFPE`.
+ *
+ */
+TEST_CASE{
+
+    volatile E4C_BOOL caught = E4C_FALSE;
+
+    e4c_context_begin(E4C_TRUE);
+
+    E4C_TRY{
+
+        int divisor = 10;
+
+        divisor = zero(integer);
+        integer = integer / divisor;
+
+        TEST_DUMP("%d", integer);
+
+        TEST_FAIL("ArithmeticException should have been thrown");
+
+    }E4C_CATCH(SignalException){
+
+        caught = E4C_TRUE;
+
+        TEST_ASSERT(e4c_get_exception()->type == &ArithmeticException);
+    }
+
+    e4c_context_end();
+
+    TEST_ASSERT(caught);
 }
 
+static int zero(int dummy){
 
-DEFINE_TEST(
-	g08,
-	"Catching a division by zero exception",
-	"This test attempts to divide by zero; the library signal handling is enabled; the exception is caught (<code>catch(SignalException)</code>)and then the program exits.",
-	"This functionality relies on the <a href=\"#requirement_z08\"><strong>platform's ability to handle signal <code>SIGFPE</code></strong></a>.",
-	EXIT_SUCCESS,
-	"after_CONTEXT_END",
-	"the_signal_WAS_CAUGHT"
-){
-
-	E4C_BOOL	caught		= E4C_FALSE;
-
-	ECHO(("before_CONTEXT_BEGIN\n"));
-
-	e4c_context_begin(E4C_TRUE);
-
-	ECHO(("before_TRY_block\n"));
-
-	E4C_TRY{
-
-		int		divisor			= 10;
-		int		integer			= 100;
-
-		/* some smartypants compilers might need to be fooled */
-		/* divisor = 0; */
-
-		ECHO(("before_SET_ZERO\n"));
-
-		divisor = set_zero_g08(divisor);
-
-		ECHO(("before_DIVISION_BY_ZERO\n"));
-
-		integer = integer / divisor;
-
-		ECHO(("after_DIVISION_BY_ZERO_%d\n", integer));
-
-	}E4C_CATCH(SignalException){
-
-		ECHO(("inside_CATCH_block\n"));
-
-		caught = E4C_TRUE;
-
-		ECHO(("catching__%s\n", e4c_get_exception()->name));
-
-	}
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-	if(caught){
-		fprintf(stderr, "\nthe_signal_WAS_CAUGHT\n");
-	}else{
-		fprintf(stderr, "\nthe_signal_WAS_NOT_CAUGHT\n");
-	}
-
-	(void)fflush(stderr);
-
-	return(EXIT_SUCCESS);
-
+    return(dummy ? 0 : 1);
 }

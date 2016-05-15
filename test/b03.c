@@ -1,44 +1,36 @@
 
 # include "testing.h"
 
+
 # define deallocate_buffer(resource, failed) free(resource)
 
 
-DEFINE_TEST(
-	b03,
-	"with-use{...} after having ended",
-	"This test uses the library in an inconsistent way, by attempting to <strong>start a <code>with... use</code> block</strong>, after having called <code>e4c_context_end()</code>. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_WITH_block",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `with... use` block after having ended
+ *
+ * This test uses the library in an inconsistent way, by attempting to start a
+ * `with... use` block, after calling `e4c_context_end`.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	char * buffer = NULL;
+    char * buffer = NULL;
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_CONTEXT_END\n"));
+    e4c_context_end();
 
-	e4c_context_end();
+    E4C_WITH(buffer, deallocate_buffer){
 
-	ECHO(("before_WITH_block\n"));
+        buffer = malloc( (size_t)256 );
 
-	E4C_WITH(buffer, deallocate_buffer){
+    }E4C_USE{
 
-		buffer = malloc( (size_t)256 );
-
-		ECHO(("inside_WITH_block\n"));
-
-	}E4C_USE{
-
-		ECHO(("inside_USE_block\n"));
-
-	}
-
-	ECHO(("after_USE_block\n"));
-
-	return(EXIT_SUCCESS);
+        THIS_SHOULD_NOT_HAPPEN;
+    }
 }

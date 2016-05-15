@@ -2,27 +2,23 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b18,
-	"Retrying with no try{...} block",
-	"This test uses the library in an inconsistent way, by attempting to <code>retry</code> without having entered a <code>try</code> block. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_RETRY",
-	"ExceptionSystemFatalError"
-){
+/**
+ * `retry` statement with no `try` block
+ *
+ * This test uses the library in an inconsistent way, by attempting to `retry`
+ * without having entered a `try` block.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ExceptionSystemFatalError`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN_block\n"));
+    TEST_EXPECTING(ExceptionSystemFatalError);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_RETRY\n"));
+    E4C_RETRY(10);
 
-	E4C_RETRY(10);
-
-	ECHO(("before_CONTEXT_END_block\n"));
-
-	e4c_context_end();
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

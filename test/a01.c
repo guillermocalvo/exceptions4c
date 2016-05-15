@@ -2,23 +2,22 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	a01,
-	"try{...} without beginning",
-	"This test uses the library improperly, by attempting to <strong>start a <code>try</code> block</strong>, without calling <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_TRY_block",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `try` block without beginning
+ *
+ * This test uses the library improperly, by attempting to start a `try` block,
+ * without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_TRY_block\n"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	E4C_TRY{
-		ECHO(("inside_TRY_block\n"));
-	}
+    E4C_TRY{
 
-	ECHO(("after_TRY_block\n"));
-
-	return(EXIT_SUCCESS);
+        THIS_SHOULD_NOT_HAPPEN;
+    }
 }

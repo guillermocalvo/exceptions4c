@@ -1,29 +1,33 @@
 
 # include "testing.h"
 
-# define e4c_acquire_buffer malloc
-# define e4c_dispose_buffer(resource, failed) free(resource)
 
+/**
+ * `throwf` statement without beginning
+ *
+ * This test uses the library improperly, by attempting to `throw` an exception
+ * with a formatted message, without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-DEFINE_TEST(
-	a04,
-	"using{...} without beginning",
-	"This test uses the library improperly, by attempting to <strong>start a <code>using</code> block</strong>, without calling <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_USING_block",
-	"ContextHasNotBegunYet"
-){
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	char * tmp = NULL;
+# if !defined(E4C_THROWF) && !defined(HAVE_VSNPRINTF)
 
-	ECHO(("before_USING_block\n"));
+    TEST_SKIP("This platform does not support variadic macros or vsnprintf");
 
-	E4C_USING(buffer, tmp, ( (size_t)256 ) ){
-		ECHO(("inside_USING_block\n"));
-	}
+# elif defined(E4C_THROWF)
 
-	ECHO(("after_USING_block\n"));
+    E4C_THROWF(RuntimeException, "%s_%s", "FORMATTED", "MESSAGE");
 
-	return(EXIT_SUCCESS);
+# else
+
+    e4c_exception_throw_format_(&RuntimeException, "file", 123, "function", "%s_%s", "FORMATTED", "MESSAGE");
+
+# endif
+
 }

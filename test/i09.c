@@ -2,54 +2,25 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	i09,
-	"Getting status (succeeded)",
-	"This test retrieves the completeness of a code block. There were no exceptions during the <code>try</code> block, so the status is <code>e4c_succeeded</code>.",
-	NULL,
-	EXIT_SUCCESS,
-	"before_CONTEXT_END",
-	"status_SUCCEEDED"
-){
+/**
+ * Getting status (succeeded)
+ *
+ * This test retrieves the completeness of a code block. There were no
+ * exceptions during the `try` block, so the status is `e4c_succeeded`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    e4c_context_begin(E4C_FALSE);
 
-	e4c_context_begin(E4C_TRUE);
+    E4C_TRY{
 
-	ECHO(("before_TRY\n"));
+        TEST_ASSERT( !e4c_get_exception() );
 
-	E4C_TRY{
+    }E4C_FINALLY{
 
-		ECHO(("inside_TRY_block\n"));
+        TEST_ASSERT_EQUALS(e4c_get_status(), e4c_succeeded);
+    }
 
-	}E4C_FINALLY{
-
-		ECHO(("before_GET_STATUS\n"));
-
-		switch( e4c_get_status() ){
-
-			case e4c_succeeded:
-
-				fprintf(stderr, "status_SUCCEEDED\n");
-				break;
-
-			case e4c_recovered:
-
-				fprintf(stderr, "status_RECOVERED\n");
-				break;
-
-			case e4c_failed:
-			default:
-
-				fprintf(stderr, "status_FAILED\n");
-		}
-
-		(void)fflush(stderr);
-	}
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

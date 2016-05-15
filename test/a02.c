@@ -2,26 +2,28 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	a02,
-	"throw(...) without beginning",
-	"This test uses the library improperly, by attempting to <strong>throw an exception</strong>, without calling <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_THROW",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `catch` block without beginning
+ *
+ * This test uses the library improperly, by attempting to start a `catch`
+ * block, without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_THROW\n"));
+    int dummy = 1;
 
-	E4C_THROW(NullPointerException, "Actually, I can't throw an exception yet.");
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	/*@-unreachable@*/
+    if(--dummy){
 
-	ECHO(("after_THROW\n"));
+        dummy = 123;
 
-	return(EXIT_SUCCESS);
+    }E4C_CATCH(NullPointerException){
 
-	/*@=unreachable@*/
+        dummy = 321;
+    }
 }
-

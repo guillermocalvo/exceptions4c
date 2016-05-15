@@ -3,51 +3,38 @@
 # include <signal.h>
 
 
-static e4c_signal_mapping custom_mappings[] = {
+static e4c_signal_mapping custom_mappings[2] = {
 
-	E4C_SIGNAL_MAPPING(1024, WildException),
-	E4C_NULL_SIGNAL_MAPPING
+    E4C_SIGNAL_MAPPING(1024, RuntimeException),
+    E4C_NULL_SIGNAL_MAPPING
 };
 
 
-DEFINE_TEST(
-	b20,
-	"Mapping an unknown signal",
-	"This test tries to create an invalid mapping for an unknown signal. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_SET_SIGNAL_MAPPINGS",
-	"ExceptionSystemFatalError"
-){
+/**
+ * Mapping an unknown signal
+ *
+ * This test tries to create an invalid mapping for an unknown signal.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ExceptionSystemFatalError`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(ExceptionSystemFatalError);
 
-	e4c_context_begin(E4C_FALSE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_SET_SIGNAL_MAPPINGS\n"));
+    e4c_context_set_signal_mappings(custom_mappings);
 
-	e4c_context_set_signal_mappings(custom_mappings);
+    E4C_TRY{
 
-	E4C_TRY{
+        raise(1024);
 
-		ECHO(("before_raise_123\n"));
+    }E4C_CATCH(RuntimeException){
 
-		raise(123);
+        THIS_SHOULD_NOT_HAPPEN;
+    }
 
-		ECHO(("after_raise_123\n"));
-
-	}E4C_CATCH(RuntimeException){
-
-		ECHO(("inside_CATCH_block\n"));
-
-		fprintf(stderr, "%s", e4c_get_exception()->name);
-	}
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	(void)fflush(stderr);
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

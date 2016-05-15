@@ -2,39 +2,39 @@
 # include "testing.h"
 
 
-static void custom_uncaught_handler(const e4c_exception * exception){
+static volatile E4C_BOOL custom_handler_was_executed = E4C_FALSE;
+static void check_execution(void);
+static void custom_uncaught_handler(const e4c_exception * exception);
 
-	fprintf(stderr, "CUSTOM_UNCAUGHT_HANDLER");
 
-	(void)fflush(stderr);
+/**
+ * Setting a custom uncaught handler
+ *
+ * This test sets a custom *uncaught handler*. Then *throws* an exception; there
+ * is no `catch` block to handle it.
+ *
+ */
+TEST_CASE{
+
+    TEST_EXPECTING(RuntimeException);
+
+    atexit(check_execution);
+
+    e4c_context_begin(E4C_FALSE);
+
+    e4c_context_set_handlers(custom_uncaught_handler, NULL, NULL, NULL);
+
+    E4C_THROW(RuntimeException, "You can't stop me now!");
+
+    e4c_context_end();
 }
 
+static void check_execution(void){
 
-DEFINE_TEST(
-	i05,
-	"Setting a custom uncaught handler",
-	"This test sets a custom <em>uncaught handler</em>. Then <em>throws</em> an exception; there is no <code>catch</code> block to handle it.",
-	NULL,
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"before_THROW",
-	"CUSTOM_UNCAUGHT_HANDLER"
-){
+    TEST_X_ASSERT(custom_handler_was_executed);
+}
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+static void custom_uncaught_handler(const e4c_exception * exception){
 
-	e4c_context_begin(E4C_TRUE);
-
-	ECHO(("before_SET_HANDLERS\n"));
-
-	e4c_context_set_handlers(custom_uncaught_handler, NULL, NULL, NULL);
-
-	ECHO(("before_THROW\n"));
-
-	E4C_THROW(WildException, "You can't stop me now!");
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	return(EXIT_SUCCESS);
+    custom_handler_was_executed = E4C_TRUE;
 }

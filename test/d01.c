@@ -2,37 +2,19 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	d01,
-	"Uncaught exception",
-	"This test <strong>throws an exception</strong>; there is no <code>catch</code> block to handle it.",
-	NULL,
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"before_THROW",
-	"WildException"
-){
+/**
+ * Uncaught exception
+ *
+ * This test throws an exception; there is no `catch` block to handle it.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(RuntimeException);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_THROW\n"));
+    E4C_THROW(RuntimeException, "Nobody will catch me.");
 
-	E4C_THROW(WildException, "Nobody will catch me.");
-
-	/*@-unreachable@*/
-
-	ECHO(("after_THROW\n"));
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-	ECHO(("before_EXIT_main\n"));
-
-	return(123);
-
-	/*@=unreachable@*/
+    e4c_context_end();
 }

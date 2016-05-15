@@ -2,34 +2,31 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b15,
-	"catch(NULL)",
-	"This test uses the library in an inconsistent way, by attempting to pass <code>NULL</code> to a <code>catch</code> block. The library must signal the misuse by throwing the exception <code>NullPointerException</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"inside_TRY_block",
-	"NullPointerException"
-){
+/**
+ * `catch(NULL)`
+ *
+ * This test uses the library in an inconsistent way, by attempting to pass
+ * `NULL` to a `catch` block.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `NullPointerException`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN_block\n"));
+    TEST_EXPECTING(NullPointerException);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	try{
+    try{
 
-		ECHO(("inside_TRY_block\n"));
+        E4C_THROW(RuntimeException, NULL);
 
-		E4C_THROW(WildException, "You must not pass NULL to a catch block.");
+    /* Never pass NULL to a catch block! */
+    }catch(  *( (e4c_exception_type *)NULL )  ){
 
-	}catch(  *( (e4c_exception_type *)NULL )  ){
+        THIS_SHOULD_NOT_HAPPEN;
+    }
 
-		ECHO(("inside_CATCH_block\n"));
-	}
-
-	ECHO(("before_CONTEXT_END_block\n"));
-
-	e4c_context_end();
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

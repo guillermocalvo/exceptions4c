@@ -1,67 +1,46 @@
 
-# include <string.h>
 # include <signal.h>
 # include "testing.h"
 
 
-DEFINE_TEST(
-	g24,
-	"Signal SIGUSR2",
-	"This test raises <code>SIGUSR2</code>; the library signal handling is enabled; the exception <code>ProgramSignal2Exception</code> is caught and then the program exits.",
-	"This functionality relies on the <strong>platform's ability to handle signals</strong>.",
-	EXIT_SUCCESS,
-	"after_CONTEXT_END",
-	"ProgramSignal2Exception_WAS_CAUGHT"
-){
+/**
+ * Catching `ProgramSignal2Exception`
+ *
+ * This test raises `SIGUSR2`; the library signal handling is enabled; the
+ * exception `ProgramSignal2Exception` is caught and then the program exits.
+ *
+ * This functionality relies on the platform's ability to handle signals.
+ *
+ */
+TEST_CASE{
 
-	E4C_BOOL	caught		= E4C_FALSE;
+#ifndef SIGUSR2
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
-
-	e4c_context_begin(E4C_TRUE);
-
-	E4C_TRY{
-
-		ECHO(("before_SIGUSR2\n"));
-
-#ifdef SIGUSR2
-
-		raise(SIGUSR2);
+    TEST_SKIP("This platform does not support SIGUSR2");
 
 #else
 
-		ECHO(("SIGUSR2_IS_UNDEFINED_ON_THIS_PLATFORM\n"));
+    volatile E4C_BOOL caught = E4C_FALSE;
 
-		throw(ProgramSignal2Exception, "This exception simulates a signal SIGUSR2");
+    e4c_context_begin(E4C_TRUE);
+
+    E4C_TRY{
+
+        raise(SIGUSR2);
+
+        TEST_FAIL("ProgramSignal2Exception should have been thrown");
+
+    }E4C_CATCH(SignalException){
+
+        caught = E4C_TRUE;
+
+        TEST_ASSERT(e4c_get_exception()->type == &ProgramSignal2Exception);
+    }
+
+    e4c_context_end();
+
+    TEST_ASSERT(caught);
 
 #endif
 
-		/*@-unreachable@*/
-		ECHO(("after_SIGUSR2\n"));
-		/*@=unreachable@*/
-
-	}E4C_CATCH(SignalException){
-
-		ECHO(("inside_CATCH_block\n"));
-
-		caught = E4C_TRUE;
-
-		fprintf(stderr, "\n%s_WAS_CAUGHT\n", e4c_get_exception()->name);
-	}
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-	if(!caught){
-
-		ECHO(("SIGUSR2_WAS_NOT_CAUGHT\n"));
-
-	}
-
-	(void)fflush(stderr);
-
-	return(EXIT_SUCCESS);
 }

@@ -2,33 +2,26 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b01,
-	"try{...} after having ended",
-	"This test uses the library in an inconsistent way, by attempting to <strong>start a <code>try</code> block</strong>, after having called <code>e4c_context_end()</code>. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_TRY_block",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `try` block after having ended
+ *
+ * This test uses the library in an inconsistent way, by attempting to start a
+ * `try` block, after calling `e4c_context_end`.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_CONTEXT_END\n"));
+    e4c_context_end();
 
-	e4c_context_end();
+    E4C_TRY{
 
-	ECHO(("before_TRY_block\n"));
-
-	E4C_TRY{
-
-		ECHO(("inside_TRY_block\n"));
-
-	}
-
-	ECHO(("after_TRY_block\n"));
-
-	return(EXIT_SUCCESS);
+        THIS_SHOULD_NOT_HAPPEN;
+    }
 }
