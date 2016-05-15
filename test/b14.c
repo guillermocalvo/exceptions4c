@@ -2,30 +2,26 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b14,
-	"e4c_using_context{..} after having already begun",
-	"This test uses the library in an inconsistent way, by attempting to <strong>start a <code>e4c_using_context</code> block</strong> when the exception context is already begun. The library must signal the misuse by throwing the exception <code>ContextAlreadyBegun</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_USING_CONTEXT_block",
-	"ContextAlreadyBegun"
-){
+/**
+ * `e4c_using_context` block after having already begun
+ *
+ * This test uses the library in an inconsistent way, by attempting to start a
+ * `e4c_using_context` block when the exception context is already begun.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextAlreadyBegun`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN_block\n"));
+    TEST_EXPECTING(ContextAlreadyBegun);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_USING_CONTEXT_block\n"));
+    e4c_using_context(E4C_FALSE){
 
-	e4c_using_context(E4C_FALSE){
+        THIS_SHOULD_NOT_HAPPEN;
+    }
 
-		ECHO(("inside_USING_CONTEXT_block\n"));
-	}
-
-	ECHO(("before_CONTEXT_END_block\n"));
-
-	e4c_context_end();
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

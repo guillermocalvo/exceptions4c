@@ -2,40 +2,56 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	f04,
-	"A child exception cannot be caught by catching a sibling exception",
-	"This test starts a <code>try</code> block, throws <code>ChildException</code> and attempts to catch it with a <code>catch(SiblingException)</code> block. This, obviously, won't work, so the exception will be left uncaught.",
-	NULL,
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"before_THROW",
-	"ChildException"
-){
+static void aux(volatile E4C_BOOL * flag);
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(E4C_TRUE);
+/**
+ * Leaking a *sibling* exception
+ *
+ * This test starts a `try` block, throws `IllegalArgumentException` and
+ * attempts to catch it with a `catch(InputOutputException)` block. This,
+ * obviously, won't work, so the exception will be left uncaught.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_TRY_block\n"));
+    volatile E4C_BOOL uncaught = E4C_FALSE;
 
-	E4C_TRY{
+    TEST_EXPECTING(RuntimeException);
 
-		ECHO(("before_THROW\n"));
+    e4c_context_begin(E4C_FALSE);
 
-		E4C_THROW(ChildException, "You cannot catch me by catching one of my supertype's subtypes.");
+    E4C_TRY{
 
-	}E4C_CATCH(SiblingException){
+        aux(&uncaught);
 
-		ECHO(("inside_CATCH_block\n"));
+    }E4C_CATCH(RuntimeException){
 
-		ECHO(("catching__%s\n", e4c_get_exception()->name));
-	}
+        TEST_ASSERT( e4c_get_exception()->type == &IllegalArgumentException );
+    }
 
-	ECHO(("before_CONTEXT_END\n"));
+    TEST_ASSERT(uncaught);
 
-	e4c_context_end();
+    e4c_context_end();
+}
 
-	ECHO(("after_CONTEXT_END\n"));
 
-	return(EXIT_SUCCESS);
+static void aux(volatile E4C_BOOL * flag){
+
+    E4C_TRY{
+
+        E4C_THROW(IllegalArgumentException, "I am not an instance of InputOutputException.");
+
+    }E4C_CATCH(InputOutputException){
+
+        TEST_FAIL("Block `catch(InputOutputException)` cannot handle an IllegalArgumentException");
+
+    }E4C_FINALLY{
+
+        *flag = ( e4c_get_status() == e4c_failed );
+    }
+
+    THIS_SHOULD_NOT_HAPPEN;
+
+    *flag = E4C_FALSE;
 }

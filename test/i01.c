@@ -2,21 +2,17 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	i01,
-	"Print exception type",
-	"This test calls <code>e4c_print_exception_type</code> passing a user-defined exception type.",
-	NULL,
-	EXIT_SUCCESS,
-	"after_PRINT_EXCEPTION_TYPE",
-	"________________________________________________________________"
-){
+static E4C_DEFINE_EXCEPTION(CustomException, "This is a custom exception", RuntimeException);
 
-	ECHO(("before_PRINT_EXCEPTION_TYPE\n"));
 
-	e4c_print_exception_type(&WildException);
+/**
+ * Print exception type
+ *
+ * This test calls `e4c_print_exception_type` passing a user-defined exception
+ * type.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("after_PRINT_EXCEPTION_TYPE\n"));
-
-	return(EXIT_SUCCESS);
+    e4c_print_exception_type(&CustomException);
 }

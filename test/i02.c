@@ -2,48 +2,43 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	i02,
-	"Retrying a block of code",
-	"This test <em>retries</em> a <code>try</code> block up to three times. The <code>retry</code> is performed from within a <code>finally</code> block, but it could also be done from a <code>catch</code> block when an exception is caught.",
-	NULL,
-	EXIT_SUCCESS,
-	"before_CONTEXT_END",
-	"RETRIES_3"
-){
-	volatile int retries = 0;
+/**
+ * Retrying a block of code
+ *
+ * This test *retries* a `try` block up to three times. The `retry` is performed
+ * from a `finally` block, but it could also be done from a `catch` block, when
+ * an exception is caught.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    volatile int total_tries = 0;
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_TRY_block\n"));
+    E4C_TRY{
 
-	E4C_TRY{
+        total_tries++;
 
-		if(retries == 0){
+        if(total_tries == 1){
 
-			fprintf(stderr, "FIRST_TRY\n");
+            TEST_ECHO("First try");
 
-		}else{
+        }else{
 
-			fprintf(stderr, "RETRIES_%d\n", retries);
-		}
+            int retries = total_tries - 1;
 
-		retries++;
+            TEST_DUMP("%d", retries);
+        }
 
-	}E4C_FINALLY{
+    }E4C_FINALLY{
 
-		ECHO(("before_RETRY\n"));
+        retry(3);
+    }
 
-		retry(3);
-	}
+    e4c_context_end();
 
-	ECHO(("before_CONTEXT_END\n"));
+    TEST_DUMP("%d", total_tries);
 
-	e4c_context_end();
-
-	(void)fflush(stderr);
-
-	return(EXIT_SUCCESS);
+    TEST_ASSERT_EQUALS(total_tries, 4);
 }

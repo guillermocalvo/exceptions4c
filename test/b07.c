@@ -2,25 +2,21 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b07,
-	"e4c_context_begin() after having already begun",
-	"This test uses the library in an inconsistent way, by attempting to <strong>call <code>e4c_context_begin()</code> twice in a row</strong>. The library must signal the misuse by throwing the exception <code>ContextHasAlreadyBegun</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_CONTEXT_BEGIN_again",
-	"ContextAlreadyBegun"
-){
+/**
+ * `e4c_context_begin` call after having already begun
+ *
+ * This test uses the library in an inconsistent way, by attempting to call
+ * `e4c_context_begin` twice in a row.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasAlreadyBegun`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(ContextHasAlreadyBegun);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_CONTEXT_BEGIN_again\n"));
-
-	e4c_context_begin(E4C_TRUE);
-
-	ECHO(("after_CONTEXT_BEGIN\n"));
-
-	return(EXIT_SUCCESS);
+    e4c_context_begin(E4C_FALSE);
 }

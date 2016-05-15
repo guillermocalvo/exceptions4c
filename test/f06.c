@@ -2,66 +2,37 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	f06,
-	"An exception will only be caught by the first capable catch{...} block",
-	"This test starts a <code>try</code> block, throws <code>ChildException</code> and attempts to catch it with a <code>catch(ChildException)</code> block, but there is a previous <code>catch(ParentException)</code> block which will eventually handle it.",
-	NULL,
-	EXIT_SUCCESS,
-	"caught_by_GENERIC_block",
-	NULL
-){
+/**
+ * Only one `catch` block will handle the exception
+ *
+ * This test starts a `try` block, throws `IllegalArgumentException` and
+ * attempts to catch it with a `catch(IllegalArgumentException)` block, but
+ * there is a previous `catch(RuntimeException)` block which will eventually
+ * handle it.
+ *
+ */
+TEST_CASE{
 
-	E4C_BOOL caught1 = E4C_FALSE;
-	E4C_BOOL caught2 = E4C_FALSE;
+    volatile E4C_BOOL caught1 = E4C_FALSE;
+    volatile E4C_BOOL caught2 = E4C_FALSE;
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    e4c_context_begin(E4C_FALSE);
 
-	e4c_context_begin(E4C_TRUE);
+    E4C_TRY{
 
-	ECHO(("before_TRY_block\n"));
+        E4C_THROW(IllegalArgumentException, "I'm going to be caught by the first (generic) catch block.");
 
-	E4C_TRY{
+    }E4C_CATCH(RuntimeException){
 
-		ECHO(("before_THROW\n"));
+        caught1 = E4C_TRUE;
 
-		E4C_THROW(ChildException, "I'm going to be caught by the first (generic) catch block.");
+    }E4C_CATCH(IllegalArgumentException){
 
-	}E4C_CATCH(ParentException){
+        caught2 = E4C_TRUE;
+    }
 
-		caught1 = E4C_TRUE;
+    e4c_context_end();
 
-		ECHO(("inside_GENERIC_CATCH_block\n"));
-
-	}E4C_CATCH(ChildException){
-
-		caught2 = E4C_TRUE;
-
-		ECHO(("inside_SPECIFIC_CATCH_block\n"));
-
-	}
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	if(caught1 && caught2){
-
-		ECHO(("caught_by_BOTH\n"));
-
-	}else if(caught1){
-
-		ECHO(("caught_by_GENERIC_block\n"));
-
-	}else if(caught2){
-
-		ECHO(("caught_by_SPECIFIC_block\n"));
-
-	}else{
-
-		ECHO(("caught_by_NONE\n"));
-
-	}
-
-	return(EXIT_SUCCESS);
+    TEST_ASSERT(caught1);
+    TEST_ASSERT(!caught2);
 }

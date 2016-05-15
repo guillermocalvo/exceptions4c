@@ -2,21 +2,19 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	a12,
-	"retry() without beginning",
-	"This test uses the library improperly, by attempting to <strong>call <code>retry()</code></strong>, without having called <code>e4c_context_begin()</code> first. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_RETRY",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `e4c_get_status` call without beginning
+ *
+ * This test uses the library improperly, by attempting to call
+ * `e4c_get_status`, without calling `e4c_context_begin` first.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_RETRY\n"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	E4C_RETRY(10);
-
-	ECHO(("after_RETRY\n"));
-
-	return(EXIT_SUCCESS);
+    (void)e4c_get_status();
 }

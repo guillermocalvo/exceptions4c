@@ -2,40 +2,54 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	f03,
-	"A parent exception cannot be caught by catching a child exception",
-	"This test starts a <code>try</code> block, throws <code>ParentException</code> and attempts to catch it with a <code>catch(ChildException)</code> block. This, obviously, won't work, so the exception will be left uncaught.",
-	NULL,
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"before_THROW",
-	"ParentException"
-){
+static void aux(volatile E4C_BOOL * flag);
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(E4C_TRUE);
+/**
+ * Leaking a *parent* exception
+ *
+ * This test starts a `try` block, throws `RuntimeException` and attempts to
+ * catch it with a `catch(IllegalArgumentException)` block. This, obviously,
+ * won't work, so the exception will be left uncaught.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_TRY_block\n"));
+    volatile E4C_BOOL uncaught = E4C_FALSE;
 
-	E4C_TRY{
+    e4c_context_begin(E4C_FALSE);
 
-		ECHO(("before_THROW\n"));
+    E4C_TRY{
 
-		E4C_THROW(ParentException, "You cannot catch me by catching one of my subtypes.");
+        aux(&uncaught);
 
-	}E4C_CATCH(ChildException){
+    }E4C_CATCH(RuntimeException){
 
-		ECHO(("inside_CATCH_block\n"));
+        TEST_ASSERT( e4c_get_exception()->type == &RuntimeException );
+    }
 
-		ECHO(("catching__%s\n", e4c_get_exception()->name));
-	}
+    TEST_ASSERT(uncaught);
 
-	ECHO(("before_CONTEXT_END\n"));
+    e4c_context_end();
+}
 
-	e4c_context_end();
 
-	ECHO(("after_CONTEXT_END\n"));
+static void aux(volatile E4C_BOOL * flag){
 
-	return(EXIT_SUCCESS);
+    E4C_TRY{
+
+        E4C_THROW(RuntimeException, "I am not an instance of IllegalArgumentException.");
+
+    }E4C_CATCH(IllegalArgumentException){
+
+        TEST_FAIL("Block `catch(IllegalArgumentException)` cannot handle a RuntimeException");
+
+    }E4C_FINALLY{
+
+        *flag = ( e4c_get_status() == e4c_failed );
+    }
+
+    THIS_SHOULD_NOT_HAPPEN;
+
+    *flag = E4C_FALSE;
 }

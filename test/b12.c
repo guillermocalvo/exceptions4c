@@ -2,26 +2,25 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b12,
-	"break... in the middle of a e4c_using_context{..} block",
-	"This test uses the library in an inconsistent way, by <strong>breaking out of a <code>e4c_using_context</code> block</strong>. The library must signal the misuse by throwing the exception <code>ContextNotEnded</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"after_USING_CONTEXT_block",
-	"ContextNotEnded"
-){
+/**
+ * `break` statement in the middle of a `e4c_using_context` block
+ *
+ * This test uses the library in an inconsistent way, by breaking out of a
+ * `e4c_using_context` block.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextNotEnded`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_USING_CONTEXT_block\n"));
+    TEST_EXPECTING(ContextNotEnded);
 
-	e4c_using_context(E4C_TRUE){
+    e4c_using_context(E4C_TRUE){
 
-		ECHO(("inside_USING_CONTEXT_block\n"));
+        TEST_ECHO("Inside `e4c_using_context` block...");
 
-		break;
-	}
-
-	ECHO(("after_USING_CONTEXT_block\n"));
-
-	return(EXIT_SUCCESS);
+        /* Never jump out of a `using` block! */
+        break;
+    }
 }

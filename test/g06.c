@@ -2,35 +2,25 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	g06,
-	"Abort exception",
-	"This test calls <code>abort</code>; the library signal handling is enabled; there is no <code>catch</code> block. The behavior of the program will no longer be undefined: it will terminate because of the uncaught exception <code>AbortException</code>.",
-	"This functionality relies on the <a href=\"#requirement_z09\"><strong>platform's ability to handle signal <code>SIGABRT</code></strong></a>.",
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"before_ABORT",
-	"AbortException"
-){
+/**
+ * Abort exception
+ *
+ * This test calls `abort`; the library signal handling is enabled. The library
+ * will convert the signal `SIGABRT` into the exception `AbortException`.
+ * There is no `catch` block, therefore the program will terminate because of
+ * the uncaught exception.
+ *
+ * This functionality relies on the platform's ability to handle signal
+ * `SIGABRT`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(AbortException);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_TRUE);
 
-	ECHO(("before_ABORT\n"));
+    abort();
 
-	abort();
-
-	/*@-unreachable@*/
-
-	ECHO(("after_ABORT\n"));
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-	return(EXIT_SUCCESS);
-
-	/*@=unreachable@*/
+    e4c_context_end();
 }

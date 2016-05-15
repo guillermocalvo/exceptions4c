@@ -2,33 +2,23 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b02,
-	"throw(...) after having ended",
-	"This test uses the library in an inconsistent way, by attempting to <strong>throw an exception</strong>, after having called <code>e4c_context_end()</code>. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_THROW",
-	"ContextHasNotBegunYet"
-){
+/**
+ * `throw` statement after having ended
+ *
+ * This test uses the library in an inconsistent way, by attempting to `throw`
+ * an exception, after calling `e4c_context_end`.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_CONTEXT_END\n"));
+    e4c_context_end();
 
-	e4c_context_end();
-
-	ECHO(("before_THROW\n"));
-
-	E4C_THROW(WildException, "Actually, I can't throw an exception anymore.");
-
-	/*@-unreachable@*/
-
-	ECHO(("after_THROW\n"));
-
-	return(EXIT_SUCCESS);
-
-	/*@=unreachable@*/
+    E4C_THROW(RuntimeException, "Can't throw an exception here");
 }

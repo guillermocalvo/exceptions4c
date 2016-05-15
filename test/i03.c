@@ -1,61 +1,55 @@
 
 # include "testing.h"
 
-# define DISPOSE_FOO(IGNORE1, IGNORE2) ECHO(("disposing_FOO\n"));
 
-DEFINE_TEST(
-	i03,
-	"Reacquiring a resource",
-	"This test tries to <em>acquire</em> a dummy resource and throws an exception. Then the <code>catch</code> block tries to <code>reacquire</code> the resource up to three times. The third reacquisition succeeds and then the resource is first <em>used</em> and then <em>disposed</em>.",
-	NULL,
-	EXIT_SUCCESS,
-	"before_CONTEXT_END",
-	"REACQUISITION_3"
-){
-	volatile int foo        = 0;
-	volatile int reacquires = 0;
+# define DISPOSE_FOO(IGNORE1, IGNORE2)
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
 
-	e4c_context_begin(E4C_TRUE);
+/**
+ * Reacquiring a resource
+ *
+ * This test tries to *acquire* a dummy resource and throws an exception. Then
+ * the `catch` block tries to `reacquire` the resource up to three times. The
+ * third reacquisition succeeds and then the resource is first *used* and then
+ * *disposed*.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_WITH_block\n"));
+    volatile int foo          = 0;
+    volatile int total_acquisitions = 0;
 
-	E4C_WITH(foo, DISPOSE_FOO){
+    e4c_context_begin(E4C_FALSE);
 
-		if(reacquires == 0){
+    E4C_WITH(foo, DISPOSE_FOO){
 
-			fprintf(stderr, "FIRST_ACQUISITION\n");
+        total_acquisitions++;
 
-		}else{
+        if(total_acquisitions == 1){
 
-			fprintf(stderr, "REACQUISITION_%d\n", reacquires);
-		}
+            TEST_ECHO("First acquisition");
 
-		foo++;
-		reacquires++;
+        }else{
 
-		if(reacquires <= 3){
+            int reacquisitions = total_acquisitions - 1;
 
-			E4C_THROW(WildException, "Simulates an error while acquiring foo");
-		}
+            TEST_DUMP("%d", reacquisitions);
+        }
 
-	}E4C_USE{
+        E4C_THROW(RuntimeException, "Simulates an error while acquiring foo");
 
-		ECHO(("using_foo_%d\n", foo));
+    }E4C_USE{
 
-	}E4C_CATCH(WildException){
+        TEST_DUMP("%d", foo);
 
-		ECHO(("before_REACQUIRE\n"));
+    }E4C_CATCH(RuntimeException){
 
-		reacquire(3);
-	}
+        reacquire(3);
+    }
 
-	ECHO(("before_CONTEXT_END\n"));
+    e4c_context_end();
 
-	e4c_context_end();
+    TEST_DUMP("%d", total_acquisitions);
 
-	(void)fflush(stderr);
-
-	return(EXIT_SUCCESS);
+    TEST_ASSERT_EQUALS(total_acquisitions, 4);
 }

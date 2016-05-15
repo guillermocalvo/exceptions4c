@@ -3,32 +3,38 @@
 # include <signal.h>
 
 
-DEFINE_TEST(
-	b22,
-	"throw(NULL)",
-	"This test <em>throws</em> <code>NULL</code>. The library must <em>throw</em> <code>NullPointerException</code> instead.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_THROW",
-	"NullPointerException"
-){
+/**
+ * Throwing `NULL`
+ *
+ * This test passes `NULL` to a `throw` statement.
+ *
+ * The library must throw `NullPointerException` instead.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    volatile E4C_BOOL thrown = E4C_FALSE;
+    volatile E4C_BOOL caught = E4C_FALSE;
 
-	e4c_context_begin(E4C_FALSE);
+    TEST_EXPECTING(NullPointerException);
 
-	E4C_TRY{
+    e4c_context_begin(E4C_FALSE);
 
-		ECHO(("before_THROW\n"));
+    E4C_TRY{
 
-		E4C_THROW( *( (const e4c_exception_type *)NULL ), "I see what you did there..." );
+        thrown = E4C_TRUE;
 
-		ECHO(("after_THROW\n"));
-	}
+        E4C_THROW( *( (const e4c_exception_type *)NULL ), "I see what you did there..." );
 
-	ECHO(("before_CONTEXT_END\n"));
+        thrown = E4C_FALSE;
 
-	e4c_context_end();
+    }E4C_CATCH(RuntimeException){
 
-	return(EXIT_SUCCESS);
+        caught = (e4c_get_exception()->type == &NullPointerException);
+    }
+
+    e4c_context_end();
+
+    TEST_ASSERT(thrown);
+    TEST_ASSERT(caught);
 }

@@ -2,57 +2,29 @@
 # include "testing.h"
 
 
-static void aux(void)
-/*@globals
-	fileSystem,
-	internalState,
+static void another_function(void);
 
-	NotEnoughMemoryException,
-	NullPointerException
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-{
 
-	ECHO(("before_THROW\n"));
+/**
+ * Uncaught exception, thrown from another function
+ *
+ * This test calls a function which throws an exception; there is no `catch`
+ * block to handle it.
+ *
+ */
+TEST_CASE{
 
-	E4C_THROW(WildException, "Nobody will catch me.");
+    TEST_EXPECTING(RuntimeException);
 
-	/*@-unreachable@*/
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("after_THROW\n"));
+    another_function();
 
-	/*@=unreachable@*/
+    e4c_context_end();
 }
 
 
-DEFINE_TEST(
-	d02,
-	"Uncaught exception thrown from another function",
-	"This test <strong>calls a function which throws an exception</strong>; there is no <code>catch</code> block to handle it.",
-	NULL,
-	IF_NOT_THREADSAFE(EXIT_FAILURE),
-	"before_THROW",
-	"WildException"
-){
+static void another_function(void){
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
-
-	e4c_context_begin(E4C_TRUE);
-
-	ECHO(("before_CALL_FUNCTION_aux\n"));
-
-	aux();
-
-	ECHO(("after_CALL_FUNCTION_aux\n"));
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-	return(EXIT_SUCCESS);
+    E4C_THROW(RuntimeException, "Nobody will catch me.");
 }

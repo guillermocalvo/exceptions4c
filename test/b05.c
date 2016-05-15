@@ -1,35 +1,41 @@
 
 # include "testing.h"
-# include "../etc/e4c_rsc.h"
 
 
-DEFINE_TEST(
-	b05,
-	"e4c_using_memory(...) after having ended",
-	"This test uses the library in an inconsistent way, by attempting to <strong>start a <code>e4c_using_memory</code> block</strong>, after having called <code>e4c_context_end()</code>. The library must signal the misuse by throwing the exception <code>ContextHasNotBegunYet</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_USING_MEMORY_block",
-	"ContextHasNotBegunYet"
-){
+# define e4c_acquire_memory malloc
+# define e4c_dispose_memory(buffer, failed) free(buffer)
+# define e4c_using_memory(buffer, bytes) \
+    E4C_WITH(buffer, e4c_dispose_memory){ \
+        buffer = e4c_acquire_memory(bytes); \
+        if(buffer == NULL){ \
+            E4C_THROW(NotEnoughMemoryException, \
+            "Could not allocate memory for: " #buffer); \
+        } \
+    }E4C_USE
 
-	char * buffer;
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+/**
+ * `e4c_using_memory` block after having ended
+ *
+ * This test uses the library in an inconsistent way, by attempting to start a
+ * `e4c_using_memory` block, after calling `e4c_context_end`.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ContextHasNotBegunYet`.
+ *
+ */
+TEST_CASE{
 
-	e4c_context_begin(E4C_TRUE);
+    char * buffer;
 
-	ECHO(("before_CONTEXT_END\n"));
+    TEST_EXPECTING(ContextHasNotBegunYet);
 
-	e4c_context_end();
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_USING_MEMORY_block\n"));
+    e4c_context_end();
 
-	e4c_using_memory(buffer, (size_t)256){
-		ECHO(("inside_USING_MEMORY_block\n"));
-	}
+    e4c_using_memory(buffer, (size_t)256){
 
-	ECHO(("after_USING_MEMORY_block\n"));
-
-	return(EXIT_SUCCESS);
+        THIS_SHOULD_NOT_HAPPEN;
+    }
 }

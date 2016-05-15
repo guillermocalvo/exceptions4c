@@ -2,32 +2,29 @@
 # include "testing.h"
 
 
-DEFINE_TEST(
-	b08,
-	"break... in the middle of a try{...} block",
-	"This test uses the library in an inconsistent way, by <strong>breaking out of a <code>try</code> block</strong>. The library must signal the misuse by throwing the exception <code>ExceptionSystemFatalError</code>.",
-	NULL,
-	EXIT_WHATEVER,
-	"before_CONTEXT_END",
-	"ExceptionSystemFatalError"
-){
+/**
+ * `break` statement in the middle of a `try` block
+ *
+ * This test uses the library in an inconsistent way, by breaking out of a `try`
+ * block.
+ *
+ * The library must signal the misuse by throwing the exception
+ * `ExceptionSystemFatalError`.
+ *
+ */
+TEST_CASE{
 
-	ECHO(("before_CONTEXT_BEGIN\n"));
+    TEST_EXPECTING(ExceptionSystemFatalError);
 
-	e4c_context_begin(E4C_TRUE);
+    e4c_context_begin(E4C_FALSE);
 
-	ECHO(("before_TRY_block\n"));
+    E4C_TRY{
 
-	E4C_TRY{
-		ECHO(("inside_TRY_block\n"));
-		break;
-	}
+        TEST_ECHO("Inside `try` block...");
 
-	ECHO(("before_CONTEXT_END\n"));
+        /* Never jump out of a `try` block! */
+        break;
+    }
 
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-	return(EXIT_SUCCESS);
+    e4c_context_end();
 }

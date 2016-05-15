@@ -1,59 +1,38 @@
 
-# include <string.h>
 # include "testing.h"
 
 
-static void set_null_g01(int * * pointer)
-/*@modifies
-	pointer
-@*/
-{
+static int * null(int dummy);
+static int integer = 123;
 
-	int * null_pointer = NULL;
 
-	/*@-boundsread@*/
-	memcpy(pointer, &null_pointer, sizeof(null_pointer) );
-	/*@=boundsread@*/
+/**
+ * Signal `SIGSEGV`
+ *
+ * This test attempts to dereference a null pointer; the library signal handling
+ * is disabled, so the behavior of the program will be implementation-defined
+ * (typically the program will terminate abruptly).
+ *
+ * This functionality relies on the platform's behavior when dereferencing a
+ * null pointer.
+ *
+ */
+TEST_CASE{
+
+    int * pointer = &integer;
+
+    e4c_context_begin(E4C_FALSE);
+
+    pointer = null(integer);
+    integer = *pointer;
+
+    e4c_context_end();
+
+    TEST_DUMP("%d", integer);
+    TEST_DUMP("%p", (void *)pointer);
 }
 
+static int * null(int dummy){
 
-DEFINE_TEST(
-	g01,
-	"Signal SIGSEGV",
-	"This test attempts to dereference a null pointer; the library signal handling is disabled, so the behavior of the program will be implementation-defined (typically the program will terminate abruptly).",
-	"This functionality relies on the <a href=\"#requirement_z04\"><strong>platform's behavior when dereferencing a null pointer</strong></a>.",
-	EXIT_WHATEVER,
-	"before_NULL_POINTER",
-	ERROR_WHATEVER
-){
-
-	int		integer			= 123;
-	int *	pointer			= &integer;
-
-	ECHO(("before_CONTEXT_BEGIN\n"));
-
-	e4c_context_begin(E4C_FALSE);
-
-	/* some smartypants compilers might need to be fooled */
-	/* pointer = NULL; */
-
-	ECHO(("before_SET_NULL\n"));
-
-	set_null_g01(&pointer);
-
-	ECHO(("before_NULL_POINTER\n"));
-
-	/*@-boundsread@*/
-	integer = *pointer;
-	/*@=boundsread@*/
-
-	ECHO(("after_NULL_POINTER_%d\n", integer));
-
-	ECHO(("before_CONTEXT_END\n"));
-
-	e4c_context_end();
-
-	ECHO(("after_CONTEXT_END\n"));
-
-	return(EXIT_SUCCESS);
+    return(dummy ? NULL : &integer);
 }
