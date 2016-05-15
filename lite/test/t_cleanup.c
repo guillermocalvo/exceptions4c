@@ -2,7 +2,10 @@
 #include "testing.h"
 
 
-TEST_CASE(test_cleanup){
+/**
+ * Cleanup
+ */
+TEST_CASE{
 
     volatile int created     = 0;
     volatile int destroyed   = 0;

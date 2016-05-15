@@ -29,17 +29,18 @@
 
 
 /* Test Cases */
-# define TEST_CASE(NAME) \
+/* Test Cases */
+# define TEST_CASE \
     \
-    void NAME(void); \
+    static void test_case(void); \
     \
     int main(void){ \
-        (void)printf(" - Running test %s...\n", #NAME); \
-        NAME(); \
+        (void)printf("    - Running test %s...\n", __FILE__); \
+        test_case(); \
         return(EXIT_SUCCESS); \
     } \
     \
-    void NAME(void)
+    static void test_case(void)
 
 
 # endif

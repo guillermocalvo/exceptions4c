@@ -5,7 +5,10 @@
 E4C_DEFINE_EXCEPTION(CustomException, "Custom exception.", RuntimeException);
 
 
-TEST_CASE(test_caught_exception){
+/**
+ * Caught exception
+ */
+ TEST_CASE{
 
     E4C_TRY{
 
