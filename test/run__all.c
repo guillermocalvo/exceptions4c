@@ -14,7 +14,6 @@
 	RUN_SUITE(g) \
 	RUN_SUITE(h) \
 	RUN_SUITE(i) \
-	RUN_SUITE(z) \
 
 END_SUITE_COLLECTION
 

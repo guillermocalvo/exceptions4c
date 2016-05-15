@@ -116,7 +116,6 @@ bin_check_test_e4c_SOURCES =            \
     test/run_g.c                        \
     test/run_h.c                        \
     test/run_i.c                        \
-    test/run_z.c                        \
     test/run__all.c                     \
     test/suite_a.c                      \
     test/suite_b.c                      \
@@ -127,7 +126,6 @@ bin_check_test_e4c_SOURCES =            \
     test/suite_g.c                      \
     test/suite_h.c                      \
     test/suite_i.c                      \
-    test/suite_z.c                      \
     test/testing.c                      \
     test/a01.c                          \
     test/a02.c                          \
@@ -233,19 +231,7 @@ bin_check_test_e4c_SOURCES =            \
     test/i12.c                          \
     test/i13.c                          \
     test/i14.c                          \
-    test/i15.c                          \
-    test/z01.c                          \
-    test/z02.c                          \
-    test/z03.c                          \
-    test/z04.c                          \
-    test/z05.c                          \
-    test/z06.c                          \
-    test/z07.c                          \
-    test/z08.c                          \
-    test/z09.c                          \
-    test/z10.c                          \
-    test/z11.c                          \
-    test/z12.c
+    test/i15.c
 
 
 # exceptions4c tests (lightweight version)
