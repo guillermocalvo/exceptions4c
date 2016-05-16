@@ -165,6 +165,7 @@ check_PROGRAMS =                        \
 	bin/check/i14                       \
 	bin/check/i15                       \
 	bin/check/i16                       \
+	bin/check/i17                       \
     bin/check/lite/uncaught             \
     bin/check/lite/caught               \
     bin/check/lite/cleanup              \
@@ -277,6 +278,7 @@ TESTS =                                 \
 	bin/check/i14                       \
 	bin/check/i15                       \
 	bin/check/i16                       \
+	bin/check/i17                       \
     bin/check/lite/uncaught             \
     bin/check/lite/caught               \
     bin/check/lite/cleanup              \
@@ -457,6 +459,7 @@ bin_check_i13_SOURCES                   = src/e4c.c test/i13.c
 bin_check_i14_SOURCES                   = src/e4c.c test/i14.c
 bin_check_i15_SOURCES                   = src/e4c.c test/i15.c
 bin_check_i16_SOURCES                   = src/e4c.c test/i16.c
+bin_check_i17_SOURCES                   = src/e4c.c test/i17.c
 
 
 # exceptions4c tests (lightweight version)
