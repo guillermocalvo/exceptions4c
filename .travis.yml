@@ -19,13 +19,8 @@ script:
   - make
   - echo travis_fold:end:MAKE
 
-  - echo travis_fold:start:TESTS
-  - make check
-  - echo travis_fold:end:TESTS
-
   - echo travis_fold:start:COVERAGE
-  - gcov src/e4c.c --object-directory src/*
-  - gcov lite/src/e4c_lite.c --object-directory lite/src/*
+  - make coverage
   - echo travis_fold:end:COVERAGE
 
 after_success:

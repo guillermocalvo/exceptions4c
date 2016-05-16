@@ -1,352 +1,84 @@
 
-# ifndef TESTING_FRAMEWORK_H
+# ifndef TESTING_H
+# define TESTING_H
 
-# define TESTING_FRAMEWORK_H
 
+# include <stdlib.h>
 # include <stdio.h>
-# include "../src/e4c.h"
-
-/*@-exportany@*/
-
-# define EXIT_WHATEVER			54321
-# define ERROR_WHATEVER			(void *)54321
-# define OUTPUT_WHATEVER		(void *)54321
-
-# if E4C_VERSION_THREADSAFE == 1
-#	define IF_NOT_THREADSAFE(EXIT_CODE) EXIT_WHATEVER
-# else
-#	define IF_NOT_THREADSAFE(EXIT_CODE) EXIT_CODE
-# endif
-
-# define SEVERITY_CRITICAL		E4C_TRUE
-# define SEVERITY_NOT_CRITICAL	E4C_FALSE
-
-# define TYPE_REQUIREMENT		E4C_TRUE
-# define TYPE_UNIT_TEST			E4C_FALSE
-
-# define STATUS_PASSED			0
-# define STATUS_WARNING			1
-# define STATUS_FAILED			2
-
-# define BOOL_EQUAL(x, y)		( (x) ? (y) : !(x) )
-# define BOOL_NOT_EQUAL(x, y)	( (x) ? !(y) : (x) )
-
-# if	defined(HAVE_C99_SNPRINTF) \
-	||	defined(HAVE_SNPRINTF) \
-	||	defined(S_SPLINT_S)
-#	define SAFE_SPRINTF						(void)snprintf
-#	define SAFE_BUFFER_ARG(buffer, size)	buffer, size_t size
-#	define SAFE_BUFFER(buffer, size)		(buffer), (size)
-#	define SAFE_ARRAY(buffer)				(buffer), sizeof(buffer)
-# else
-#	define SAFE_SPRINTF						(void)sprintf
-#	define SAFE_BUFFER_ARG(buffer, size)	buffer
-#	define SAFE_BUFFER(buffer, size)		(buffer)
-#	define SAFE_ARRAY(buffer)				(buffer)
-# endif
-
-/*
-	TESTS
-	________________________________________________________________
-*/
-
-# define DEFINE_UNIT_TEST(IS_REQUIREMENT, CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
-	/*@-globuse@*/ \
-	static int test_##CODE##_function(void) \
-	/*@globals \
-		fileSystem, \
-		internalState, \
-		\
-		e4c_default_signal_mappings, \
-		\
-		AbortException, \
-		AssertionException, \
-		BadPointerException, \
-		MemoryAllocationException, \
-		NotEnoughMemoryException, \
-		NullPointerException, \
-		RuntimeException, \
-		SignalException \
-	@*/ \
-	/*@modifies \
-		fileSystem, \
-		internalState \
-	@*/; \
-	/*@=globuse@*/ \
-	\
-	unit_test test_##CODE = { \
-		/* is_requirement */		IS_REQUIREMENT, \
-		/* code */					#CODE, \
-		/* title */					TITLE, \
-		/* description1 */			DESCRIPTION1, \
-		/* description2 */			DESCRIPTION2, \
-		/* is_critical */			IS_CRITICAL, \
-		/* at_failure */			AT_FAILURE, \
-		/* function */				test_##CODE##_function, \
-		/* expected_exit_code */	EXIT_CODE, \
-		/* expected_output */		OUT, \
-		/* expected_error */		ERR, \
-		/* found_exit_code */		0, \
-		/* found_output */			/*@-initallelements@*/ { '\0' }, /*@=initallelements@*/ \
-		/* found_error */			/*@-initallelements@*/ { '\0' }, /*@=initallelements@*/ \
-		/* unexpected_exit_code */	E4C_FALSE, \
-		/* unexpected_output */		E4C_FALSE, \
-		/* unexpected_error */		E4C_FALSE, \
-		/* status */				0 \
-	}; \
-	\
-	static int test_##CODE##_function(void)
-
-# define DEFINE_TEST(CODE, TITLE, DESCRIPTION, AT_FAILURE, EXIT_CODE, OUT, ERR) \
-	DEFINE_UNIT_TEST(TYPE_UNIT_TEST, CODE, TITLE, DESCRIPTION, NULL, SEVERITY_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
-
-# define DEFINE_REQUIREMENT(CODE, TITLE, DESCRIPTION, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
-	DEFINE_UNIT_TEST(TYPE_REQUIREMENT, CODE, TITLE, DESCRIPTION, NULL, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
-
-# define DEFINE_TEST_LONG_DESCRIPTION(CODE, TITLE, DESCRIPTION1, DESCRIPTION2, AT_FAILURE, EXIT_CODE, OUT, ERR) \
-	DEFINE_UNIT_TEST(TYPE_UNIT_TEST, CODE, TITLE, DESCRIPTION1, DESCRIPTION2, SEVERITY_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
-
-# define DEFINE_REQUIREMENT_LONG_DESCRIPTION(CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR) \
-	DEFINE_UNIT_TEST(TYPE_REQUIREMENT, CODE, TITLE, DESCRIPTION1, DESCRIPTION2, IS_CRITICAL, AT_FAILURE, EXIT_CODE, OUT, ERR)
-
-/*@unchecked@*/
-E4C_DECLARE_EXCEPTION(WildException);
-/*@unchecked@*/
-E4C_DECLARE_EXCEPTION(TamedException);
-
-/*@unchecked@*/
-E4C_DECLARE_EXCEPTION(ChildException);
-/*@unchecked@*/
-E4C_DECLARE_EXCEPTION(SiblingException);
-/*@unchecked@*/
-E4C_DECLARE_EXCEPTION(ParentException);
-/*@unchecked@*/
-E4C_DECLARE_EXCEPTION(GrandparentException);
-
-# define ECHO(args) \
-	(void)printf args; \
-	(void)fflush(stdout);
-
-/*
-	SUITES
-	________________________________________________________________
-*/
-
-# define TEST_DECLARATION(ID) extern unit_test test_##ID;
-# define TEST_ENUMERATION(ID) &test_##ID,
-
-# define SUITE(IS_REQUIREMENT, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION1, SUITE_DESCRIPTION2) \
-	\
-	COLLECTION(TEST_DECLARATION) \
-	\
-	static unit_test * test_array_##SUITE_CODE[] = { \
-		COLLECTION(TEST_ENUMERATION) \
-	\
-	}; \
-	\
-	/*@unused@*/ \
-	test_collection test_collection_##SUITE_CODE = { \
-		/* test */	test_array_##SUITE_CODE, \
-		/* count*/	sizeof(test_array_##SUITE_CODE) / sizeof(test_array_##SUITE_CODE[0]) \
-	}; \
-	\
-	test_suite suite_##SUITE_CODE = { \
-		/* is_requirement */	IS_REQUIREMENT, \
-		/* title */				SUITE_TITLE, \
-		/* description1 */		SUITE_DESCRIPTION1, \
-		/* description2 */		SUITE_DESCRIPTION2, \
-		/* tests */				&test_collection_##SUITE_CODE, \
-		/* stats */				{ \
-			/* total */				0, \
-			/* passed */			0, \
-			/* warnings */			0, \
-			/* failed */			0 \
-								}, \
-		/* status */			0 \
-	};
+# include <string.h>
+# include <e4c.h>
 
 
-# define END_SUITE NEW
-
-# define TEST_SUITE(SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION) \
-	SUITE(TYPE_UNIT_TEST, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION, NULL)
-
-# define REQUIREMENT_SUITE(SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION) \
-	SUITE(TYPE_REQUIREMENT, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION, NULL)
-
-# define TEST_SUITE_LONG_DESCRIPTION(SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION1, SUITE_DESCRIPTION2) \
-	SUITE(TYPE_UNIT_TEST, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION1, SUITE_DESCRIPTION2)
-
-# define REQUIREMENT_SUITE_LONG_DESCRIPTION(SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION1, SUITE_DESCRIPTION2) \
-	SUITE(TYPE_REQUIREMENT, SUITE_CODE, SUITE_TITLE, SUITE_DESCRIPTION1, SUITE_DESCRIPTION2)
-
-/*
-	RUNNERS
-	________________________________________________________________
-*/
-
-# define SUITE_DECLARATION(ID) \
-	/*@-redecl@*/ \
-	extern test_suite suite_##ID; \
-	/*@=redecl@*/
-
-# define SUITE_ENUMERATION(ID) \
-	&suite_##ID,
-
-# define SUITE_COLLECTION(COLLECTION_NAME) \
-	\
-	COLLECTION(SUITE_DECLARATION) \
-	\
-	static test_suite * COLLECTION_NAME##_suites[] = { \
-		COLLECTION(SUITE_ENUMERATION) \
-	}; \
-	\
-	/*@unused@*/ \
-	test_suite_collection COLLECTION_NAME = { \
-		/* suite */ COLLECTION_NAME##_suites, \
-		/* count */ sizeof(COLLECTION_NAME##_suites) / sizeof(COLLECTION_NAME##_suites[0]) \
-	};
-
-# define END_SUITE_COLLECTION NEW
+/* Output */
+# define TEST_PRINT_PREFIX              "    - "
+# define TEST_PRINT_SUFFIX              "\n"
+# define TEST_PRINT(FORMAT, MESSAGE) \
+    do{ \
+        (void)fprintf(stdout, TEST_PRINT_PREFIX FORMAT TEST_PRINT_SUFFIX, (MESSAGE)); \
+        (void)fflush(stdout); \
+    }while(0)
+# define TEST_ECHO(MESSAGE)             TEST_PRINT("%s", (MESSAGE))
+# define TEST_DUMP(FORMAT, VARIABLE)    TEST_PRINT(#VARIABLE ": " FORMAT, (VARIABLE))
+# define TEST_EXPECTING(EXCEPTION)      TEST_PRINT("Expecting exception: %s", #EXCEPTION)
+# define THIS_SHOULD_NOT_HAPPEN         TEST_ECHO("ERROR! Something didn't quite work...")
 
 
-typedef int (*test_function)(void);
-
-typedef struct unit_test_struct				unit_test;
-typedef struct test_suite_struct			test_suite;
-
-typedef struct test_collection_struct		test_collection;
-typedef struct test_suite_collection_struct	test_suite_collection;
-
-typedef struct test_runner_struct			test_runner;
-typedef struct statistics_struts			statistics;
-
-struct statistics_struts{
-
-	size_t					total;
-	size_t					passed;
-	size_t					warnings;
-	size_t					failed;
-};
-
-struct unit_test_struct{
-
-	E4C_BOOL				is_requirement;
-	/*@observer@*/
-	const char *			code;
-	/*@observer@*/
-	const char *			title;
-	/*@observer@*/
-	const char *			description1;
-	/*@observer@*/ /*@null@*/
-	const char *			description2;
-	E4C_BOOL				is_critical;
-	/*@observer@*/ /*@null@*/
-	const char *			at_failure;
-	test_function			function;
-	int						expected_exit_code;
-	/*@observer@*/ /*@null@*/
-	const char *			expected_output;
-	/*@observer@*/ /*@null@*/
-	const char *			expected_error;
-	int						found_exit_code;
-	char					found_output[640];
-	char					found_error[1024 * 2];
-	E4C_BOOL				unexpected_exit_code;
-	E4C_BOOL				unexpected_output;
-	E4C_BOOL				unexpected_error;
-	int						status;
-};
-
-struct test_suite_struct{
-
-	E4C_BOOL				is_requirement;
-	/*@observer@*/
-	const char *			title;
-	/*@observer@*/
-	const char *			description1;
-	/*@observer@*/ /*@null@*/
-	const char *			description2;
-	/*@shared@*/
-	test_collection *		tests;
-	statistics				stats;
-	int						status;
-};
-
-struct test_collection_struct{
-
-	/*@shared@*/
-	unit_test * *			test;
-	const size_t			count;
-};
-
-struct test_suite_collection_struct{
-
-	/*@shared@*/
-	test_suite * *			suite;
-	const size_t			count;
-};
-
-struct test_runner_struct{
-
-	/*@observer@*/
-	const char *			file_path;
-	size_t					suite_number;
-	size_t					test_number;
-	char					buffer[1024];
-
-	/*@observer@*/
-	const char *			out;
-	/*@observer@*/
-	const char *			err;
-	/*@observer@*/
-	const char *			report;
-
-	/*@shared@*/
-	test_suite_collection *	suites;
-
-	struct{
-		statistics			tests;
-		statistics			suites;
-		statistics			requirements;
-	}						stats;
-};
-
-extern int parse_command_line(
-	int						argc,
-	char *					argv[],
-	/*@shared@*/
-	test_suite_collection *	suite_collection,
-	const char *			report,
-	const char *			out,
-	const char *			err
-)
-/*@globals
-	fileSystem,
-	internalState
-@*/
-/*@modifies
-	fileSystem,
-	internalState
-@*/
-;
-
-/*@unchecked@*/
-extern test_suite_collection
-	ALL_SUITES,
-	SUITE_BEGINNING,
-	SUITE_CONSISTENCY,
-	SUITE_ENDING,
-	SUITE_UNCAUGHT,
-	SUITE_FINALLY,
-	SUITE_CAUGHT,
-	SUITE_SIGNALS,
-	SUITE_INTEGRATION,
-	SUITE_FEATURES,
-	PLATFORM_REQUIREMENTS;
+/* Test Results */
+# define TEST_RESULT_PASS               EXIT_SUCCESS
+# define TEST_RESULT_FAIL               EXIT_FAILURE
+# define TEST_RESULT_SKIP               77
 
 
-/*@=exportany@*/
+/* Test Actions */
+# define TEST_EXIT(MESSAGE, RESULT) \
+    do{ \
+        TEST_ECHO(MESSAGE); \
+        exit(RESULT); \
+    }while(0)
+# define TEST_SKIP(MESSAGE)             TEST_EXIT(MESSAGE, TEST_RESULT_SKIP)
+# define TEST_PASS(MESSAGE)             TEST_EXIT(MESSAGE, TEST_RESULT_PASS)
+# define TEST_FAIL(MESSAGE)             TEST_EXIT(MESSAGE, TEST_RESULT_FAIL)
+# define TEST_X_PASS(MESSAGE)           TEST_EXIT(MESSAGE, TEST_RESULT_FAIL)
+# define TEST_X_FAIL(MESSAGE)           TEST_EXIT(MESSAGE, TEST_RESULT_PASS)
+# define TEST_ASSERT_THAT(CHECK, ACTION) \
+    do{ \
+        if( !(CHECK) ){ \
+            ACTION; \
+        } \
+    }while(0)
+
+/* Assertions */
+# define TEST_ASSERT(CHECK) \
+    TEST_ASSERT_THAT( CHECK, TEST_FAIL("Assertion failed: " #CHECK "\n") )
+# define TEST_X_ASSERT(CHECK) \
+    TEST_ASSERT_THAT( CHECK, TEST_PASS("Assertion failed: " #CHECK "\n") )
+# define TEST_ASSERT_EQUALS(FOUND, EXPECTED) \
+    TEST_ASSERT_THAT( (FOUND) == (EXPECTED), TEST_FAIL(#FOUND " does not equals " #EXPECTED "\n") )
+# define TEST_ASSERT_STRING_EQUALS(FOUND, EXPECTED) \
+    TEST_ASSERT_THAT( strcmp( (FOUND), (EXPECTED) ) == 0, TEST_FAIL(#FOUND " does not contain string " #EXPECTED "\n") )
+
+
+/* Test Cases */
+# define TEST_CASE \
+    \
+    void test_case(void); \
+    \
+    int main(void){ \
+        TEST_PRINT("Running test %s...", __FILE__); \
+        test_case(); \
+        return(EXIT_SUCCESS); \
+    } \
+    \
+    void test_case(void)
+
+# define TEST_X_CASE TEST_CASE
+
+
+/* Third party library simulation */
+# define LIBRARY_SUCCESS 0
+# define LIBRARY_FAILURE -1
+# define LIBRARY_FAILURE_IO -2
+# define LIBRARY_FAILURE_ILLEGAL_ARGUMENT -3
 
 
 # endif
