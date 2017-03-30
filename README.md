@@ -4,6 +4,8 @@
 [![Build status][BUILD_STATUS_BADGE]][BUILD_STATUS_LINK]
 [![Code coverage][COVERAGE_BADGE]][COVERAGE_LINK]
 [![Static analysis][COVERITY_BADGE]][COVERITY_LINK]
+[![Flattr this][FLATTR_BADGE]][FLATTR_LINK]
+
 
 > Bring the power of exceptions to your C applications
 > with this tiny, portable library.
@@ -266,6 +268,12 @@ https://scan.coverity.com/projects/guillermocalvo-exceptions4c
 
 [COVERITY_BADGE]:
 https://scan.coverity.com/projects/8074/badge.svg
+
+[FLATTR_BADGE]:
+https://button.flattr.com/flattr-badge-large.png
+
+[FLATTR_LINK]:
+https://flattr.com/submit/auto?fid=g3eowe&url=https%3A%2F%2Fexceptions4c.guillermo.in%2F "Flattr this"
 
 [EXAMPLE]:
 https://raw.githubusercontent.com/guillermocalvo/exceptions4c/master/etc/img/example.png
