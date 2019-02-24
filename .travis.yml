@@ -23,11 +23,18 @@ script:
   - make coverage
   - echo travis_fold:end:COVERAGE
 
+  - echo travis_fold:start:DOCS
+  - make docs
+  - echo travis_fold:end:DOCS
+
 after_success:
 
   - bash <(curl -s https://codecov.io/bash)
 
 addons:
+  apt:
+    packages:
+      - doxygen
   coverity_scan:
     project:
       name: "guillermocalvo/exceptions4c"
@@ -36,3 +43,24 @@ addons:
     build_command_prepend: "autoreconf --install; ./configure; make clean"
     build_command: "make -j 4"
     branch_pattern: coverity_scan
+
+deploy:
+  - provider: pages
+    github-token: $GITHUB_TOKEN
+    local-dir: doc/html
+    target-branch: docs
+    verbose: true
+    keep-history: true
+    skip-cleanup: true
+    on:
+      branch: master
+  - provider: pages
+    github-token: $GITHUB_TOKEN
+    local-dir: doc/html
+    target-branch: next-docs
+    verbose: true
+    keep-history: true
+    skip-cleanup: true
+    on:
+      all_branches: true
+      condition: $TRAVIS_BRANCH != master
