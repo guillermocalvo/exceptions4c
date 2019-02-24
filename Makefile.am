@@ -480,3 +480,10 @@ e4c.c.gcov:
 
 e4c_lite.c.gcov:
 	gcov lite/src/e4c_lite.c --object-directory lite/src/*
+
+# generate documentation
+
+docs: doc/html/index.html
+
+doc/html/index.html:
+	doxygen ./etc/Doxyfile
