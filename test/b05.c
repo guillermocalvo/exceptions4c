@@ -1,6 +1,8 @@
 
 # include "testing.h"
 
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
 # define e4c_acquire_memory malloc
 # define e4c_dispose_memory(buffer, failed) free(buffer)
@@ -13,6 +15,7 @@
         } \
     }E4C_USE
 
+# pragma GCC diagnostic pop
 
 /**
  * `e4c_using_memory` block after having ended

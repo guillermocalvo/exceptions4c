@@ -31,6 +31,9 @@ TEST_CASE{
 
     e4c_using_memory(tmp, (size_t)256){
 
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
         free(tmp);
+# pragma GCC diagnostic pop
     }
 }
