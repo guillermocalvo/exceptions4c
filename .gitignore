@@ -23,3 +23,9 @@
 /report.html
 /test-driver
 /test-suite.log
+/doxygen_warnings
+/doc/html
+/doc/latex
+/doc/man
+/doc/rtf
+/doc/xml
