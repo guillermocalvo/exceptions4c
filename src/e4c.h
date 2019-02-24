@@ -900,7 +900,7 @@
  *
  * There is a way to lighten up even more this pattern by defining convenience
  * macros, customized for a specific kind of resources. For example,
- * `#e4c_using_file` or `#e4c_using_memory`.
+ * `e4c_using_file` or `e4c_using_memory`.
  *
  * @pre
  *   - A program (or thread) **must** begin an exception context prior to using
