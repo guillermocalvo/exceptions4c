@@ -1148,6 +1148,7 @@ HTML_EXTRA_STYLESHEET  = ./etc/doxygen/exceptions4c.css
 
 HTML_EXTRA_FILES       = ./etc/img/logo/sheep_064.png \
                          ./etc/img/logo/sheep_016.png \
+                         ./etc/img/favicon.ico \
                          ./etc/img/thumb.png
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
