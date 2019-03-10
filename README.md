@@ -273,7 +273,7 @@ https://scan.coverity.com/projects/8074/badge.svg
 https://button.flattr.com/flattr-badge-large.png
 
 [FLATTR_LINK]:
-https://flattr.com/submit/auto?fid=g3eowe&url=https%3A%2F%2Fexceptions4c.guillermo.in%2F "Flattr this"
+https://flattr.com/submit/auto?fid=g3eowe&url=https%3A%2F%2Fguillermo.dev%2Fexceptions4c%2F "Flattr this"
 
 [EXAMPLE]:
 https://raw.githubusercontent.com/guillermocalvo/exceptions4c/master/etc/img/example.png

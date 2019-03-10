@@ -7,7 +7,7 @@ AC_PREREQ([2.68])
 
 
 # Initialize package
-AC_INIT([exceptions4c], [3.0.6], [exceptions4c@guillermo.in], [exceptions4c], [https://github.com/guillermocalvo/exceptions4c/])
+AC_INIT([exceptions4c], [3.0.6], [exceptions4c@guillermo.dev], [exceptions4c], [https://github.com/guillermocalvo/exceptions4c/])
 
 
 # Information on the package
