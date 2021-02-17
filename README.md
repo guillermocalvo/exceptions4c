@@ -1,10 +1,10 @@
-
 # exceptions4c
 
 [![Build status][BUILD_STATUS_BADGE]][BUILD_STATUS_LINK]
 [![Code coverage][COVERAGE_BADGE]][COVERAGE_LINK]
 [![Static analysis][COVERITY_BADGE]][COVERITY_LINK]
 [![Flattr this][FLATTR_BADGE]][FLATTR_LINK]
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fguillermocalvo%2Fexceptions4c.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fguillermocalvo%2Fexceptions4c?ref=badge_shield)
 
 
 > Bring the power of exceptions to your C applications
@@ -213,6 +213,9 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License along
 with this software. If not, see <http://www.gnu.org/licenses/>.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fguillermocalvo%2Fexceptions4c.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fguillermocalvo%2Fexceptions4c?ref=badge_large)
 
 ### Required
 
