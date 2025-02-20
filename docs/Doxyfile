@@ -1,0 +1,154 @@
+
+#---------------------------------------------------------------------------
+# Project related configuration options
+#---------------------------------------------------------------------------
+
+PROJECT_NAME           = "exceptions4c"
+PROJECT_NUMBER         = 4.0
+PROJECT_BRIEF          = "Exceptions for C"
+PROJECT_LOGO           = ./docs/logo.svg
+PROJECT_ICON           = ./docs/icon.svg
+OUTPUT_DIRECTORY       = ./docs
+CREATE_SUBDIRS         = NO
+ALWAYS_DETAILED_SEC    = YES
+FULL_PATH_NAMES        = NO
+JAVADOC_AUTOBRIEF      = YES
+TYPEDEF_HIDES_STRUCT   = YES
+OPTIMIZE_OUTPUT_FOR_C  = YES
+MARKDOWN_ID_STYLE      = GITHUB
+
+
+#---------------------------------------------------------------------------
+# Build related configuration options
+#---------------------------------------------------------------------------
+
+EXTRACT_ALL            = NO
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_SCOPE_NAMES       = YES
+HIDE_UNDOC_CLASSES     = YES
+CASE_SENSE_NAMES       = NO
+SORT_MEMBER_DOCS       = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to warning and progress messages
+#---------------------------------------------------------------------------
+
+WARN_NO_PARAMDOC       = YES
+WARN_AS_ERROR          = YES
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the input files
+#---------------------------------------------------------------------------
+
+INPUT                  = ./src/ \
+                         ./docs/README.md
+FILE_PATTERNS          = *.c \
+                         *.h \
+                         *.md
+EXAMPLE_PATH           = ./examples/
+IMAGE_PATH             = ./docs
+USE_MDFILE_AS_MAINPAGE = ./docs/README.md
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to source browsing
+#---------------------------------------------------------------------------
+
+VERBATIM_HEADERS       = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the alphabetical class index
+#---------------------------------------------------------------------------
+
+ALPHABETICAL_INDEX     = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the HTML output
+#---------------------------------------------------------------------------
+
+GENERATE_HTML          = YES
+HTML_FOOTER            = ./docs/footer.html
+DISABLE_INDEX          = NO
+GENERATE_TREEVIEW      = YES
+HTML_EXTRA_STYLESHEET  = ./docs/doxygen-awesome.css \
+                         ./docs/doxygen-awesome-sidebar-only.css \
+                         ./docs/exceptions4c.css
+HTML_EXTRA_FILES       = ./docs/octicons/alert-16.svg \
+                         ./docs/octicons/bug-16.svg \
+                         ./docs/octicons/check-circle-16.svg \
+                         ./docs/octicons/check-circle-fill-16.svg \
+                         ./docs/octicons/checkbox-16.svg \
+                         ./docs/octicons/eye-16.svg \
+                         ./docs/octicons/info-16.svg \
+                         ./docs/octicons/light-bulb-16.svg \
+                         ./docs/octicons/report-16.svg \
+                         ./docs/octicons/stop-16.svg \
+                         ./docs/octicons/trash-16.svg
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the LaTeX output
+#---------------------------------------------------------------------------
+
+GENERATE_LATEX         = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the RTF output
+#---------------------------------------------------------------------------
+
+GENERATE_RTF           = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the man page output
+#---------------------------------------------------------------------------
+
+GENERATE_MAN           = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the XML output
+#---------------------------------------------------------------------------
+
+GENERATE_XML           = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the DOCBOOK output
+#---------------------------------------------------------------------------
+
+GENERATE_DOCBOOK       = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options for the AutoGen Definitions output
+#---------------------------------------------------------------------------
+
+GENERATE_AUTOGEN_DEF   = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the Perl module output
+#---------------------------------------------------------------------------
+
+GENERATE_PERLMOD       = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to the preprocessor
+#---------------------------------------------------------------------------
+
+PREDEFINED             = __bool_true_false_are_defined
+SKIP_FUNCTION_MACROS   = NO
+
+
+#---------------------------------------------------------------------------
+# Configuration options related to diagram generator tools
+#---------------------------------------------------------------------------
+
+HAVE_DOT               = NO
