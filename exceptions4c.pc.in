@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=${prefix}/include
 
 Name: exceptions4c
-Description: An exception handling framework for C
+Description: Exceptions for C
 Version: @VERSION@
-Libs: -L${libdir} -llibe4c
+Libs: -L${libdir} -llibexceptions4c
 Cflags: -I${includedir}
