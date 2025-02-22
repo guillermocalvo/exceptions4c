@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
-## [Unreleased]
+## [4.0.0]
 
 - Changed license from LGPL to Apache 2.
 - Renamed public macros and "keywords".
@@ -179,7 +179,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 Initial release.
 
 
-[Unreleased]: https://github.com/guillermocalvo/exceptions4c/compare/main...develop
 [1.0.0]: https://github.com/guillermocalvo/exceptions4c/releases/tag/v1.0.0
 [1.1.0]: https://github.com/guillermocalvo/exceptions4c/releases/tag/v1.1.0
 [1.2.0]: https://github.com/guillermocalvo/exceptions4c/releases/tag/v1.2.0
@@ -201,3 +200,4 @@ Initial release.
 [2.11.0]: https://github.com/guillermocalvo/exceptions4c/releases/tag/v2.11.0
 [3.0.0]: https://github.com/guillermocalvo/exceptions4c/releases/tag/v3.0.0
 [3.0.5]: https://github.com/guillermocalvo/exceptions4c/releases/tag/v3.0.5
+[4.0.0]: https://github.com/guillermocalvo/exceptions4c/releases/tag/4.0.0
