@@ -1,0 +1,15 @@
+{
+  "name": "exceptions4c",
+  "version": "4.0.0",
+  "description": "Exceptions for C",
+  "repo": "guillermocalvo/exceptions4c",
+  "license": "Apache-2.0",
+  "src": [
+    "src/exceptions4c.c",
+    "src/exceptions4c.h"
+  ],
+  "keywords": [
+    "exceptions",
+    "error-handling"
+  ]
+}

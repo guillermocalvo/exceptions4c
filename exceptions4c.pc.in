@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=${prefix}/include
+
+Name: exceptions4c
+Description: Exceptions for C
+Version: @VERSION@
+Libs: -L${libdir} -llibexceptions4c
+Cflags: -I${includedir}

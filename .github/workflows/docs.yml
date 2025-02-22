@@ -1,0 +1,80 @@
+# Generate and publish docs to GitHub Pages
+name: Docs
+
+on:
+  push:
+    branches:
+    - 'main'
+  workflow_dispatch:
+
+jobs:
+  docs:
+
+    permissions:
+      pages: write
+      id-token: write
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # ================================
+    # INSTALL DOXYGEN
+    # ================================
+    - name: Install Doxygen
+      run: |
+        mkdir ~/doxygen
+        cd ~/doxygen
+        echo "Installing latest Doxygen version"
+        DOWNLOAD_URL=`curl -s https://api.github.com/repos/doxygen/doxygen/releases/latest | jq -r '.assets[].browser_download_url | select(contains("linux"))'`
+        wget -nv $DOWNLOAD_URL
+        tar -xf *.linux.bin.tar.gz
+        rm *.linux.bin.tar.gz
+        cd doxygen-*
+        sudo make install
+
+    # ================================
+    # INSTALL LCOV
+    # ================================
+    - name: Install LCOV
+      run: sudo apt-get install lcov
+
+    # ================================
+    # SHALLOW CLONE
+    # ================================
+    - name: Shallow clone
+      uses: actions/checkout@v4
+
+    # ================================
+    # UPDATE CONFIGURE SCRIPTS
+    # ================================
+    - name: Update configure scripts
+      run: |
+        autoreconf --install
+        ./configure
+
+    # ================================
+    # MAKE DOCS
+    # ================================
+    - name: Make docs
+      run: make docs
+
+    # ================================
+    # COVERAGE REPORT
+    # ================================
+    - name: Make coverage report
+      run: make coverage-report
+
+    # ================================
+    # UPLOAD DOXYGEN
+    # ================================
+    - name: Upload Doxygen files as artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ${{github.workspace}}/docs/html
+
+    # ================================
+    # PUBLISH DOCUMENTATION
+    # ================================
+    - name: Publish documentation to GitHub Pages
+      uses: actions/deploy-pages@v4

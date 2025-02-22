@@ -1,0 +1,58 @@
+# Scan with SonarQube
+name: SonarQube
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  checks: write
+
+jobs:
+  build:
+
+    name: Build
+    runs-on: ubuntu-latest
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
+
+    steps:
+
+      # ================================
+      # CHECKOUT BRANCH
+      # ================================
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ================================
+      # INSTALL BUILD WRAPPER
+      # ================================
+      - name: Install build wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v4
+
+      # ================================
+      # RUN BUILD WRAPPER
+      # ================================
+      - name: Run build wrapper
+        run: |
+          autoreconf --install
+          ./configure
+          build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR}} make coverage
+
+      # ================================
+      # SONARQUBE SCAN
+      # ================================
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            --define sonar.cfamily.compile-commands="${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"

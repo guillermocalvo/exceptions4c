@@ -1,0 +1,35 @@
+
+# Publish a new Release
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+*']
+
+jobs:
+  publish:
+
+    name: Publish
+    runs-on: ubuntu-latest
+
+    steps:
+
+    # ================================
+    # CHECKOUT
+    # ================================
+    - name: Checkout git tag
+      uses: actions/checkout@v4
+
+    # ================================
+    # CREATE RELEASE
+    # ================================
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        preserve_order: true
+        files: |
+          src/exceptions4c.h
+          src/exceptions4c.c
+          LICENSE
+          NOTICE
+          CHANGELOG.md

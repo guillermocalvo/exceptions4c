@@ -1,0 +1,122 @@
+html {
+  --attention-color-dark: var(--bug-color-dark);
+  --attention-color-darker: var(--bug-color-darker);
+  --attention-color: var(--bug-color);
+  --important-color-dark: var(--todo-color-dark);
+  --important-color-darker: var(--todo-color-darker);
+  --important-color: var(--todo-color);
+  --remark-color-dark: var(--invariant-color-dark);
+  --remark-color-darker: var(--invariant-color-darker);
+  --remark-color: var(--invariant-color);
+  --see-color-dark: var(--note-color-dark);
+  --see-color-darker: var(--note-color-darker);
+  --see-color: var(--note-color);
+}
+
+dl.attention > dt::before,
+dl.bug > dt::before,
+dl.deprecated > dt::before,
+dl.important > dt::before,
+dl.invariant > dt::before,
+dl.note > dt::before,
+dl.post > dt::before,
+dl.pre > dt::before,
+dl.remark > dt::before,
+dl.see > dt::before,
+dl.warning > dt::before {
+  margin-right: 0.5em;
+}
+
+dl.attention > dt::before {
+  content: url(stop-16.svg);
+}
+
+dl.bug > dt::before {
+  content: url(bug-16.svg);
+}
+
+dl.deprecated > dt::before {
+  content: url(trash-16.svg);
+}
+
+dl.important > dt::before {
+  content: url(report-16.svg);
+}
+
+dl.invariant > dt::before {
+  content: url(checkbox-16.svg);
+}
+
+dl.note > dt::before {
+  content: url(info-16.svg);
+}
+
+dl.post > dt::before {
+  content: url(check-circle-fill-16.svg);
+}
+
+dl.pre > dt::before {
+  content: url(check-circle-16.svg);
+}
+
+dl.remark > dt::before {
+  content: url(light-bulb-16.svg);
+}
+
+dl.see > dt::before {
+  content: url(eye-16.svg);
+}
+
+dl.warning > dt::before {
+  content: url(alert-16.svg);
+}
+
+dl.attention {
+  background: var(--attention-color);
+  border-color: var(--attention-color-dark);
+  color: var(--attention-color-darker);
+  dt {
+    color: var(--attention-color-dark);
+  }
+}
+
+dl.important {
+  background: var(--important-color);
+  border-color: var(--important-color-dark);
+  color: var(--important-color-darker);
+  dt {
+    color: var(--important-color-dark);
+  }
+}
+
+dl.remark {
+  background: var(--remark-color);
+  border-color: var(--remark-color-dark);
+  color: var(--remark-color-darker);
+  dt {
+    color: var(--remark-color-dark);
+  }
+}
+
+dl.see {
+  background: var(--see-color);
+  border-left: 8px solid var(--see-color-dark);
+  border-radius: var(--border-radius-small);
+  color: var(--see-color-darker);
+  padding: var(--spacing-medium);
+  margin: var(--spacing-medium) 0;
+  overflow: hidden;
+  margin-left: 0;
+  dt {
+    color: var(--see-color-dark);
+  }
+  dd {
+    color: var(--see-color-darker);
+    margin-left: 1em;
+    display: list-item;
+    list-style-type: square;
+  }
+  dd::marker {
+    color: var(--see-color-darker);
+  }
+}
