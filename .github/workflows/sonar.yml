@@ -35,7 +35,7 @@ jobs:
       # INSTALL BUILD WRAPPER
       # ================================
       - name: Install build wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v4
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
 
       # ================================
       # RUN BUILD WRAPPER
@@ -50,7 +50,7 @@ jobs:
       # SONARQUBE SCAN
       # ================================
       - name: SonarQube scan
-        uses: SonarSource/sonarqube-scan-action@v4
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
